@@ -1,0 +1,61 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Level;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class LevelController extends Controller
+{
+    public function index(): Response
+    {
+        $levels = Level::all();
+        return Inertia::render('MainMenu', ['levels' => $levels]);
+    }
+
+    public function getAllLevels(): JsonResponse
+    {
+        $levels = Level::all();
+        return response()->json($levels);
+    }
+
+    public function toggleLevelAccess(Request $request): JsonResponse
+    {
+        $request->validate([
+            'level_id' => 'required|exists:levels,id',
+            'name' => 'required|string',
+        ]);
+
+        $level = Level::find($request->level_id);
+        $newStatus = !$level->is_enabled;
+        $level->is_enabled = $newStatus;
+        $level->save();
+
+        $message = $newStatus ? 'Le niveau ' . $request->name . ' a été activé avec succès.' : 'Le niveau ' . $request->name . ' a été désactivé avec succès.';
+
+        return response()->json(['message' => $message]);
+    }
+
+    public function updateLastLevel(Request $request): JsonResponse
+    {
+        $request->validate([
+            'level' => 'required|exists:levels,id',
+            'userId' => 'required|exists:users,id',
+        ]);
+
+        $user = User::find($request->userId);
+
+        if ($user) {
+            $user->last_level = $request->level;
+            $user->save();
+            return response()->json(['message' => 'Niveau mis à jour avec succès'], 200);
+        }
+        else {
+            return response()->json(['message' => 'Utilisateur non trouvé'], 404);
+        }
+    }
+}
