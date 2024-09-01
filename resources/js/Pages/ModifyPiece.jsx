@@ -177,60 +177,63 @@ export default function ModifyPiece() {
             </div>
 
             <DragDropContext onDragEnd={handleOnDragEnd}>
-                <Droppable droppableId="pieces">
-                    {(provided, snapshot) => (
-                        <table
-                            {...provided.droppableProps}
-                            ref={provided.innerRef}
-                            className="min-w-full bg-white mt-4"
-                        >
-                            <thead>
-                            <tr>
-                                <th className="py-2">Niveau</th>
-                                <th className="py-2">Période</th>
-                                <th className="py-2">Genre</th>
-                                <th className="py-2">Compositeur</th>
-                                <th className="py-2">Titre</th>
-                                <th className="py-2">Élément</th>
-                                <th className="py-2">No. Mvt</th>
-                                <th className="py-2">Nom Mvt / Partie</th>
-                                <th className="py-2">Forme</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {sortedPieces.map((piece, index) => (
-                                <Draggable key={piece.id} draggableId={piece.id.toString()} index={index}>
-                                    {(provided, snapshot) => (
-                                        <tr
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}
-                                            {...provided.dragHandleProps}
-                                            className="text-center cursor-pointer"
-                                            onClick={() => openModal(piece)}
-                                        >
-                                            <td className="border px-4 py-2">{getLevelNameById(piece.level_id)}</td>
-                                            <td className="border px-4 py-2">{piece.period}</td>
-                                            <td className="border px-4 py-2">{piece.genre}</td>
-                                            <td className="border px-4 py-2">{piece.composer}</td>
-                                            <td className="border px-4 py-2">{piece.title}</td>
-                                            <td className="border px-4 py-2">{piece.element}</td>
-                                            <td className="border px-4 py-2">{piece.no_mvt}</td>
-                                            <td className="border px-4 py-2">{piece.mvt}</td>
-                                            <td className="border px-4 py-2">{piece.form}</td>
-                                        </tr>
-                                    )}
-                                </Draggable>
-                            ))}
-                            {provided.placeholder}
-                            </tbody>
-                        </table>
-                    )}
-                </Droppable>
+                <div className="w-full max-h-[600px] overflow-y-auto mt-4">
+                    <table className="min-w-full">
+                        <thead className="bg-white sticky top-0 shadow-md z-10">
+                        <tr>
+                            <th className="py-2">Niveau</th>
+                            <th className="py-2">Période</th>
+                            <th className="py-2">Genre</th>
+                            <th className="py-2">Compositeur</th>
+                            <th className="py-2">Titre</th>
+                            <th className="py-2">Élément</th>
+                            <th className="py-2">No. Mvt</th>
+                            <th className="py-2">Nom Mvt / Partie</th>
+                            <th className="py-2">Forme</th>
+                        </tr>
+                        </thead>
+                        <Droppable droppableId="pieces">
+                            {(provided) => (
+                                <tbody
+                                    {...provided.droppableProps}
+                                    ref={provided.innerRef}
+                                    className="bg-white"
+                                >
+                                {sortedPieces.map((piece, index) => (
+                                    <Draggable key={piece.id} draggableId={piece.id.toString()} index={index}>
+                                        {(provided) => (
+                                            <tr
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                {...provided.dragHandleProps}
+                                                className="text-center cursor-pointer"
+                                                onClick={() => openModal(piece)}
+                                            >
+                                                <td className="border px-4 py-2">{getLevelNameById(piece.level_id)}</td>
+                                                <td className="border px-4 py-2">{piece.period}</td>
+                                                <td className="border px-4 py-2">{piece.genre}</td>
+                                                <td className="border px-4 py-2">{piece.composer}</td>
+                                                <td className="border px-4 py-2">{piece.title}</td>
+                                                <td className="border px-4 py-2">{piece.element}</td>
+                                                <td className="border px-4 py-2">{piece.no_mvt}</td>
+                                                <td className="border px-4 py-2">{piece.mvt}</td>
+                                                <td className="border px-4 py-2">{piece.form}</td>
+                                            </tr>
+                                        )}
+                                    </Draggable>
+                                ))}
+                                {provided.placeholder}
+                                </tbody>
+                            )}
+                        </Droppable>
+                    </table>
+                </div>
             </DragDropContext>
 
             {isModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-75 z-20">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl mx-4 max-h-[80vh] hide-scrollbar overflow-y-auto">
+                    <div
+                        className="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl mx-4 max-h-[80vh] hide-scrollbar overflow-y-auto">
                         <div className="flex flex-row items-center gap-2 mb-4">
                             <h2 className="text-2xl">Modification</h2>
                             <img src={editIcon} alt="Edit Icon" className="h-6 w-6"/>
