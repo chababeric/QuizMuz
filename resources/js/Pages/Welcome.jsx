@@ -93,7 +93,7 @@ export default function Welcome({ auth }) {
                     </main>
 
                     <footer className="py-16 text-center text-sm text-white hover:cursor-default">
-                        QuizMuz v2.1.10 © 2024 - Tous droits réservés
+                        QuizMuz v2.1.11 © 2024 - Tous droits réservés
                     </footer>
                 </div>
             </div>
