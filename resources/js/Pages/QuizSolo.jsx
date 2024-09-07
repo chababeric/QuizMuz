@@ -5,7 +5,7 @@ import Grader from "@/Components/Grader.jsx";
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 
-export default function QuizSolo({ auth, pieces, difficulty, level }) {
+export default function QuizSolo({ auth, pieces, difficulty, level, courseId }) {
     const [lastCheckTime, setLastCheckTime] = useState(0);
     const [piecesData, setPiecesData] = useState([]);
     const [selectListData, setSelectListData] = useState([]);
@@ -279,7 +279,7 @@ export default function QuizSolo({ auth, pieces, difficulty, level }) {
 
                     <div className="flex justify-center mt-5">
                         <Link
-                            href={route('mainmenu', { courseId: 3 })}
+                            href={route('mainmenu', { courseId: courseId })}
                             className="flex items-center text-white font-bold py-2 px-4 rounded-lg bg-gray-700 hover:bg-gray-900 mr-4 border border-white"
                             onClick={() => {
                                 if (audioRef.current) {

@@ -7,7 +7,7 @@ import nextIcon from "../../icons/next.svg";
 import previousIcon from "../../icons/previous.svg";
 import backIcon from "../../icons/back.svg";
 
-export default function Practice({ auth, level }) {
+export default function Practice({ auth, level, courseId }) {
     const [pieces, setPieces] = useState([]);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentPiece, setCurrentPiece] = useState(null);
@@ -167,7 +167,7 @@ export default function Practice({ auth, level }) {
             <Head title="Pratique - QuizMuz"/>
             <div className="relative flex items-center justify-between w-full">
                 <Link
-                    href={route('mainmenu', { courseId: 3 })}
+                    href={route('mainmenu', { courseId: courseId })}
                     className="hover:cursor-pointer absolute left-3"
                     onClick={() => {
                         if (audioRef.current) {

@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Course;
 use App\Models\Level;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,16 +14,17 @@ class LevelController extends Controller
 {
     public function index($courseId): Response
     {
-        $levels = Level::all();
+        $levels = Level::where('course_id', $courseId)->get();
+        $courseName = Course::where('id', $courseId)->first()->name;
 
         if ($courseId == 1) {
-            return Inertia::render('MenuFMA');
+            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
         }
         elseif ($courseId == 2) {
             return Inertia::render('MenuHIST');
         }
         else if ($courseId == 3) {
-            return Inertia::render('MainMenu', ['levels' => $levels]);
+            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
         }
         else {
             return Inertia::render('Welcome');

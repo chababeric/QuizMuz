@@ -3,7 +3,7 @@ import { Link, Head } from '@inertiajs/react';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-export default function OptionsMenu({ auth, level }) {
+export default function OptionsMenu({ auth, level, courseId }) {
     const [pieces, setPieces] = useState([]);
     const [checkedPieces, setCheckedPieces] = useState([]);
     const [checkText, setCheckText] = useState("Sélectionner tout");
@@ -136,14 +136,14 @@ export default function OptionsMenu({ auth, level }) {
 
             <div className="flex justify-center mt-8">
                 <Link
-                    href={route('mainmenu', { courseId: 3 })}
+                    href={route('mainmenu', { courseId: courseId })}
                     className="text-white font-bold py-2 px-4 rounded-lg bg-gray-700 hover:bg-gray-900 mt-4 mr-4 border border-white">
                     Retourner au menu
                 </Link>
 
                 {canPlay ? (
                     <Link
-                        href={route('quizsolo', {pieces: checkedPieces, difficulty: difficulty, level: level})}
+                        href={route('quizsolo', {pieces: checkedPieces, difficulty: difficulty, level: level, courseId: courseId})}
                         className="text-white font-bold py-2 px-4 rounded-lg bg-rose-600 hover:bg-rose-800 mt-4"
                     >
                         Commencer le quiz

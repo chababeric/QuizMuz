@@ -72,13 +72,15 @@ Route::middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastAct
 
 Route::get('/practice', function (Illuminate\Http\Request $request) {
     return Inertia::render('Practice', [
-        'level' => $request->input('level')
+        'level' => $request->input('level'),
+        'courseId' => $request->input('courseId'),
     ]);
 })->name('practice')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
 
 Route::get('/optionsmenu', function (Illuminate\Http\Request $request) {
     return Inertia::render('OptionsMenu', [
-        'level' => $request->input('level')
+        'level' => $request->input('level'),
+        'courseId' => $request->input('courseId'),
     ]);
 })->name('optionsmenu')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class]);
 
@@ -87,11 +89,14 @@ Route::get('/quizsolo', function (Illuminate\Http\Request $request) {
         'pieces' => $request->input('pieces'),
         'difficulty' => $request->input('difficulty'),
         'level' => $request->input('level'),
+        'courseId' => $request->input('courseId'),
     ]);
 })->name('quizsolo')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
 
-Route::get('highscores', function () {
-    return Inertia::render('HighScores');
+Route::get('highscores', function (Illuminate\Http\Request $request) {
+    return Inertia::render('HighScores', [
+        'courseId' => $request->input('courseId'),
+    ]);
 })->name('highscores')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class]);
 
 Route::middleware(['auth', 'verified'])->group(function () {

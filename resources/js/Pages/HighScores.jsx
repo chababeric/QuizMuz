@@ -4,7 +4,7 @@ import { Head, Link } from "@inertiajs/react";
 import { useSwipeable } from 'react-swipeable';
 import ScoreCard from "@/Components/ScoreCard.jsx";
 
-export default function HighScores({ auth }) {
+export default function HighScores({ auth, courseId }) {
     const [scores, setScores] = useState([]);
     const [rotation, setRotation] = useState(0);
 
@@ -85,7 +85,7 @@ export default function HighScores({ auth }) {
 
             <div className="text-center">
                 <Link
-                    href={route('mainmenu', { courseId: 3 })}
+                    href={route('mainmenu', { courseId: courseId })}
                     className="inline-flex items-center justify-center text-white py-2 px-4 rounded-md bg-gray-700 hover:bg-gray-900 border border-white"
                     style={{userSelect: 'none'}}
                 >
