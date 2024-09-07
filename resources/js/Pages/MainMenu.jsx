@@ -34,7 +34,6 @@ export default function MainMenu({ auth }) {
             <div className="background-container"></div>
             <Head title="Menu Principal - QuizMuz"/>
             <h1 className="text-6xl font-bold text-white hover:cursor-default mb-4">Menu Principal</h1>
-            <h3 className="text-2xl font-bold text-white hover:cursor-default mb-6">Bienvenue, {auth.user.username} !</h3>
 
             <div className="w-full px-4">
                 <h3 className="text-5xl text-white text-center hover:cursor-default mb-6 font-bold">Niveau</h3>

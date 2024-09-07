@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminKeyController;
+use App\Http\Controllers\CourseController;
 use App\Http\Controllers\InstitutionController;
 use App\Http\Controllers\PieceController;
 use App\Http\Controllers\QuizSoloController;
@@ -50,9 +51,19 @@ Route::get('/admincontrol', function () {
     return Inertia::render('AdminControl');
 })->name('admincontrol')->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class]);
 
+Route::middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class])->group(function () {
+    Route::get('/course', [CourseController::class, 'index'])->name('course');
+});
+
 // get the main menu if the user is authenticated
 Route::middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class])->group(function () {
-    Route::get('/mainmenu', [LevelController::class, 'index'])->name('mainmenu');
+    Route::get('/mainmenu/{courseId}', [LevelController::class, 'index'])->name('mainmenu');
+});
+
+Route::middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class])->group(function () {
+    Route::get('/menufma', function () {
+        return Inertia::render('MenuFMA');
+    })->name('menufma');
 });
 
 Route::middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class])->group(function () {
@@ -125,5 +136,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/pieces-info', [PieceController::class, 'getPiecesInfo'])->name('piecesInfo');
     });
 });
+
+//Route::middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class])->group(function () {
+//    Route::get('/mainmenu', [LevelController::class, 'index'])->name('mainmenu');
+//});
 
 require __DIR__.'/auth.php';

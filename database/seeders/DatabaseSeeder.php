@@ -13,10 +13,11 @@ class DatabaseSeeder extends Seeder
     {
         // Insert the Levels in the database
         $this->call([
-            LevelSeeder::class,
-            PiecesSeeder::class,
-            InstitutionSeeder::class,
-            AdminKeySeeder::class
+//            LevelSeeder::class,
+//            PiecesSeeder::class,
+//            InstitutionSeeder::class,
+//            AdminKeySeeder::class
+            CourseSeeder::class
         ]);
     }
 }

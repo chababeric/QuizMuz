@@ -167,7 +167,7 @@ export default function Practice({ auth, level }) {
             <Head title="Pratique - QuizMuz"/>
             <div className="relative flex items-center justify-between w-full">
                 <Link
-                    href={route('mainmenu')}
+                    href={route('mainmenu', { courseId: 3 })}
                     className="hover:cursor-pointer absolute left-3"
                     onClick={() => {
                         if (audioRef.current) {

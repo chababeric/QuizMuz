@@ -6,15 +6,28 @@ use App\Models\Level;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class LevelController extends Controller
 {
-    public function index(): Response
+    public function index($courseId): Response
     {
         $levels = Level::all();
-        return Inertia::render('MainMenu', ['levels' => $levels]);
+
+        if ($courseId == 1) {
+            return Inertia::render('MenuFMA');
+        }
+        elseif ($courseId == 2) {
+            return Inertia::render('MenuHIST');
+        }
+        else if ($courseId == 3) {
+            return Inertia::render('MainMenu', ['levels' => $levels]);
+        }
+        else {
+            return Inertia::render('Welcome');
+        }
     }
 
     public function getAllLevels(): JsonResponse

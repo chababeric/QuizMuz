@@ -17,10 +17,10 @@ export default function Welcome({ auth }) {
                             {auth.user ? (
                                 <>
                                     <Link
-                                        href={route('mainmenu')}
+                                        href={route('course')}
                                         className="login-links"
                                     >
-                                        Menu Principal
+                                        Cours
                                     </Link>
 
                                     {auth.isAdmin && (
@@ -28,7 +28,7 @@ export default function Welcome({ auth }) {
                                             href={route('admincontrol')}
                                             className="login-links"
                                         >
-                                            Page Admin
+                                            Admin
                                         </Link>
                                     )}
 

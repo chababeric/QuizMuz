@@ -85,7 +85,7 @@ export default function HighScores({ auth }) {
 
             <div className="text-center">
                 <Link
-                    href={route('mainmenu')}
+                    href={route('mainmenu', { courseId: 3 })}
                     className="inline-flex items-center justify-center text-white py-2 px-4 rounded-md bg-gray-700 hover:bg-gray-900 border border-white"
                     style={{userSelect: 'none'}}
                 >

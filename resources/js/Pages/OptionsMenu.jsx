@@ -97,8 +97,10 @@ export default function OptionsMenu({ auth, level }) {
                         </ul>
                     </>
                 ) : (
-                    <p className="text-black text-2xl hover:cursor-default">Il n'y a pas de pièces trouvées pour ce
-                        niveau.</p>
+                    <p className="text-black text-2xl hover:cursor-default">
+                        Il n'y a pas de pièces trouvées pour ce
+                        niveau.
+                    </p>
                 )}
             </div>
 
@@ -134,7 +136,7 @@ export default function OptionsMenu({ auth, level }) {
 
             <div className="flex justify-center mt-8">
                 <Link
-                    href={route('mainmenu')}
+                    href={route('mainmenu', { courseId: 3 })}
                     className="text-white font-bold py-2 px-4 rounded-lg bg-gray-700 hover:bg-gray-900 mt-4 mr-4 border border-white">
                     Retourner au menu
                 </Link>

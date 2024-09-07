@@ -279,7 +279,7 @@ export default function QuizSolo({ auth, pieces, difficulty, level }) {
 
                     <div className="flex justify-center mt-5">
                         <Link
-                            href={route('mainmenu')}
+                            href={route('mainmenu', { courseId: 3 })}
                             className="flex items-center text-white font-bold py-2 px-4 rounded-lg bg-gray-700 hover:bg-gray-900 mr-4 border border-white"
                             onClick={() => {
                                 if (audioRef.current) {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -14,7 +15,7 @@ class QuizSoloController extends Controller
         return Inertia::render('QuizSolo');
     }
 
-    public function updateLastActionTime(Request $request)
+    public function updateLastActionTime(Request $request): JsonResponse
     {
         if (Auth::check()) {
             $user = Auth::user();
