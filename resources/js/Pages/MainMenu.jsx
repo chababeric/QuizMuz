@@ -54,12 +54,12 @@ export default function MainMenu({ auth }) {
                     ))}
                 </div>
 
-                <h3 className="text-5xl text-white text-center hover:cursor-default mb-6 mt-10 font-bold">Mode de
-                    Jeu
+                <h3 className="text-5xl text-white text-center hover:cursor-default mb-6 mt-10 font-bold">
+                    Mode de Jeu
                 </h3>
                 <div className="flex flex-wrap justify-center gap-4 mb-6 w-full flex-col items-center">
                     <Link
-                        href={route('practice', {level: selectedLevel, courseId: courseId})}
+                        href={route('practice', {level: selectedLevel, courseId: courseId, courseName: courseName})}
                         className="game-mode"
                     >
                         Pratique

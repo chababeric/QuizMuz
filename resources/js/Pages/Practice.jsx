@@ -7,7 +7,7 @@ import nextIcon from "../../icons/next.svg";
 import previousIcon from "../../icons/previous.svg";
 import backIcon from "../../icons/back.svg";
 
-export default function Practice({ auth, level, courseId }) {
+export default function Practice({ auth, level, courseId, courseName }) {
     const [pieces, setPieces] = useState([]);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentPiece, setCurrentPiece] = useState(null);
@@ -19,16 +19,31 @@ export default function Practice({ auth, level, courseId }) {
 
     useEffect(() => {
         if (level) {
-            axios.get(`/api/pieces/level/${level}`)
-                .then(response => {
-                    const sortedPieces = sortPiecesByOrder(response.data);
-                    setPieces(sortedPieces);
-                    setCurrentPiece(sortedPieces[0]);
-                    setLoading(false);
-                })
-                .catch(error => {
-                    console.error("There was an error fetching the pieces!", error);
-                });
+            if (courseName === "Formation Musicale et Auditive") {
+                axios.get(`/api/chords/level/${level}`)
+                    .then(response => {
+                        const sortedPieces = sortPiecesByOrder(response.data);
+                        setPieces(sortedPieces);
+                        setCurrentPiece(sortedPieces[0]);
+                        setLoading(false);
+                        // console.log(response.data);
+                    })
+                    .catch(error => {
+                        console.error("There was an error fetching the chords!", error);
+                    });
+            }
+            else {
+                axios.get(`/api/pieces/level/${level}`)
+                    .then(response => {
+                        const sortedPieces = sortPiecesByOrder(response.data);
+                        setPieces(sortedPieces);
+                        setCurrentPiece(sortedPieces[0]);
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.error("There was an error fetching the pieces!", error);
+                    });
+            }
         }
 
         return () => {
@@ -72,7 +87,10 @@ export default function Practice({ auth, level, courseId }) {
         const audioElement = audioRef.current;
 
         if (currentPiece) {
-            audioElement.src = "https://www.quizmuz.com/storage/litmus_pieces/" + currentPiece.file_name;
+            if (courseName === "Formation Musicale et Auditive")
+                audioElement.src = "https://www.quizmuz.com/storage/fma_chords/" + currentPiece.file_name;
+            else
+                audioElement.src = "https://www.quizmuz.com/storage/litmus_pieces/" + currentPiece.file_name;
             audioElement.addEventListener('timeupdate', handleTimeUpdate);
             audioElement.addEventListener('loadedmetadata', handleMetadata);
             audioElement.addEventListener('canplaythrough', handleCanPlayThrough);
@@ -191,18 +209,30 @@ export default function Practice({ auth, level, courseId }) {
                     <div className="flex-1 overflow-y-auto w-11/12 mx-auto hide-scrollbar bg-black/50">
                         {pieces.length > 0 ? (
                             pieces.map(piece => (
-                                <div
-                                    key={piece.id}
-                                    className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
-                                    onClick={() => handlePieceClick(piece)}
-                                >
-                                    <h2 className="text-xl font-semibold text-white">
-                                        {piece.title}
-                                        {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
-                                        {piece.mvt && `, ${piece.mvt}`}
-                                    </h2>
-                                    <p className="text-lg text-gray-300">{piece.composer}</p>
-                                </div>
+                                courseName === "Formation Musicale et Auditive" ? (
+                                    <div
+                                        key={piece.id}
+                                        className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
+                                        onClick={() => handlePieceClick(piece)}
+                                    >
+                                        <h2 className="text-xl font-semibold text-white">
+                                            {piece.chord_name}
+                                        </h2>
+                                    </div>
+                                ) : (
+                                    <div
+                                        key={piece.id}
+                                        className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
+                                        onClick={() => handlePieceClick(piece)}
+                                    >
+                                        <h2 className="text-xl font-semibold text-white">
+                                            {piece.title}
+                                            {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
+                                            {piece.mvt && `, ${piece.mvt}`}
+                                        </h2>
+                                        <p className="text-lg text-gray-300">{piece.composer}</p>
+                                    </div>
+                                )
                             ))
                         ) : (
                             <p className="text-lg text-gray-400">Aucune pièce trouvée pour ce niveau.</p>
@@ -232,7 +262,7 @@ export default function Practice({ auth, level, courseId }) {
                         />
 
                         <div className="flex justify-between w-full text-white text-sm mt-2">
-                            <span>{new Date(progress * 1000).toISOString().substr(14, 5)}</span>
+                        <span>{new Date(progress * 1000).toISOString().substr(14, 5)}</span>
                             <span>{new Date(duration * 1000).toISOString().substr(14, 5)}</span>
                         </div>
 

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminKeyController;
+use App\Http\Controllers\ChordController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\InstitutionController;
 use App\Http\Controllers\PieceController;
@@ -74,6 +75,7 @@ Route::get('/practice', function (Illuminate\Http\Request $request) {
     return Inertia::render('Practice', [
         'level' => $request->input('level'),
         'courseId' => $request->input('courseId'),
+        'courseName' => $request->input('courseName'),
     ]);
 })->name('practice')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
 
@@ -107,6 +109,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/scores', [ScoreController::class, 'getAllScores']);
     Route::get('/all-scores', [ScoreController::class, 'index']);
     Route::get('/api/pieces/level/{level_id}', [PieceController::class, 'getPiecesByLevel']);
+    Route::get('/api/chords/level/{level_id}', [ChordController::class, 'getChordsByLevel']);
     Route::get('/api/pieces', [PieceController::class, 'getPiecesById']);
     Route::get('/api/users', [AdminController::class, 'getAllUsers']);
     Route::get('/api/levels', [LevelController::class, 'getAllLevels']);
