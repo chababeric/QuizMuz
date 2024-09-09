@@ -3,7 +3,7 @@ import { Link, Head } from '@inertiajs/react';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-export default function OptionsMenu({ auth, level, courseId }) {
+export default function OptionsMenu({ auth, level, courseId, courseName }) {
     const [pieces, setPieces] = useState([]);
     const [checkedPieces, setCheckedPieces] = useState([]);
     const [checkText, setCheckText] = useState("Sélectionner tout");
@@ -12,14 +12,26 @@ export default function OptionsMenu({ auth, level, courseId }) {
 
     useEffect(() => {
         if (level) {
-            axios.get(`/api/pieces/level/${level}`)
-                .then(response => {
-                    const sortedPieces = sortPiecesByOrder(response.data);
-                    setPieces(sortedPieces);
-                })
-                .catch(error => {
-                    console.error("There was an error fetching the pieces!", error);
-                });
+            if (courseName === "Formation Musicale et Auditive") {
+                axios.get(`/api/chords/level/${level}`)
+                    .then(response => {
+                        const sortedPieces = sortPiecesByOrder(response.data);
+                        setPieces(sortedPieces);
+                    })
+                    .catch(error => {
+                        console.error("There was an error fetching the chords!", error);
+                    });
+            }
+            else {
+                axios.get(`/api/pieces/level/${level}`)
+                    .then(response => {
+                        const sortedPieces = sortPiecesByOrder(response.data);
+                        setPieces(sortedPieces);
+                    })
+                    .catch(error => {
+                        console.error("There was an error fetching the pieces!", error);
+                    });
+            }
         }
     }, [level]);
 
@@ -86,10 +98,14 @@ export default function OptionsMenu({ auth, level, courseId }) {
                                             onChange={() => handleCheckItem(piece.id)}
                                         />
                                         <span className="ml-2 text-lg text-black text-left">
-                                            {piece.composer} - {piece.title}
-                                            {piece.element && ` - ${piece.element}`}
-                                            {piece.no_mvt && ` - Mvt.${piece.no_mvt}`}
-                                            {piece.mvt && ` - ${piece.mvt}`}
+                                            {courseName === "Formation Musicale et Auditive" ? piece.chord_name :
+                                                <>
+                                                    {piece.composer} - {piece.title}
+                                                    {piece.element && ` - ${piece.element}`}
+                                                    {piece.no_mvt && ` - Mvt.${piece.no_mvt}`}
+                                                    {piece.mvt && ` - ${piece.mvt}`}
+                                                </>
+                                            }
                                         </span>
                                     </label>
                                 </li>
@@ -98,8 +114,7 @@ export default function OptionsMenu({ auth, level, courseId }) {
                     </>
                 ) : (
                     <p className="text-black text-2xl hover:cursor-default">
-                        Il n'y a pas de pièces trouvées pour ce
-                        niveau.
+                        Il n'y a pas de pièces trouvées pour ce niveau.
                     </p>
                 )}
             </div>
@@ -117,13 +132,15 @@ export default function OptionsMenu({ auth, level, courseId }) {
                     >
                         Facile
                     </button>
-                    <button
-                        className={`border-2 border-white p-2.5 text-center cursor-pointer bg-black text-white text-lg w-18 max-w-24 mx-auto rounded-lg hover:bg-opacity-80 hover:shadow-greenGlow
-                        ${difficulty === 2 && 'bg-black text-black shadow-greenGlow'}`}
-                        onClick={() => setDifficulty(2)}
-                    >
-                        Moyen
-                    </button>
+                    {courseName !== "Formation Musicale et Auditive" && (
+                        <button
+                            className={`border-2 border-white p-2.5 text-center cursor-pointer bg-black text-white text-lg w-18 max-w-24 mx-auto rounded-lg hover:bg-opacity-80 hover:shadow-greenGlow
+                            ${difficulty === 2 && 'bg-black text-black shadow-greenGlow'}`}
+                            onClick={() => setDifficulty(2)}
+                        >
+                            Moyen
+                        </button>
+                    )}
                     <button
                         className={`border-2 border-white p-2.5 text-center cursor-pointer bg-black text-white text-lg w-18 max-w-24 mx-auto rounded-lg hover:bg-opacity-80 hover:shadow-greenGlow
                         ${difficulty === 3 && 'bg-black text-black shadow-greenGlow'}`}
@@ -142,12 +159,21 @@ export default function OptionsMenu({ auth, level, courseId }) {
                 </Link>
 
                 {canPlay ? (
-                    <Link
-                        href={route('quizsolo', {pieces: checkedPieces, difficulty: difficulty, level: level, courseId: courseId})}
-                        className="text-white font-bold py-2 px-4 rounded-lg bg-rose-600 hover:bg-rose-800 mt-4"
-                    >
-                        Commencer le quiz
-                    </Link>
+                    courseName === "Formation Musicale et Auditive" ? (
+                        <Link
+                            href={route('quizfma', {chords: checkedPieces, difficulty: difficulty, level: level, courseId: courseId})}
+                            className="text-white font-bold py-2 px-4 rounded-lg bg-rose-600 hover:bg-rose-800 mt-4"
+                        >
+                            Commencer le quiz
+                        </Link>
+                    ) : (
+                        <Link
+                            href={route('quizsolo', {pieces: checkedPieces, difficulty: difficulty, level: level, courseId: courseId})}
+                            className="text-white font-bold py-2 px-4 rounded-lg bg-rose-600 hover:bg-rose-800 mt-4"
+                        >
+                            Commencer le quiz
+                        </Link>
+                    )
                 ) : (
                     <button
                         className="text-white font-bold py-2 px-4 rounded-lg bg-gray-400 mt-4"

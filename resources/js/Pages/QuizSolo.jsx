@@ -224,7 +224,7 @@ export default function QuizSolo({ auth, pieces, difficulty, level, courseId }) 
     return (
         <div className="main-app pb-5">
             <div className="background-container"></div>
-            <Head title="Quiz Solo - QuizMuz"/>
+            <Head title="Quiz - QuizMuz"/>
             <h1 className="text-6xl font-bold text-white hover:cursor-default mb-4">Quiz</h1>
 
             {loading ? (

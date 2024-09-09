@@ -65,7 +65,7 @@ export default function MainMenu({ auth }) {
                         Pratique
                     </Link>
                     <Link
-                        href={route('optionsmenu', {level: selectedLevel, courseId: courseId})}
+                        href={route('optionsmenu', {level: selectedLevel, courseId: courseId, courseName: courseName})}
                         className="game-mode"
                     >
                         Quiz

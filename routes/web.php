@@ -83,6 +83,7 @@ Route::get('/optionsmenu', function (Illuminate\Http\Request $request) {
     return Inertia::render('OptionsMenu', [
         'level' => $request->input('level'),
         'courseId' => $request->input('courseId'),
+        'courseName' => $request->input('courseName'),
     ]);
 })->name('optionsmenu')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class]);
 
@@ -94,6 +95,15 @@ Route::get('/quizsolo', function (Illuminate\Http\Request $request) {
         'courseId' => $request->input('courseId'),
     ]);
 })->name('quizsolo')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
+
+Route::get('/quizfma', function (Illuminate\Http\Request $request) {
+    return Inertia::render('QuizFMA', [
+        'chords' => $request->input('chords'),
+        'difficulty' => $request->input('difficulty'),
+        'level' => $request->input('level'),
+        'courseId' => $request->input('courseId'),
+    ]);
+})->name('quizfma')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
 
 Route::get('highscores', function (Illuminate\Http\Request $request) {
     return Inertia::render('HighScores', [
