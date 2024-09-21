@@ -41,6 +41,14 @@ Route::get('welcome', function () {
     ]);
 })->name('welcome');
 
+Route::get('dashboard', function () {
+    return Inertia::render('Dashboard');
+})->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class])->name('dashboard');
+
+Route::get('profile/edit', function () {
+    return Inertia::render('Profile/Edit');
+})->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class])->name('profile.edit');
+
 Route::get('login', [LoginUserController::class, 'create'])->name('login');
 Route::post('login', [LoginUserController::class, 'store']);
 Route::post('logout', [LoginUserController::class, 'destroy'])->name('logout');
@@ -154,9 +162,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/pieces-info', [PieceController::class, 'getPiecesInfo'])->name('piecesInfo');
     });
 });
-
-//Route::middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class])->group(function () {
-//    Route::get('/mainmenu', [LevelController::class, 'index'])->name('mainmenu');
-//});
 
 require __DIR__.'/auth.php';
