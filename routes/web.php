@@ -155,14 +155,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/set-difficulty', [UserStats::class, 'setDifficulty']);
     Route::post('/updateLastLevel', [LevelController::class, 'updateLastLevel'])->name('updateLastLevel');
     Route::get('/user-score', [ScoreController::class, 'getUserScore'])->name('userScore');
+    Route::get('/all-courses', [CourseController::class, 'getAllCourses'])->name('allCourses');
 
     Route::middleware([AdminMiddleware::class])->group(function () {
         Route::post('/admin/update-username', [AdminController::class, 'updateUsername'])->name('admin.update-username');
         Route::post('/admin/update-password', [AdminController::class, 'updatePassword'])->name('admin.update-password');
         Route::post('/admin/make-admin', [AdminController::class, 'makeAdmin'])->name('admin.make-admin');
         Route::post('/admin/remove-admin', [AdminController::class, 'removeAdmin'])->name('admin.remove-admin');
-        Route::post('/admin/remove-level', [AdminController::class, 'removeLevel'])->name('admin.remove-level');
-        Route::post('/admin/add-level', [AdminController::class, 'addLevel'])->name('admin.add-level');
+        Route::post('/admin/delete-level', [LevelController::class, 'deleteLevel'])->name('admin.delete-level');
+        Route::post('/admin/add-level', [LevelController::class, 'addLevel'])->name('admin.add-level');
         Route::post('/admin/delete-user', [AdminController::class, 'deleteUser'])->name('admin.delete-user');
         Route::post('/admin/remove-institution', [InstitutionController::class, 'removeInstitution'])->name('admin.remove-institution');
         Route::post('/admin/add-institution', [InstitutionController::class, 'store'])->name('admin.add-institution');

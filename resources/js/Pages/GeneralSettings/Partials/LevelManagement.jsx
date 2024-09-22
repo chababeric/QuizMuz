@@ -1,7 +1,17 @@
 import MessageDisplay from "@/Components/MessageDisplay.jsx";
 import deleteIcon from "../../../../icons/delete.svg";
+import addIcon from "../../../../icons/add.svg";
+import Modal from "@/Components/Modal.jsx";
+import { useState } from "react";
 
-export default function LevelManagement({ levels, setLevels, updateLastActionTime, successMessage, errorMessage, setSuccessMessage, setErrorMessage }) {
+export default function LevelManagement({ courses, levels, setLevels, getLevels, updateLastActionTime, successMessage, errorMessage, setSuccessMessage, setErrorMessage }) {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [newLevelName, setNewLevelName] = useState('');
+    const [selectedCourse, setSelectedCourse] = useState('');
+
+    const openModal = () => setIsModalOpen(true);
+    const closeModal = () => setIsModalOpen(false);
+
     const toggleLevelAccess = async (toggledLevel) => {
         updateLastActionTime();
 
@@ -31,12 +41,106 @@ export default function LevelManagement({ levels, setLevels, updateLastActionTim
         }
     };
 
+    const addLevel = async () => {
+        updateLastActionTime();
+        closeModal();
+
+        try {
+            const response = await axios.post(route('admin.add-level'), {
+                name: newLevelName,
+                course_id: selectedCourse,
+            });
+
+            setSuccessMessage(response.data.message);
+            setErrorMessage('');
+
+            getLevels();
+        } catch (error) {
+            setErrorMessage(error.response?.data?.message || 'An error occurred');
+            setSuccessMessage('');
+        }
+
+        setNewLevelName('');
+        setSelectedCourse('');
+    };
+
     const deleteLevel = async (level) => {
-        console.log('deleteLevel', level);
+        updateLastActionTime();
+
+        if (!window.confirm(`Êtes-vous sûr de vouloir supprimer le niveau '${level.name}' ?`)) {
+            return;
+        }
+
+        try {
+            const response = await axios.post(route('admin.delete-level'), {
+                level_id: level.id,
+                name: level.name
+            });
+
+            setSuccessMessage(response.data.message);
+            setErrorMessage('');
+            // Remove the level from the list
+            setLevels(prevLevels => prevLevels.filter(lvl => lvl.id !== level.id));
+        } catch (error) {
+            if (error.response && error.response.data) {
+                setErrorMessage(error.response.data.message || 'An error occurred');
+            } else {
+                setErrorMessage('An error occurred');
+            }
+            setSuccessMessage('');
+        }
     }
 
     return (
         <section>
+            {/* Modal for adding a new level */}
+            <Modal show={isModalOpen} onClose={closeModal} maxWidth="lg">
+                <div className="p-4">
+
+                    <h2 className="text-xl font-semibold mb-4">Ajouter un niveau</h2>
+
+                    {/* Select Course */}
+                    <label className="block mb-2">Cours:</label>
+                    <select
+                        value={selectedCourse}
+                        onChange={(e) => setSelectedCourse(e.target.value)}
+                        className="mb-4 p-2 border rounded"
+                    >
+                        <option value="">-- Sélectionner un cours --</option>
+                        {courses.map((course) => (
+                            <option key={course.id} value={course.id}>
+                                {course.name}
+                            </option>
+                        ))}
+                    </select>
+
+                    {/* New Level Name */}
+                    <label className="block mb-2">Nom du niveau:</label>
+                    <input
+                        type="text"
+                        value={newLevelName}
+                        onChange={(e) => setNewLevelName(e.target.value)}
+                        className="mb-4 p-2 border rounded w-full"
+                    />
+
+                    {/* Buttons */}
+                    <div className="flex justify-end">
+                        <button
+                            onClick={addLevel}
+                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                        >
+                            Ajouter
+                        </button>
+                        <button
+                            onClick={closeModal}
+                            className="ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                        >
+                            Annuler
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
             <MessageDisplay
                 successMessage={successMessage}
                 errorMessage={errorMessage}
@@ -87,11 +191,19 @@ export default function LevelManagement({ levels, setLevels, updateLastActionTim
                                     onClick={() => deleteLevel(level)}
                                     className="px-4 py-2 rounded-md flex items-center text-white bg-gray-700 hover:bg-gray-800"
                                 >
-                                    <img src={deleteIcon} alt="Delete icon" className="w-4 h-4 mr-1" />
+                                    <img src={deleteIcon} alt="Delete icon" className="w-6 h-6 mr-1" />
                                     Supprimer
                                 </button>
                             </div>
                         ))}
+
+                        {/* Add New Level button */}
+                        <div
+                            className="p-6 border rounded-lg shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-105 bg-gray-300 cursor-pointer"
+                            onClick={openModal}
+                        >
+                            <img src={addIcon} alt="Add icon" className="w-14 h-14" />
+                        </div>
                     </div>
                 </div>
             ))}

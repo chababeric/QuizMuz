@@ -119,38 +119,6 @@ class AdminController extends Controller
         }
     }
 
-    public function removeLevel(Request $request): JsonResponse
-    {
-        $request->validate([
-            'level_id' => 'required|integer',
-            'name' => 'required|string',
-        ]);
-
-        $level = Level::find($request->level_id);
-
-        if (!$level) {
-            return response()->json(['message' => 'Le niveau \'' . $request->name . '\' n\'a pas été trouvé.'], 404);
-        } else {
-            // Delete the level ID from the levels table
-            $level->delete();
-
-            return response()->json(['message' => 'Le niveau \'' . $request->name . '\' a été supprimé avec succès.'], 200);
-        }
-    }
-
-    public function addLevel(Request $request): JsonResponse
-    {
-        $request->validate([
-            'nom' => 'required|digits:3|unique:levels,name',
-        ]);
-
-        $level = new Level();
-        $level->name = $request->nom;
-        $level->save();
-
-        return response()->json(['message' => 'Le niveau \'' . $request->nom . '\' a été ajouté avec succès.'], 200);
-    }
-
     public function deleteUser(Request $request): JsonResponse
     {
         $request->validate([

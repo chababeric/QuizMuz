@@ -73,4 +73,42 @@ class LevelController extends Controller
             return response()->json(['message' => 'Utilisateur non trouvé'], 404);
         }
     }
+
+    public function addLevel(Request $request): JsonResponse
+    {
+        $request->validate([
+            'name' => 'required|digits:3',
+            'course_id' => 'required|exists:courses,id',
+        ], [
+            'name.required' => 'Le nom du niveau est requis.',
+            'name.digits' => 'Le nom du niveau doit être un nombre de 3 chiffres.',
+            'course_id.required' => 'Le cours est requis.',
+            'course_id.exists' => 'Le cours sélectionné n\'existe pas.',
+        ]);
+
+        $level = new Level();
+        $level->name = $request->name;
+        $level->course_id = $request->course_id;
+        $level->save();
+
+        return response()->json(['message' => 'Le niveau \'' . $request->name . '\' a été ajouté avec succès.'], 200);
+    }
+
+    public function deleteLevel(Request $request): JsonResponse
+    {
+        $request->validate([
+            'level_id' => 'required|integer',
+            'name' => 'required|string',
+        ]);
+
+        $level = Level::find($request->level_id);
+
+        if (!$level) {
+            return response()->json(['message' => 'Le niveau \'' . $request->name . '\' n\'a pas été trouvé.'], 404);
+        } else {
+            $level->delete();
+
+            return response()->json(['message' => 'Le niveau \'' . $request->name . '\' a été supprimé avec succès.'], 200);
+        }
+    }
 }

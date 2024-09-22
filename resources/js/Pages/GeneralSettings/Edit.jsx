@@ -5,19 +5,30 @@ import LevelManagement from "@/Pages/GeneralSettings/Partials/LevelManagement.js
 import AdminManagement from "@/Pages/GeneralSettings/Partials/AdminManagement.jsx";
 
 export default function Edit({ auth }) {
+    const [courses, setCourses] = useState([]);
     const [levels, setLevels] = useState([]);
     const [users, setUsers] = useState([]);
     const [sortedUsers, setSortedUsers] = useState([]);
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
-    useEffect(() => {
+    const getLevels = () => {
         axios.get('/api/levels')
+        .then(response => {
+            setLevels(response.data);
+        })
+        .catch(error => {
+            console.error('Error fetching levels:', error);
+        });
+    };
+
+    useEffect(() => {
+        axios.get(route('allCourses'))
             .then(response => {
-                setLevels(response.data);
+                setCourses(response.data);
             })
             .catch(error => {
-                console.error('Error fetching levels:', error);
+                console.error('Error fetching courses:', error);
             });
 
         axios.get('/api/users')
@@ -27,6 +38,8 @@ export default function Edit({ auth }) {
             .catch(error => {
                 console.error('Error fetching users:', error);
             });
+
+        getLevels();
     }, []);
 
     useEffect(() => {
@@ -57,11 +70,13 @@ export default function Edit({ auth }) {
                         <LevelManagement
                             levels={levels}
                             setLevels={setLevels}
+                            getLevels={getLevels}
                             updateLastActionTime={updateLastActionTime}
                             successMessage={successMessage}
                             errorMessage={errorMessage}
                             setSuccessMessage={setSuccessMessage}
                             setErrorMessage={setErrorMessage}
+                            courses={courses}
                         />
                     </div>
 
@@ -90,6 +105,11 @@ export default function Edit({ auth }) {
 
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
                         <h1 className="text-2xl font-semibold text-gray-900 mb-4">Réinitialisation des scores</h1>
+                        {/*<DeleteUserForm className="max-w-xl" />*/}
+                    </div>
+
+                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
+                        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des cours</h1>
                         {/*<DeleteUserForm className="max-w-xl" />*/}
                     </div>
                 </div>
