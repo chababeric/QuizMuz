@@ -107,12 +107,10 @@ export default function Dashboard({ auth }) {
                                                 <thead className="border-b font-medium dark:border-neutral-500">
                                                 <tr>
                                                     <th scope="col" className="px-6 py-4">#</th>
-                                                    <th scope="col" className="px-6 py-4">Nom</th>
-                                                    <th scope="col" className="px-6 py-4">Prénom</th>
-                                                    <th scope="col" className="px-6 py-4">Nom d'utilisateur</th>
+                                                    <th scope="col" className="px-6 py-4">Utilisateur</th>
                                                     <th scope="col" className="px-6 py-4">Institution</th>
-                                                    <th scope="col" className="px-6 py-4">Nombre de Pratiques</th>
-                                                    <th scope="col" className="px-6 py-4">Nombre de parties Quiz</th>
+                                                    <th scope="col" className="px-6 py-4">Pratique</th>
+                                                    <th scope="col" className="px-6 py-4">Quiz</th>
                                                     <th scope="col" className="px-6 py-4">Dernière connexion</th>
                                                     <th scope="col" className="px-6 py-4">Statut</th>
                                                 </tr>
@@ -121,9 +119,13 @@ export default function Dashboard({ auth }) {
                                                 {sortedUsers.map((item, rowIndex) => (
                                                     <tr key={rowIndex} className="border-b dark:border-neutral-500">
                                                         <td className="whitespace-nowrap px-6 py-4 font-medium">{rowIndex + 1}</td>
-                                                        <td className="whitespace-nowrap px-6 py-4">{item.last_name}</td>
-                                                        <td className="whitespace-nowrap px-6 py-4">{item.first_name}</td>
-                                                        <td className="whitespace-nowrap px-6 py-4">{item.username}</td>
+                                                        <td className="whitespace-nowrap px-6 py-4">
+                                                            <span
+                                                                className="font-semibold text-gray-900">{item.last_name}, {item.first_name}</span>
+                                                            <br/>
+                                                            <span
+                                                                className="text-sm text-gray-600">{item.username}</span>
+                                                        </td>
                                                         <td className="whitespace-nowrap px-6 py-4">{item.institution_name}</td>
                                                         <td className="whitespace-nowrap px-6 py-4">{item.nb_practice}</td>
                                                         <td className="whitespace-nowrap px-6 py-4">{item.nb_game_solo}</td>
