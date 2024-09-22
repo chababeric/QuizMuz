@@ -94,7 +94,7 @@ export default function LevelManagement({ courses, levels, setLevels, getLevels,
     return (
         <section>
             {/* Modal for adding a new level */}
-            <Modal show={isModalOpen} onClose={closeModal} maxWidth="lg">
+            <Modal show={isModalOpen} onClose={closeModal}>
                 <div className="p-4">
 
                     <h2 className="text-xl font-semibold mb-4">Ajouter un niveau</h2>
@@ -104,7 +104,7 @@ export default function LevelManagement({ courses, levels, setLevels, getLevels,
                     <select
                         value={selectedCourse}
                         onChange={(e) => setSelectedCourse(e.target.value)}
-                        className="mb-4 p-2 border rounded"
+                        className="mb-4 p-2 border rounded w-full"
                     >
                         <option value="">-- Sélectionner un cours --</option>
                         {courses.map((course) => (

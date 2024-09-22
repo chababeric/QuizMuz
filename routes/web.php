@@ -87,11 +87,11 @@ Route::middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastAct
     Route::get('/mainmenu/{courseId}', [LevelController::class, 'index'])->name('mainmenu');
 });
 
-Route::middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class])->group(function () {
-    Route::get('/menufma', function () {
-        return Inertia::render('MenuFMA');
-    })->name('menufma');
-});
+//Route::middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class])->group(function () {
+//    Route::get('/menufma', function () {
+//        return Inertia::render('MenuFMA');
+//    })->name('menufma');
+//});
 
 Route::middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class])->group(function () {
     Route::get('/support', [SupportController::class, 'index'])->name('support');

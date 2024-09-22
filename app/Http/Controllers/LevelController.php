@@ -21,7 +21,7 @@ class LevelController extends Controller
             return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
         }
         elseif ($courseId == 2) {
-            return Inertia::render('MenuHIST');
+            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
         }
         else if ($courseId == 3) {
             return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
