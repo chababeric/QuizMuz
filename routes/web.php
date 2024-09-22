@@ -21,10 +21,28 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\LevelController;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-    ]);
+    $user = auth()->user();
+    if (!$user) {
+        return Inertia::render('Welcome', [
+            'canLogin' => Route::has('login'),
+            'canRegister' => Route::has('register'),
+            'auth' => [
+                'user' => null,
+                'isAdmin' => false,
+            ],
+        ]);
+    }
+    else {
+        $isAdmin = $user->administrator()->exists();
+        return Inertia::render('Welcome', [
+            'canLogin' => Route::has('login'),
+            'canRegister' => Route::has('register'),
+            'auth' => [
+                'user' => $user,
+                'isAdmin' => $isAdmin,
+            ],
+        ]);
+    }
 });
 
 Route::get('welcome', function () {
@@ -43,11 +61,11 @@ Route::get('welcome', function () {
 
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class])->name('dashboard');
+})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('dashboard');
 
-Route::get('profile/edit', function () {
-    return Inertia::render('Profile/Edit');
-})->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class])->name('profile.edit');
+Route::get('general/edit', function () {
+    return Inertia::render('GeneralSettings/Edit');
+})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('general.edit');
 
 Route::get('login', [LoginUserController::class, 'create'])->name('login');
 Route::post('login', [LoginUserController::class, 'store']);

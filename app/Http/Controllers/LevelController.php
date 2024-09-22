@@ -33,7 +33,8 @@ class LevelController extends Controller
 
     public function getAllLevels(): JsonResponse
     {
-        $levels = Level::all();
+        $levels = Level::with('course')->get();
+
         return response()->json($levels);
     }
 
