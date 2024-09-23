@@ -138,17 +138,17 @@ Route::get('highscores', function (Illuminate\Http\Request $request) {
 })->name('highscores')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class]);
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::post('/update-last-action-time', [QuizSoloController::class, 'updateLastActionTime']);
+    Route::post('/update-last-action-time', [QuizSoloController::class, 'updateLastActionTime'])->name('updateLastActionTime');
 
-    Route::get('/institutions', [InstitutionController::class, 'index']);
+    Route::get('/institutions', [InstitutionController::class, 'index'])->name('allInstitutions');
     Route::post('/update-score', [ScoreController::class, 'store']);
-    Route::get('/scores', [ScoreController::class, 'getAllScores']);
+    Route::get('/scores', [ScoreController::class, 'getAllScores'])->name('allScores');
     Route::get('/all-scores', [ScoreController::class, 'index']);
     Route::get('/api/pieces/level/{level_id}', [PieceController::class, 'getPiecesByLevel']);
     Route::get('/api/chords/level/{level_id}', [ChordController::class, 'getChordsByLevel']);
     Route::get('/api/pieces', [PieceController::class, 'getPiecesById']);
-    Route::get('/api/users', [AdminController::class, 'getAllUsers']);
-    Route::get('/api/levels', [LevelController::class, 'getAllLevels']);
+    Route::get('/api/users', [AdminController::class, 'getAllUsers'])->name('allUsers');
+    Route::get('/api/levels', [LevelController::class, 'getAllLevels'])->name('allLevels');
     Route::get('/api/all-pieces', [PieceController::class, 'getAllPieces']);
     Route::get('/api/pieces-in-reserve', [PieceController::class, 'getPiecesInReserve']);
     Route::post('/increment-total-pieces-played', [UserStats::class, 'incrementTotalPiecesPlayed']);
@@ -165,7 +165,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/admin/delete-level', [LevelController::class, 'deleteLevel'])->name('admin.delete-level');
         Route::post('/admin/add-level', [LevelController::class, 'addLevel'])->name('admin.add-level');
         Route::post('/admin/delete-user', [AdminController::class, 'deleteUser'])->name('admin.delete-user');
-        Route::post('/admin/remove-institution', [InstitutionController::class, 'removeInstitution'])->name('admin.remove-institution');
+        Route::post('/admin/remove-institution', [InstitutionController::class, 'removeInstitution'])->name('admin.delete-institution');
         Route::post('/admin/add-institution', [InstitutionController::class, 'store'])->name('admin.add-institution');
         Route::post('/admin/toggle-level-access', [LevelController::class, 'toggleLevelAccess'])->name('admin.toggle-level-access');
         Route::post('/admin/reset-scores', [ScoreController::class, 'resetScores'])->name('admin.reset-scores');

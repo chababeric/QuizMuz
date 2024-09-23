@@ -12,7 +12,7 @@ class ScoreController extends Controller
     {
         $scores = Score::with('user')
             ->join('users', 'scores.user_id', '=', 'users.id')
-            ->orderBy('users.username', 'asc')
+            ->orderBy('score', 'desc')
             ->select('scores.*') // Select scores columns to avoid ambiguity
             ->get();
 

@@ -3,17 +3,21 @@ import { Head } from '@inertiajs/react';
 import {useEffect, useState} from "react";
 import LevelManagement from "@/Pages/GeneralSettings/Partials/LevelManagement.jsx";
 import AdminManagement from "@/Pages/GeneralSettings/Partials/AdminManagement.jsx";
+import InstitutionManagement from "@/Pages/GeneralSettings/Partials/InstitutionManagement.jsx";
+import ScoresReset from "@/Pages/GeneralSettings/Partials/ScoresReset.jsx";
 
 export default function Edit({ auth }) {
+    const [institutions, setInstitutions] = useState([]);
     const [courses, setCourses] = useState([]);
     const [levels, setLevels] = useState([]);
     const [users, setUsers] = useState([]);
+    const [scores, setScores] = useState([]);
     const [sortedUsers, setSortedUsers] = useState([]);
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
     const getLevels = () => {
-        axios.get('/api/levels')
+        axios.get(route('allLevels'))
         .then(response => {
             setLevels(response.data);
         })
@@ -22,7 +26,17 @@ export default function Edit({ auth }) {
         });
     };
 
-    useEffect(() => {
+    const getInstitutions = () => {
+        axios.get(route('allInstitutions'))
+        .then(response => {
+            setInstitutions(response.data);
+        })
+        .catch(error => {
+            console.error('Error fetching institutions:', error);
+        });
+    }
+
+    const getCourses = () => {
         axios.get(route('allCourses'))
             .then(response => {
                 setCourses(response.data);
@@ -30,16 +44,33 @@ export default function Edit({ auth }) {
             .catch(error => {
                 console.error('Error fetching courses:', error);
             });
+    }
 
-        axios.get('/api/users')
+    const getUsers = () => {
+        axios.get(route('allUsers'))
             .then(response => {
                 setUsers(response.data);
             })
             .catch(error => {
                 console.error('Error fetching users:', error);
             });
+    }
+    const getScores = () => {
+        axios.get(route('allScores'))
+            .then(response => {
+                setScores(response.data);
+            })
+            .catch(error => {
+                console.error('Error fetching scores:', error);
+            });
+    }
 
+    useEffect(() => {
+        getUsers();
         getLevels();
+        getCourses();
+        getInstitutions();
+        getScores();
     }, []);
 
     useEffect(() => {
@@ -49,7 +80,7 @@ export default function Edit({ auth }) {
     }, [users]);
 
     const updateLastActionTime = () => {
-        axios.post('/update-last-action-time')
+        axios.post(route('updateLastActionTime'))
             .then(response => {})
             .catch(error => {
                 console.error('Error updating last action time:', error);
@@ -69,7 +100,6 @@ export default function Edit({ auth }) {
                         <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des niveaux</h1>
                         <LevelManagement
                             levels={levels}
-                            setLevels={setLevels}
                             getLevels={getLevels}
                             updateLastActionTime={updateLastActionTime}
                             successMessage={successMessage}
@@ -84,7 +114,7 @@ export default function Edit({ auth }) {
                         <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des admins</h1>
                         <AdminManagement
                             users={sortedUsers}
-                            setUsers={setUsers}
+                            getUsers={getUsers}
                             updateLastActionTime={updateLastActionTime}
                             successMessage={successMessage}
                             setSuccessMessage={setSuccessMessage}
@@ -94,18 +124,28 @@ export default function Edit({ auth }) {
                     </div>
 
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des niveaux</h1>
-                        {/*<DeleteUserForm className="max-w-xl" />*/}
-                    </div>
-
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
                         <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des institutions</h1>
-                        {/*<DeleteUserForm className="max-w-xl" />*/}
+                        <InstitutionManagement
+                            institutions={institutions}
+                            getInstitutions={getInstitutions}
+                            updateLastActionTime={updateLastActionTime}
+                            successMessage={successMessage}
+                            setSuccessMessage={setSuccessMessage}
+                            errorMessage={errorMessage}
+                            setErrorMessage={setErrorMessage}
+                        />
                     </div>
 
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Réinitialisation des scores</h1>
-                        {/*<DeleteUserForm className="max-w-xl" />*/}
+                        <ScoresReset
+                            scores={scores}
+                            getScores={getScores}
+                            updateLastActionTime={updateLastActionTime}
+                            successMessage={successMessage}
+                            setSuccessMessage={setSuccessMessage}
+                            errorMessage={errorMessage}
+                            setErrorMessage={setErrorMessage}
+                        />
                     </div>
 
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">

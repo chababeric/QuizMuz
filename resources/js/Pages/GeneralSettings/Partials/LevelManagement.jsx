@@ -4,13 +4,26 @@ import addIcon from "../../../../icons/add.svg";
 import Modal from "@/Components/Modal.jsx";
 import { useState } from "react";
 
-export default function LevelManagement({ courses, levels, setLevels, getLevels, updateLastActionTime, successMessage, errorMessage, setSuccessMessage, setErrorMessage }) {
+export default function LevelManagement({ courses, levels, getLevels, updateLastActionTime, successMessage, errorMessage, setSuccessMessage, setErrorMessage }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newLevelName, setNewLevelName] = useState('');
     const [selectedCourse, setSelectedCourse] = useState('');
 
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [levelToDelete, setLevelToDelete] = useState(null); // Track the level to be deleted
+
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
+
+    const openDeleteModal = (level) => {
+        setLevelToDelete(level);
+        setIsDeleteModalOpen(true);
+    };
+
+    const closeDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+        setLevelToDelete(null);
+    };
 
     const toggleLevelAccess = async (toggledLevel) => {
         updateLastActionTime();
@@ -23,20 +36,10 @@ export default function LevelManagement({ courses, levels, setLevels, getLevels,
 
             setSuccessMessage(response.data.message);
             setErrorMessage('');
-            // Update the levels state locally to reflect the change without a page refresh
-            setLevels(prevLevels =>
-                prevLevels.map(level =>
-                    level.id === toggledLevel.id
-                        ? { ...level, is_enabled: !level.is_enabled } // Toggle the is_enabled value
-                        : level
-                )
-            );
+
+            getLevels();
         } catch (error) {
-            if (error.response && error.response.data) {
-                setErrorMessage(error.response.data.message || 'An error occurred');
-            } else {
-                setErrorMessage('An error occurred');
-            }
+            setErrorMessage(error.response?.data?.message || 'An error occurred');
             setSuccessMessage('');
         }
     };
@@ -64,39 +67,34 @@ export default function LevelManagement({ courses, levels, setLevels, getLevels,
         setSelectedCourse('');
     };
 
-    const deleteLevel = async (level) => {
-        updateLastActionTime();
+    const deleteLevel = async () => {
+        if (!levelToDelete) return;
 
-        if (!window.confirm(`Êtes-vous sûr de vouloir supprimer le niveau '${level.name}' ?`)) {
-            return;
-        }
+        updateLastActionTime();
 
         try {
             const response = await axios.post(route('admin.delete-level'), {
-                level_id: level.id,
-                name: level.name
+                level_id: levelToDelete.id,
+                name: levelToDelete.name
             });
 
             setSuccessMessage(response.data.message);
             setErrorMessage('');
-            // Remove the level from the list
-            setLevels(prevLevels => prevLevels.filter(lvl => lvl.id !== level.id));
+
+            getLevels();
         } catch (error) {
-            if (error.response && error.response.data) {
-                setErrorMessage(error.response.data.message || 'An error occurred');
-            } else {
-                setErrorMessage('An error occurred');
-            }
+            setErrorMessage(error.response?.data?.message || 'An error occurred');
             setSuccessMessage('');
         }
-    }
+
+        closeDeleteModal(); // Close the modal after deletion
+    };
 
     return (
         <section>
             {/* Modal for adding a new level */}
             <Modal show={isModalOpen} onClose={closeModal}>
                 <div className="p-4">
-
                     <h2 className="text-xl font-semibold mb-4">Ajouter un niveau</h2>
 
                     {/* Select Course */}
@@ -141,6 +139,30 @@ export default function LevelManagement({ courses, levels, setLevels, getLevels,
                 </div>
             </Modal>
 
+            {/* Modal for confirming delete */}
+            <Modal show={isDeleteModalOpen} onClose={closeDeleteModal}>
+                <div className="p-4">
+                    <h2 className="text-xl font-semibold mb-4">Confirmer la suppression</h2>
+                    <p className="mb-4">Êtes-vous sûr de vouloir supprimer le niveau '{levelToDelete?.name}' ?</p>
+
+                    {/* Buttons */}
+                    <div className="flex justify-end">
+                        <button
+                            onClick={deleteLevel}
+                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                        >
+                            Supprimer
+                        </button>
+                        <button
+                            onClick={closeDeleteModal}
+                            className="ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                        >
+                            Annuler
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
             <MessageDisplay
                 successMessage={successMessage}
                 errorMessage={errorMessage}
@@ -150,7 +172,6 @@ export default function LevelManagement({ courses, levels, setLevels, getLevels,
 
             {/* Group levels by course */}
             {levels.reduce((acc, level) => {
-                // Group levels by course_id
                 const courseIndex = acc.findIndex(course => course.course_id === level.course_id);
                 if (courseIndex === -1) {
                     acc.push({
@@ -164,10 +185,8 @@ export default function LevelManagement({ courses, levels, setLevels, getLevels,
                 return acc;
             }, []).map((course, courseIndex) => (
                 <div key={courseIndex} className="mb-8">
-                    {/* Course Name */}
                     <h2 className="text-xl font-semibold mb-4">{course.course_name}</h2>
 
-                    {/* Levels for the course */}
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         {course.levels.map((level, levelIndex) => (
                             <div
@@ -188,7 +207,7 @@ export default function LevelManagement({ courses, levels, setLevels, getLevels,
                                     {level.is_enabled ? "Désactiver l'accès" : "Activer l'accès"}
                                 </button>
                                 <button
-                                    onClick={() => deleteLevel(level)}
+                                    onClick={() => openDeleteModal(level)}
                                     className="px-4 py-2 rounded-md flex items-center text-white bg-gray-700 hover:bg-gray-800"
                                 >
                                     <img src={deleteIcon} alt="Delete icon" className="w-6 h-6 mr-1" />
