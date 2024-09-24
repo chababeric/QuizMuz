@@ -64,7 +64,12 @@ Route::get('dashboard', function () {
 })->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('dashboard');
 
 Route::get('general/edit', function () {
-    return Inertia::render('GeneralSettings/Edit');
+    $institution = auth()->user()->institution()->first()->name;
+    return Inertia::render('GeneralSettings/Edit',
+        [
+            'institution' => $institution,
+        ]
+    );
 })->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('general.edit');
 
 Route::get('login', [LoginUserController::class, 'create'])->name('login');

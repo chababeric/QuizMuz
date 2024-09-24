@@ -4,7 +4,7 @@ import addIcon from "../../../../icons/add.svg";
 import Modal from "@/Components/Modal.jsx";
 import { useState } from "react";
 
-export default function LevelManagement({ courses, levels, getLevels, updateLastActionTime, successMessage, errorMessage, setSuccessMessage, setErrorMessage }) {
+export default function LevelManagement({ courses, levels, getLevels, updateLastActionTime, successMessage, errorMessage, setSuccessMessage, setErrorMessage, selectedInstitution }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newLevelName, setNewLevelName] = useState('');
     const [selectedCourse, setSelectedCourse] = useState('');
@@ -144,7 +144,7 @@ export default function LevelManagement({ courses, levels, getLevels, updateLast
             <Modal show={isDeleteModalOpen} onClose={closeDeleteModal}>
                 <div className="p-4">
                     <h2 className="text-xl font-semibold mb-4">Confirmer la suppression</h2>
-                    <p className="mb-4">Êtes-vous sûr de vouloir supprimer le niveau '{levelToDelete?.name}' ?</p>
+                    <p className="mb-4">Êtes-vous sûr de vouloir supprimer le niveau <strong>{levelToDelete?.name}</strong> du cours: <strong>{levelToDelete?.course.name}</strong>?</p>
 
                     {/* Buttons */}
                     <div className="flex justify-end">

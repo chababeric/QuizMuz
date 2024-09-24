@@ -7,7 +7,7 @@ import InstitutionManagement from "@/Pages/GeneralSettings/Partials/InstitutionM
 import ScoresReset from "@/Pages/GeneralSettings/Partials/ScoresReset.jsx";
 import CourseManagement from "@/Pages/GeneralSettings/Partials/CourseManagement.jsx";
 
-export default function Edit({ auth }) {
+export default function Edit({ auth, institution }) {
     const [institutions, setInstitutions] = useState([]);
     const [courses, setCourses] = useState([]);
     const [levels, setLevels] = useState([]);
@@ -16,6 +16,7 @@ export default function Edit({ auth }) {
     const [sortedUsers, setSortedUsers] = useState([]);
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [selectedInstitution, setSelectedInstitution] = useState(institution);
 
     const getLevels = () => {
         axios.get(route('allLevels'))
@@ -73,7 +74,7 @@ export default function Edit({ auth }) {
         getCourses();
         getInstitutions();
         getScores();
-    }, []);
+    }, [selectedInstitution]);
 
     useEffect(() => {
         // Sort users alphabetically by last name
@@ -98,6 +99,37 @@ export default function Edit({ auth }) {
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+                    {/* Institution Select */}
+                    <div className="mb-6">
+                        <label htmlFor="institution" className="block text-xl font-medium text-black">
+                            Choisir une institution
+                        </label>
+                        <select
+                            id="institution"
+                            name="institution"
+                            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-base rounded-md"
+                            onChange={(e) => {
+                                const selectedId = Number(e.target.value);
+                                const selectedInst = institutions.find(inst => inst.id === selectedId);
+                                setSelectedInstitution(selectedInst ? selectedInst.name : institution);
+                            }}
+                        >
+                            {/* Default option: user's institution */}
+                            <option value={auth.user.institution_id}>
+                                {institution}
+                            </option>
+
+                            {/* Filter out user's institution from the list */}
+                            {institutions
+                                .filter(inst => inst.id !== auth.user.institution_id)
+                                .map(institution => (
+                                    <option key={institution.id} value={institution.id}>
+                                        {institution.name}
+                                    </option>
+                                ))}
+                        </select>
+                    </div>
+
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
                         <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des institutions</h1>
                         <InstitutionManagement
@@ -112,7 +144,7 @@ export default function Edit({ auth }) {
                     </div>
 
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des cours</h1>
+                        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des cours - {selectedInstitution}</h1>
                         <CourseManagement
                             courses={courses}
                             getCourses={getCourses}
@@ -121,11 +153,12 @@ export default function Edit({ auth }) {
                             errorMessage={errorMessage}
                             setSuccessMessage={setSuccessMessage}
                             setErrorMessage={setErrorMessage}
+                            selectedInstitution={selectedInstitution}
                         />
                     </div>
 
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des niveaux</h1>
+                        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des niveaux - {selectedInstitution}</h1>
                         <LevelManagement
                             levels={levels}
                             getLevels={getLevels}
@@ -135,11 +168,12 @@ export default function Edit({ auth }) {
                             setSuccessMessage={setSuccessMessage}
                             setErrorMessage={setErrorMessage}
                             courses={courses}
+                            selectedInstitution={selectedInstitution}
                         />
                     </div>
 
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des administrateurs</h1>
+                        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des administrateurs - {selectedInstitution}</h1>
                         <AdminManagement
                             users={sortedUsers}
                             getUsers={getUsers}
@@ -148,6 +182,7 @@ export default function Edit({ auth }) {
                             setSuccessMessage={setSuccessMessage}
                             errorMessage={errorMessage}
                             setErrorMessage={setErrorMessage}
+                            selectedInstitution={selectedInstitution}
                         />
                     </div>
 
@@ -160,6 +195,7 @@ export default function Edit({ auth }) {
                             setSuccessMessage={setSuccessMessage}
                             errorMessage={errorMessage}
                             setErrorMessage={setErrorMessage}
+                            selectedInstitution={selectedInstitution}
                         />
                     </div>
                 </div>

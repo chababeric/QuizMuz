@@ -3,7 +3,7 @@ import Modal from "@/Components/Modal.jsx";
 import MessageDisplay from "@/Components/MessageDisplay.jsx";
 import axios from 'axios';
 
-export default function ScoresReset({ scores, getScores, updateLastActionTime, successMessage, setSuccessMessage, errorMessage, setErrorMessage }) {
+export default function ScoresReset({ scores, getScores, updateLastActionTime, successMessage, setSuccessMessage, errorMessage, setErrorMessage, selectedInstitution }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const openModal = () => setIsModalOpen(true);
@@ -28,7 +28,7 @@ export default function ScoresReset({ scores, getScores, updateLastActionTime, s
     return (
         <section>
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-semibold text-gray-900 max-w-xs">Réinitialisation des scores</h2>
+                <h2 className="text-2xl font-semibold text-gray-900 max-w-xs">Réinitialisation des scores - {selectedInstitution}</h2>
                 <button
                     onClick={() => setIsModalOpen(true)}
                     className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition duration-200 ml-4"
@@ -66,7 +66,8 @@ export default function ScoresReset({ scores, getScores, updateLastActionTime, s
                 <Modal show={isModalOpen}>
                     <div className="p-6">
                         <h2 className="text-lg font-bold mb-4">Confirmation</h2>
-                        <p>Êtes-vous sûr de vouloir réinitialiser tous les scores ? Cette action est irréversible.</p>
+                        <p>Êtes-vous sûr de vouloir <strong>réinitialiser tous les scores</strong> de l'institution : <strong>{selectedInstitution}</strong>?</p>
+                        <p className="text-red-500 mt-6">Cette action est irréversible.</p>
                         <div className="mt-6 flex justify-end space-x-4">
                             <button
                                 className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"

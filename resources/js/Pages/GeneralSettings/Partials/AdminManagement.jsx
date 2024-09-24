@@ -2,7 +2,7 @@ import { useState } from "react";
 import MessageDisplay from "@/Components/MessageDisplay.jsx";
 import Modal from "@/Components/Modal.jsx";
 
-export default function AdminManagement({users, getUsers, updateLastActionTime, successMessage, setSuccessMessage, errorMessage, setErrorMessage}) {
+export default function AdminManagement({users, getUsers, updateLastActionTime, successMessage, setSuccessMessage, errorMessage, setErrorMessage, selectedInstitution}) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalAction, setModalAction] = useState(null); // 'promote' or 'demote'
     const [selectedUser, setSelectedUser] = useState(null); // Store user data for modal confirmation
@@ -81,7 +81,7 @@ export default function AdminManagement({users, getUsers, updateLastActionTime, 
                         {modalAction === 'promote' ? 'Promouvoir' : 'Rétrograder'} {selectedUser?.first_name} {selectedUser?.last_name}
                     </h2>
                     <p>
-                        Êtes-vous sûr de vouloir {modalAction === 'promote' ? "donner les droits d'administrateur à" : "retirer les droits d'administrateur de"} {selectedUser?.first_name} {selectedUser?.last_name} ?
+                        Êtes-vous sûr de vouloir {modalAction === 'promote' ? "donner les droits d'administrateur à" : "retirer les droits d'administrateur de"} <strong>{selectedUser?.first_name} {selectedUser?.last_name}</strong> du <strong>{selectedInstitution}</strong> ?
                     </p>
                     <div className="flex justify-end mt-4">
                         <button

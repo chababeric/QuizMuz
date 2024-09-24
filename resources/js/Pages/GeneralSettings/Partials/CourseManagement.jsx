@@ -4,7 +4,7 @@ import { useState } from "react";
 import deleteIcon from "../../../../icons/delete.svg";
 import addIcon from "../../../../icons/add.svg";
 
-export default function CourseManagement({ courses, getCourses, updateLastActionTime, successMessage, errorMessage, setSuccessMessage, setErrorMessage }) {
+export default function CourseManagement({ courses, getCourses, updateLastActionTime, successMessage, errorMessage, setSuccessMessage, setErrorMessage, selectedInstitution }) {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [newCourseName, setNewCourseName] = useState('');
@@ -65,7 +65,7 @@ export default function CourseManagement({ courses, getCourses, updateLastAction
         <section>
             <Modal show={isAddModalOpen} close={closeAddModal}>
                 <div className="p-4">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Ajouter un nouveau cours</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Ajouter un nouveau cours à l'institution: {selectedInstitution}</h2>
 
                     <label className="block mb-2">Nom du cours:</label>
                     <input
@@ -95,7 +95,7 @@ export default function CourseManagement({ courses, getCourses, updateLastAction
             <Modal show={isDeleteModalOpen} close={closeDeleteModal}>
                 <div className="p-4">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Confirmer la suppression</h2>
-                    <p>Êtes-vous sûr de vouloir supprimer le cours <strong>{currentCourseToDelete.name}</strong>?</p>
+                    <p>Êtes-vous sûr de vouloir supprimer le cours <strong>{currentCourseToDelete.name}</strong> de l'institution: <strong>{selectedInstitution}</strong>?</p>
 
                     <div className="flex justify-end mt-4">
                         <button
