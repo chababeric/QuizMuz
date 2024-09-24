@@ -167,6 +167,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/admin/delete-user', [AdminController::class, 'deleteUser'])->name('admin.delete-user');
         Route::post('/admin/remove-institution', [InstitutionController::class, 'removeInstitution'])->name('admin.delete-institution');
         Route::post('/admin/add-institution', [InstitutionController::class, 'store'])->name('admin.add-institution');
+        Route::post('/admin/add-course', [CourseController::class, 'store'])->name('admin.add-course');
+        Route::post('/admin/delete-course', [CourseController::class, 'destroy'])->name('admin.delete-course');
         Route::post('/admin/toggle-level-access', [LevelController::class, 'toggleLevelAccess'])->name('admin.toggle-level-access');
         Route::post('/admin/reset-scores', [ScoreController::class, 'resetScores'])->name('admin.reset-scores');
         Route::put('/admin/update-piece/{id}', [PieceController::class, 'update'])->name('admin.update-piece');

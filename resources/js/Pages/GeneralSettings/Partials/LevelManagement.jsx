@@ -8,11 +8,13 @@ export default function LevelManagement({ courses, levels, getLevels, updateLast
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newLevelName, setNewLevelName] = useState('');
     const [selectedCourse, setSelectedCourse] = useState('');
-
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [levelToDelete, setLevelToDelete] = useState(null); // Track the level to be deleted
 
-    const openModal = () => setIsModalOpen(true);
+    const openModal = (course = '') => {
+        setSelectedCourse(course);  // Set the default course
+        setIsModalOpen(true);
+    };
     const closeModal = () => setIsModalOpen(false);
 
     const openDeleteModal = (level) => {
@@ -104,7 +106,6 @@ export default function LevelManagement({ courses, levels, getLevels, updateLast
                         onChange={(e) => setSelectedCourse(e.target.value)}
                         className="mb-4 p-2 border rounded w-full"
                     >
-                        <option value="">-- Sélectionner un cours --</option>
                         {courses.map((course) => (
                             <option key={course.id} value={course.id}>
                                 {course.name}
@@ -219,7 +220,7 @@ export default function LevelManagement({ courses, levels, getLevels, updateLast
                         {/* Add New Level button */}
                         <div
                             className="p-6 border rounded-lg shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-105 bg-gray-300 cursor-pointer"
-                            onClick={openModal}
+                            onClick={() => openModal(course.course_id)} // Pass the course id here
                         >
                             <img src={addIcon} alt="Add icon" className="w-14 h-14" />
                         </div>

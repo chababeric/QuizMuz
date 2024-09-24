@@ -67,7 +67,7 @@ export default function InstitutionManagement({ institutions, getInstitutions, u
             {/* Modal for adding a new institution */}
             <Modal show={isAddModalOpen} onClose={closeAddModal}>
                 <div className="p-4">
-                    <h2 className="text-xl font-semibold mb-4">Ajouter une institution</h2>
+                    <h2 className="text-xl font-semibold mb-4">Ajouter une nouvelle institution</h2>
 
                     {/* New Institution Name */}
                     <label className="block mb-2">Nom de l'institution:</label>

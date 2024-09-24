@@ -5,6 +5,7 @@ import LevelManagement from "@/Pages/GeneralSettings/Partials/LevelManagement.js
 import AdminManagement from "@/Pages/GeneralSettings/Partials/AdminManagement.jsx";
 import InstitutionManagement from "@/Pages/GeneralSettings/Partials/InstitutionManagement.jsx";
 import ScoresReset from "@/Pages/GeneralSettings/Partials/ScoresReset.jsx";
+import CourseManagement from "@/Pages/GeneralSettings/Partials/CourseManagement.jsx";
 
 export default function Edit({ auth }) {
     const [institutions, setInstitutions] = useState([]);
@@ -34,7 +35,7 @@ export default function Edit({ auth }) {
         .catch(error => {
             console.error('Error fetching institutions:', error);
         });
-    }
+    };
 
     const getCourses = () => {
         axios.get(route('allCourses'))
@@ -44,7 +45,7 @@ export default function Edit({ auth }) {
             .catch(error => {
                 console.error('Error fetching courses:', error);
             });
-    }
+    };
 
     const getUsers = () => {
         axios.get(route('allUsers'))
@@ -54,7 +55,8 @@ export default function Edit({ auth }) {
             .catch(error => {
                 console.error('Error fetching users:', error);
             });
-    }
+    };
+
     const getScores = () => {
         axios.get(route('allScores'))
             .then(response => {
@@ -63,7 +65,7 @@ export default function Edit({ auth }) {
             .catch(error => {
                 console.error('Error fetching scores:', error);
             });
-    }
+    };
 
     useEffect(() => {
         getUsers();
@@ -97,6 +99,32 @@ export default function Edit({ auth }) {
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
+                        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des institutions</h1>
+                        <InstitutionManagement
+                            institutions={institutions}
+                            getInstitutions={getInstitutions}
+                            updateLastActionTime={updateLastActionTime}
+                            successMessage={successMessage}
+                            setSuccessMessage={setSuccessMessage}
+                            errorMessage={errorMessage}
+                            setErrorMessage={setErrorMessage}
+                        />
+                    </div>
+
+                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
+                        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des cours</h1>
+                        <CourseManagement
+                            courses={courses}
+                            getCourses={getCourses}
+                            updateLastActionTime={updateLastActionTime}
+                            successMessage={successMessage}
+                            errorMessage={errorMessage}
+                            setSuccessMessage={setSuccessMessage}
+                            setErrorMessage={setErrorMessage}
+                        />
+                    </div>
+
+                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
                         <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des niveaux</h1>
                         <LevelManagement
                             levels={levels}
@@ -111,23 +139,10 @@ export default function Edit({ auth }) {
                     </div>
 
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des admins</h1>
+                        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des administrateurs</h1>
                         <AdminManagement
                             users={sortedUsers}
                             getUsers={getUsers}
-                            updateLastActionTime={updateLastActionTime}
-                            successMessage={successMessage}
-                            setSuccessMessage={setSuccessMessage}
-                            errorMessage={errorMessage}
-                            setErrorMessage={setErrorMessage}
-                        />
-                    </div>
-
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des institutions</h1>
-                        <InstitutionManagement
-                            institutions={institutions}
-                            getInstitutions={getInstitutions}
                             updateLastActionTime={updateLastActionTime}
                             successMessage={successMessage}
                             setSuccessMessage={setSuccessMessage}
@@ -146,11 +161,6 @@ export default function Edit({ auth }) {
                             errorMessage={errorMessage}
                             setErrorMessage={setErrorMessage}
                         />
-                    </div>
-
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                        <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des cours</h1>
-                        {/*<DeleteUserForm className="max-w-xl" />*/}
                     </div>
                 </div>
             </div>
