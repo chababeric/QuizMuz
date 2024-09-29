@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
 //            LevelSeeder::class,
 //            PiecesSeeder::class,
 //            InstitutionSeeder::class,
-//            AdminKeySeeder::class
+//            AdminKeySeeder::class,
             CourseSeeder::class
         ]);
     }

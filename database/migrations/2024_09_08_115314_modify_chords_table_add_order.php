@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('chords', function (Blueprint $table) {
-            $table->unsignedInteger('order');
+            $table->unsignedInteger('order')->default(0);
             $table->index('order');
         });
     }
