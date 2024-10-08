@@ -72,6 +72,10 @@ Route::get('general/edit', function () {
     );
 })->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('general.edit');
 
+Route::get('account/edit', function () {
+    return Inertia::render('Account/Edit');
+})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('account.edit');
+
 Route::get('login', [LoginUserController::class, 'create'])->name('login');
 Route::post('login', [LoginUserController::class, 'store']);
 Route::post('logout', [LoginUserController::class, 'destroy'])->name('logout');

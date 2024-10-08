@@ -28,6 +28,10 @@ export default function Authenticated({ user, header, children }) {
                                 <NavLink href={route('general.edit')} active={route().current('general.edit')}>
                                     Général
                                 </NavLink>
+
+                                <NavLink href={route('account.edit')} active={route().current('account.edit')}>
+                                    Compte
+                                </NavLink>
                             </div>
                         </div>
 
