@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminKeyController;
+use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\ChordController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\InstitutionController;
@@ -96,12 +97,6 @@ Route::middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastAct
     Route::get('/mainmenu/{courseId}', [LevelController::class, 'index'])->name('mainmenu');
 });
 
-//Route::middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class])->group(function () {
-//    Route::get('/menufma', function () {
-//        return Inertia::render('MenuFMA');
-//    })->name('menufma');
-//});
-
 Route::middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class])->group(function () {
     Route::get('/support', [SupportController::class, 'index'])->name('support');
 });
@@ -147,8 +142,7 @@ Route::get('highscores', function (Illuminate\Http\Request $request) {
 })->name('highscores')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class]);
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::post('/update-last-action-time', [QuizSoloController::class, 'updateLastActionTime'])->name('updateLastActionTime');
-
+    Route::post('/update-last-action-time', [QuizSoloController::class, 'updateLastActionTime'])->name('admin.update-username');
     Route::get('/institutions', [InstitutionController::class, 'index'])->name('allInstitutions');
     Route::post('/update-score', [ScoreController::class, 'store']);
     Route::get('/scores', [ScoreController::class, 'getAllScores'])->name('allScores');
@@ -167,8 +161,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/all-courses', [CourseController::class, 'getAllCourses'])->name('allCourses');
 
     Route::middleware([AdminMiddleware::class])->group(function () {
-        Route::post('/admin/update-username', [AdminController::class, 'updateUsername'])->name('admin.update-username');
-        Route::post('/admin/update-password', [AdminController::class, 'updatePassword'])->name('admin.update-password');
+        Route::patch('/admin/update-username', [AdminController::class, 'updateUsername'])->name('admin.update-username');
+        Route::put('password', [PasswordController::class, 'update'])->name('password.update');
         Route::post('/admin/make-admin', [AdminController::class, 'makeAdmin'])->name('admin.make-admin');
         Route::post('/admin/remove-admin', [AdminController::class, 'removeAdmin'])->name('admin.remove-admin');
         Route::post('/admin/delete-level', [LevelController::class, 'deleteLevel'])->name('admin.delete-level');
