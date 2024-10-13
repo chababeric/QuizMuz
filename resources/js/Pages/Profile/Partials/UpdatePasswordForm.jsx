@@ -57,6 +57,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                         onChange={(e) => setData('username', e.target.value)}
                         className="mt-1 block w-full"
                         autoComplete="username"
+                        required
                     />
 
                     <InputError message={errors.username} className="mt-2" />
@@ -73,6 +74,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                         type="password"
                         className="mt-1 block w-full"
                         autoComplete="new-password"
+                        required
                     />
 
                     <InputError message={errors.password} className="mt-2" />
@@ -88,13 +90,14 @@ export default function UpdatePasswordForm({ className = '' }) {
                         type="password"
                         className="mt-1 block w-full"
                         autoComplete="new-password"
+                        required
                     />
 
                     <InputError message={errors.password_confirmation} className="mt-2" />
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Save</PrimaryButton>
+                    <PrimaryButton disabled={processing}>Sauvegarder</PrimaryButton>
 
                     <Transition
                         show={recentlySuccessful}

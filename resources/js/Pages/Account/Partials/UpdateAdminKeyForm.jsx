@@ -1,0 +1,154 @@
+import { useRef, useState } from 'react';
+import InputError from '@/Components/InputError';
+import InputLabel from '@/Components/InputLabel';
+import PrimaryButton from '@/Components/PrimaryButton';
+import TextInput from '@/Components/TextInput';
+import { useForm, usePage } from '@inertiajs/react';
+import { Transition } from '@headlessui/react';
+
+export default function UpdateAdminKeyForm({ className = '' }) {
+    const user = usePage().props.auth.user;
+    const newKey = useRef();
+    const confirmationKey = useRef();
+    const userPassword = useRef();
+
+    const [recentlyValidated, setRecentlyValidated] = useState(false);
+    const [recentlyUpdated, setRecentlyUpdated] = useState(false);
+
+    const { data, setData, errors, post, reset, processing } = useForm({
+        key: '',
+        newKey: '',
+        userPassword: '',
+    });
+
+    const validateKey = (e) => {
+        e.preventDefault();
+
+        post(route('admin_key.validate'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                reset('key');
+                setRecentlyValidated(true);
+                setTimeout(() => setRecentlyValidated(false), 3000); // Clear message after 3 seconds
+            },
+            onError: (errors) => {
+                if (errors.key) {
+                    reset('key');
+                }
+            },
+        });
+    };
+
+    const updateKey = (e) => {
+        e.preventDefault();
+
+        post(route('admin_key.update'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                reset('newKey');
+                reset('userPassword');
+                setRecentlyUpdated(true);
+                setTimeout(() => setRecentlyUpdated(false), 3000); // Clear message after 3 seconds
+            },
+            onError: (errors) => {
+                reset('newKey');
+                reset('userPassword');
+            },
+        });
+    };
+
+    return (
+        <section className={className}>
+            <header>
+                <h2 className="text-lg font-medium text-gray-900">Clé d'administrateur</h2>
+
+                <p className="mt-1 text-sm text-gray-600">
+                    Modifier la clé d'administrateur.
+                </p>
+            </header>
+
+            {/* Key Validation Form */}
+            <form onSubmit={validateKey} className="mt-6 space-y-6">
+                <div>
+                    <InputLabel htmlFor="key" value="Clé admin à vérifier"/>
+
+                    <TextInput
+                        id="key"
+                        ref={confirmationKey}
+                        value={data.key}
+                        onChange={(e) => setData('key', e.target.value)}
+                        className="mt-1 block w-full"
+                        autoComplete="key"
+                        required
+                    />
+
+                    <InputError className="mt-2" message={errors.key}/>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    <PrimaryButton disabled={processing}>Vérifier</PrimaryButton>
+
+                    <Transition
+                        show={recentlyValidated}
+                        enter="transition ease-in-out"
+                        enterFrom="opacity-0"
+                        leave="transition ease-in-out"
+                        leaveTo="opacity-0"
+                    >
+                        <p className="text-sm text-green-500">Clé correcte.</p>
+                    </Transition>
+                </div>
+            </form>
+
+            {/* Key Update Form */}
+            <form onSubmit={updateKey} className="mt-10 space-y-6">
+                <div>
+                    <InputLabel htmlFor="newKey" value="Nouvelle clé admin"/>
+
+                    <TextInput
+                        id="newKey"
+                        ref={newKey}
+                        value={data.newKey}
+                        onChange={(e) => setData('newKey', e.target.value)}
+                        className="mt-1 block w-full"
+                        autoComplete="newKey"
+                        required
+                    />
+
+                    <InputError className="mt-2" message={errors.newKey}/>
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="userPassword" value={`Mot de passe de ${user.username}`}/>
+
+                    <TextInput
+                        id="userPassword"
+                        ref={userPassword}
+                        value={data.userPassword}
+                        onChange={(e) => setData('userPassword', e.target.value)}
+                        type="password"
+                        className="mt-1 block w-full"
+                        autoComplete="password"
+                        required
+                    />
+
+                    <InputError className="mt-2" message={errors.userPassword}/>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    <PrimaryButton disabled={processing}>Sauvegarder</PrimaryButton>
+
+                    <Transition
+                        show={recentlyUpdated}
+                        enter="transition ease-in-out"
+                        enterFrom="opacity-0"
+                        leave="transition ease-in-out"
+                        leaveTo="opacity-0"
+                    >
+                        <p className="text-sm text-green-500">Clé sauvegardée.</p>
+                    </Transition>
+                </div>
+            </form>
+        </section>
+    );
+}

@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.jsx';
 import UpdateProfileInformationForm from "@/Pages/Profile/Partials/UpdateProfileInformationForm.jsx";
 import UpdatePasswordForm from "@/Pages/Profile/Partials/UpdatePasswordForm.jsx";
 import DeleteUserForm from "@/Pages/Profile/Partials/DeleteUserForm.jsx";
+import UpdateAdminKeyForm from "@/Pages/Account/Partials/UpdateAdminKeyForm.jsx";
 
 export default function Edit({ auth, user }) {
 
@@ -23,6 +24,10 @@ export default function Edit({ auth, user }) {
 
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
                         <UpdatePasswordForm className="max-w-xl"/>
+                    </div>
+
+                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
+                        <UpdateAdminKeyForm className="max-w-xl"/>
                     </div>
 
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
