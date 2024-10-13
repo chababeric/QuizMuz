@@ -67,8 +67,11 @@ export default function UpdateAdminKeyForm({ className = '' }) {
                 </p>
             </header>
 
-            {/* Key Validation Form */}
             <form onSubmit={validateKey} className="mt-6 space-y-6">
+                <p className="text-sm text-gray-800">
+                    Pour des raisons de sécurité, la clé d'administrateur ne peut pas être affichée à cause de son chiffrement.
+                    Cependant, vous pouvez la vérifier en la saisissant dans le champ ci-dessous.
+                </p>
                 <div>
                     <InputLabel htmlFor="key" value="Clé admin à vérifier"/>
 
