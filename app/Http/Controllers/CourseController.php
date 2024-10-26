@@ -43,9 +43,13 @@ class CourseController extends Controller
         return response()->json(['message' => 'Le cours \''. $course->name . '\' a été supprimé avec succès']);
     }
 
-    public function getAllCourses(): JsonResponse
+    public function getAllCourses(Request $request): JsonResponse
     {
-        $courses = Course::where('institution_id', auth()->user()->institution_id)->get();
+        $request->validate([
+            'institution_id' => 'required|exists:institutions,id',
+        ]);
+
+        $courses = Course::where('institution_id', $request->institution_id)->get();
 
         return response()->json($courses);
     }

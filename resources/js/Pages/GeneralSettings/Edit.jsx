@@ -17,9 +17,14 @@ export default function Edit({ auth, institution }) {
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [selectedInstitution, setSelectedInstitution] = useState(institution);
+    const [selectedInstitutionId, setSelectedInstitutionId] = useState(auth.user.institution_id);
 
     const getLevels = () => {
-        axios.get(route('allLevels'))
+        axios.get(route('allLevels'), {
+            params: {
+                institution_id: selectedInstitutionId
+            }
+        })
         .then(response => {
             setLevels(response.data);
         })
@@ -39,7 +44,11 @@ export default function Edit({ auth, institution }) {
     };
 
     const getCourses = () => {
-        axios.get(route('allCourses'))
+        axios.get(route('allCourses'), {
+            params: {
+                institution_id: selectedInstitutionId
+            }
+        })
             .then(response => {
                 setCourses(response.data);
             })
@@ -49,7 +58,11 @@ export default function Edit({ auth, institution }) {
     };
 
     const getUsers = () => {
-        axios.get(route('allUsers'))
+        axios.get(route('allUsers'), {
+            params: {
+                institution_id: selectedInstitutionId
+            }
+        })
             .then(response => {
                 setUsers(response.data);
             })
@@ -59,7 +72,11 @@ export default function Edit({ auth, institution }) {
     };
 
     const getScores = () => {
-        axios.get(route('allScores'))
+        axios.get(route('allScores'), {
+            params: {
+                institution_id: selectedInstitutionId
+            }
+        })
             .then(response => {
                 setScores(response.data);
             })
@@ -111,6 +128,7 @@ export default function Edit({ auth, institution }) {
                             onChange={(e) => {
                                 const selectedId = Number(e.target.value);
                                 const selectedInst = institutions.find(inst => inst.id === selectedId);
+                                setSelectedInstitutionId(selectedId);
                                 setSelectedInstitution(selectedInst ? selectedInst.name : institution);
                             }}
                         >

@@ -31,9 +31,12 @@ class LevelController extends Controller
         }
     }
 
-    public function getAllLevels(): JsonResponse
+    public function getAllLevels(Request $request): JsonResponse
     {
-        $levels = Level::with('course')->get();
+        $request->validate([
+            'institution_id' => 'required|exists:institutions,id',
+        ]);
+        $levels = Level::with('course')->where('institution_id', $request->institution_id)->get();
 
         return response()->json($levels);
     }

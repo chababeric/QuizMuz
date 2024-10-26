@@ -20,10 +20,14 @@ class AdminController extends Controller
         return Inertia::render('AdminControl');
     }
 
-    public function getAllUsers(): JsonResponse
+    public function getAllUsers(Request $request): JsonResponse
     {
-        // Eager load the institution relationship
-        $users = User::with('institution')->get();
+        $request->validate([
+            'institution_id' => 'required|exists:institutions,id',
+        ]);
+
+//        $users = User::with('institution')->get();
+        $users = User::where('institution_id', $request->institution_id)->get();
 
         foreach ($users as $user) {
             $user->is_admin = $user->administrator()->exists();
@@ -109,22 +113,64 @@ class AdminController extends Controller
         }
     }
 
-    public function deleteUser(Request $request): JsonResponse
+    public function findUser(Request $request): JsonResponse
     {
         $request->validate([
-            'user_id' => 'required|integer',
-            'name' => 'required|string',
+            'usernameToDelete' => 'required|string',
         ]);
 
-        $user = User::find($request->user_id);
+        $initiator = $request->user();
+        $userToDelete = User::where('username', $request->usernameToDelete)->first();
 
-        if (!$user) {
-            return response()->json(['message' => 'L\'utilisateur n\'a pas été trouvé.'], 404);
-        } else {
-            // Delete the user ID from the users table
-            $user->delete();
+        if (!$userToDelete) {
+            return response()->json(['error' => 'L\'utilisateur n\'a pas été trouvé.'], 404);
+        }
 
-            return response()->json(['message' => 'Le compte de ' . $request->name . ' a été supprimé avec succès.'], 200);
+        // Make sure the user is not an admin
+        if ($userToDelete->administrator()->exists()) {
+            return response()->json(['error' => 'Vous ne pouvez pas supprimer le compte d\'un administrateur.'], 403);
+        }
+
+        // Make sure the user is in the same institution as the current user
+        if ($userToDelete->institution_id !== $initiator->institution_id) {
+            return response()->json(['error' => 'Vous ne pouvez pas supprimer le compte d\'un utilisateur d\'une autre institution.'], 403);
+        }
+
+        return response()->json(['user' => $userToDelete], 200);
+    }
+
+    public function deleteUser(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'usernameToDelete' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+        $initiator = $request->user();
+        if (!password_verify($request->password, $initiator->password)) {
+            return Redirect::back()->withErrors(['password' => 'Le mot de passe est incorrect.']);
+        }
+        else {
+            $user = User::where('username', $request->usernameToDelete)->first();
+
+            if (!$user) {
+                return Redirect::back()->withErrors(['usernameToDelete' => 'L\'utilisateur n\'a pas été trouvé.']);
+            } else {
+                // Delete the user ID from the users table
+                $user->delete();
+
+                // Log the action
+                Log::info('**********START TRANSACTION**********');
+                Log::info('ACTION: User deletion');
+                Log::info('INITIATOR ID: ' . $user->id);
+                Log::info('INITIATOR First Name: ' . $initiator->first_name);
+                Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+                Log::info('INITIATOR Username: ' . $initiator->username);
+                Log::info('User Deleted: ' . $request->usernameToDelete);
+                Log::info('**********END TRANSACTION**********');
+
+                return Redirect::route('account.edit');
+            }
         }
     }
 }

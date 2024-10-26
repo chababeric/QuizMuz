@@ -8,10 +8,15 @@ use Illuminate\Http\Request;
 
 class ScoreController extends Controller
 {
-    public function getAllScores(): JsonResponse
+    public function getAllScores(Request $request): JsonResponse
     {
+        $request->validate([
+            'institution_id' => 'required|exists:institutions,id',
+        ]);
+
         $scores = Score::with('user')
             ->join('users', 'scores.user_id', '=', 'users.id')
+            ->where('users.institution_id', $request->institution_id)
             ->orderBy('score', 'desc')
             ->select('scores.*') // Select scores columns to avoid ambiguity
             ->get();

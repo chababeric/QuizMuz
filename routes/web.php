@@ -142,7 +142,7 @@ Route::get('highscores', function (Illuminate\Http\Request $request) {
 })->name('highscores')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class]);
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::post('/update-last-action-time', [QuizSoloController::class, 'updateLastActionTime'])->name('admin.update-username');
+    Route::post('/update-last-action-time', [QuizSoloController::class, 'updateLastActionTime'])->name('updateLastActionTime');
     Route::get('/institutions', [InstitutionController::class, 'index'])->name('allInstitutions');
     Route::post('/update-score', [ScoreController::class, 'store']);
     Route::get('/scores', [ScoreController::class, 'getAllScores'])->name('allScores');
@@ -184,6 +184,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/admin/total-stats', [UserStatsController::class, 'getTotalStats'])->name('admin.total-stats');
         Route::post('/admin/update-order', [PieceController::class, 'updateOrder'])->name('admin.update-order');
         Route::get('/pieces-info', [PieceController::class, 'getPiecesInfo'])->name('piecesInfo');
+        Route::post('/admin/find-user', [AdminController::class, 'findUser'])->name('user.find');
     });
 });
 
