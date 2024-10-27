@@ -58,7 +58,7 @@ export default function Edit({ auth, institution }) {
     };
 
     const getUsers = () => {
-        axios.get(route('allUsers'), {
+        axios.get(route('usersFromInstitution'), {
             params: {
                 institution_id: selectedInstitutionId
             }
@@ -164,6 +164,7 @@ export default function Edit({ auth, institution }) {
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
                         <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des cours - {selectedInstitution}</h1>
                         <CourseManagement
+                            authInstitution={institution}
                             courses={courses}
                             getCourses={getCourses}
                             updateLastActionTime={updateLastActionTime}

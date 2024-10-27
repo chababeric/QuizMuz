@@ -54,6 +54,7 @@ export default function LevelManagement({ courses, levels, getLevels, updateLast
             const response = await axios.post(route('admin.add-level'), {
                 name: newLevelName,
                 course_id: selectedCourse,
+                institution_name: selectedInstitution
             });
 
             setSuccessMessage(response.data.message);
@@ -77,7 +78,8 @@ export default function LevelManagement({ courses, levels, getLevels, updateLast
         try {
             const response = await axios.post(route('admin.delete-level'), {
                 level_id: levelToDelete.id,
-                name: levelToDelete.name
+                name: levelToDelete.name,
+                institution_name: selectedInstitution,
             });
 
             setSuccessMessage(response.data.message);

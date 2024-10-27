@@ -4,7 +4,7 @@ import { useState } from "react";
 import deleteIcon from "../../../../icons/delete.svg";
 import addIcon from "../../../../icons/add.svg";
 
-export default function CourseManagement({ courses, getCourses, updateLastActionTime, successMessage, errorMessage, setSuccessMessage, setErrorMessage, selectedInstitution }) {
+export default function CourseManagement({ authInstitution, courses, getCourses, updateLastActionTime, successMessage, errorMessage, setSuccessMessage, setErrorMessage, selectedInstitution }) {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [newCourseName, setNewCourseName] = useState('');
@@ -25,7 +25,8 @@ export default function CourseManagement({ courses, getCourses, updateLastAction
 
         try {
             const response = await axios.post(route('admin.add-course'), {
-                name: newCourseName
+                name: newCourseName,
+                selectedInstitutionName: selectedInstitution
             });
 
             setSuccessMessage(response.data.message);
@@ -47,7 +48,8 @@ export default function CourseManagement({ courses, getCourses, updateLastAction
         try {
             const response = await axios.post(route('admin.delete-course'), {
                 course_id: course.id,
-                name: course.name
+                name: course.name,
+                institution_name: selectedInstitution
             });
 
             setSuccessMessage(response.data.message);
@@ -139,12 +141,14 @@ export default function CourseManagement({ courses, getCourses, updateLastAction
                 ))}
 
                 {/* Add New Institution button */}
-                <div
-                    className="p-6 border rounded-lg shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-105 bg-orange-200 cursor-pointer"
-                    onClick={openAddModal}
-                >
-                    <img src={addIcon} alt="Add icon" className="w-14 h-14"/>
-                </div>
+                {authInstitution === selectedInstitution &&
+                    <div
+                        className="p-6 border rounded-lg shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-105 bg-orange-200 cursor-pointer"
+                        onClick={openAddModal}
+                    >
+                        <img src={addIcon} alt="Add icon" className="w-14 h-14"/>
+                    </div>
+                }
             </div>
         </section>
     );

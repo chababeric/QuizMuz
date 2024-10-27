@@ -21,7 +21,7 @@ export default function Dashboard({ auth }) {
 
         const fetchUsers = async () => {
             try {
-                const response = await fetch('/api/users');
+                const response = await fetch(route('allUsers'));
                 const data = await response.json();
                 setUsers(data);
             } catch (error) {

@@ -151,6 +151,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/api/chords/level/{level_id}', [ChordController::class, 'getChordsByLevel']);
     Route::get('/api/pieces', [PieceController::class, 'getPiecesById']);
     Route::get('/api/users', [AdminController::class, 'getAllUsers'])->name('allUsers');
+    Route::get('/api/users-institution', [AdminController::class, 'getUsersFromInstitution'])->name('usersFromInstitution');
     Route::get('/api/levels', [LevelController::class, 'getAllLevels'])->name('allLevels');
     Route::get('/api/all-pieces', [PieceController::class, 'getAllPieces']);
     Route::get('/api/pieces-in-reserve', [PieceController::class, 'getPiecesInReserve']);

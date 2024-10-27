@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\Institution;
 use App\Models\Level;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -82,6 +83,7 @@ class LevelController extends Controller
         $request->validate([
             'name' => 'required|digits:3',
             'course_id' => 'required|exists:courses,id',
+            'institution_name' => 'required|string',
         ], [
             'name.required' => 'Le nom du niveau est requis.',
             'name.digits' => 'Le nom du niveau doit être un nombre de 3 chiffres.',
@@ -89,10 +91,18 @@ class LevelController extends Controller
             'course_id.exists' => 'Le cours sélectionné n\'existe pas.',
         ]);
 
-        $level = new Level();
-        $level->name = $request->name;
-        $level->course_id = $request->course_id;
-        $level->save();
+        $institution = auth()->user()->institution_id;
+        $institution_name = Institution::where('id', $institution)->first()->name;
+
+        if ($request->institution_name != $institution_name) {
+            return response()->json(['message' => 'Vous n\'avez pas l\'autorisation de créer un niveau pour une autre institution.'], 403);
+        }
+
+        Level::create([
+            'name' => $request->name,
+            'course_id' => $request->course_id,
+            'institution_id' => $institution,
+        ]);
 
         return response()->json(['message' => 'Le niveau \'' . $request->name . '\' a été ajouté avec succès.'], 200);
     }
@@ -102,7 +112,15 @@ class LevelController extends Controller
         $request->validate([
             'level_id' => 'required|integer',
             'name' => 'required|string',
+            'institution_name' => 'required|string',
         ]);
+
+        $institution = auth()->user()->institution_id;
+        $institution_name = Institution::where('id', $institution)->first()->name;
+
+        if ($request->institution_name != $institution_name) {
+            return response()->json(['message' => 'Vous n\'avez pas l\'autorisation de supprimer un niveau d\'une autre institution.'], 403);
+        }
 
         $level = Level::find($request->level_id);
 

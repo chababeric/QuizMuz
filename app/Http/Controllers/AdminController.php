@@ -20,13 +20,25 @@ class AdminController extends Controller
         return Inertia::render('AdminControl');
     }
 
-    public function getAllUsers(Request $request): JsonResponse
+    public function getAllUsers(): JsonResponse
+    {
+        $users = User::with('institution')->get();
+
+        foreach ($users as $user) {
+            $user->is_admin = $user->administrator()->exists();
+            // Access the institution name directly
+            $user->institution_name = $user->institution ? $user->institution->name : null;
+        }
+
+        return response()->json($users);
+    }
+
+    public function getUsersFromInstitution(Request $request): JsonResponse
     {
         $request->validate([
             'institution_id' => 'required|exists:institutions,id',
         ]);
 
-//        $users = User::with('institution')->get();
         $users = User::where('institution_id', $request->institution_id)->get();
 
         foreach ($users as $user) {
