@@ -96,9 +96,10 @@ class AdminController extends Controller
 
         if (!$user) {
             return response()->json(['message' => $request->name . ' n\'a pas été trouvé.'], 404);
-        } else if ($initiator->institution_id !== $user->institution_id) {
-            return response()->json(['message' => 'Vous ne pouvez pas promouvoir des utilisateurs d\'autres institutions.'], 403);
-        } else if ($initiator->id === $user->id) {
+        }
+//        else if ($initiator->institution_id !== $user->institution_id) {
+//            return response()->json(['message' => 'Vous ne pouvez pas promouvoir des utilisateurs d\'autres institutions.'], 403);}
+        else if ($initiator->id === $user->id) {
             return response()->json(['message' => 'Vous ne pouvez pas vous promouvoir vous-même.'], 403);
         } else {
             $adminControl = new AdminControl();

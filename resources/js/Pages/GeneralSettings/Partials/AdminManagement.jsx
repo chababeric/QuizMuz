@@ -71,7 +71,7 @@ export default function AdminManagement({auth, users, getUsers, updateLastAction
                                         ? "bg-red-500 hover:bg-red-600"
                                         : "bg-green-500 hover:bg-green-600"
                             }`}
-                            disabled={user.id === auth.user.id || auth.user.institution_id !== selectedInstitutionId}
+                            disabled={user.id === auth.user.id /*|| auth.user.institution_id !== selectedInstitutionId*/}
                         >
                             {user.is_admin ? "Rétrograder" : "Promouvoir"}
                         </button>

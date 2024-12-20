@@ -45,6 +45,8 @@ class LevelController extends Controller
 
     public function toggleLevelAccess(Request $request): JsonResponse
     {
+        $initiator = $request->user();
+
         $request->validate([
             'level_id' => 'required|exists:levels,id',
             'name' => 'required|string',
@@ -56,6 +58,15 @@ class LevelController extends Controller
         $level->save();
 
         $message = $newStatus ? 'Le niveau ' . $request->name . ' a été activé avec succès.' : 'Le niveau ' . $request->name . ' a été désactivé avec succès.';
+
+        Log::info('**********START TRANSACTION**********');
+        Log::info('ACTION: Level access toggling');
+        Log::info('INITIATOR ID: ' . $initiator->id);
+        Log::info('INITIATOR First Name: ' . $initiator->first_name);
+        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+        Log::info('INITIATOR Username: ' . $initiator->username);
+        Log::info('Level Toggled: ' . $request->name);
+        Log::info('**********END TRANSACTION**********');
 
         return response()->json(['message' => $message]);
     }
@@ -81,6 +92,8 @@ class LevelController extends Controller
 
     public function addLevel(Request $request): JsonResponse
     {
+        $initiator = $request->user();
+
         $request->validate([
             'name' => 'required|digits:3',
             'course_id' => 'required|exists:courses,id',
@@ -105,11 +118,22 @@ class LevelController extends Controller
             'institution_id' => $institution,
         ]);
 
+        Log::info('**********START TRANSACTION**********');
+        Log::info('ACTION: Level creation');
+        Log::info('INITIATOR ID: ' . $initiator->id);
+        Log::info('INITIATOR First Name: ' . $initiator->first_name);
+        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+        Log::info('INITIATOR Username: ' . $initiator->username);
+        Log::info('Level Created: ' . $request->name . ' for course ' . $request->course_id . ' in institution ' . $institution_name);
+        Log::info('**********END TRANSACTION**********');
+
         return response()->json(['message' => 'Le niveau \'' . $request->name . '\' a été ajouté avec succès.'], 200);
     }
 
     public function deleteLevel(Request $request): JsonResponse
     {
+        $initiator = $request->user();
+
         $request->validate([
             'level_id' => 'required|integer',
             'name' => 'required|string',
@@ -129,6 +153,15 @@ class LevelController extends Controller
             return response()->json(['message' => 'Le niveau \'' . $request->name . '\' n\'a pas été trouvé.'], 404);
         } else {
             $level->delete();
+
+            Log::info('**********START TRANSACTION**********');
+            Log::info('ACTION: Level deletion');
+            Log::info('INITIATOR ID: ' . $initiator->id);
+            Log::info('INITIATOR First Name: ' . $initiator->first_name);
+            Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+            Log::info('INITIATOR Username: ' . $initiator->username);
+            Log::info('Level Deleted: ' . $request->name . ' in institution ' . $institution_name);
+            Log::info('**********END TRANSACTION**********');
 
             return response()->json(['message' => 'Le niveau \'' . $request->name . '\' a été supprimé avec succès.'], 200);
         }

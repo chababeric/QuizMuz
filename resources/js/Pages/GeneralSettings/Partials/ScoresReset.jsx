@@ -3,7 +3,7 @@ import Modal from "@/Components/Modal.jsx";
 import MessageDisplay from "@/Components/MessageDisplay.jsx";
 import axios from 'axios';
 
-export default function ScoresReset({ scores, getScores, updateLastActionTime, successMessage, setSuccessMessage, errorMessage, setErrorMessage, selectedInstitution }) {
+export default function ScoresReset({auth, scores, getScores, updateLastActionTime, successMessage, setSuccessMessage, errorMessage, setErrorMessage, selectedInstitution, selectedInstitutionId }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const openModal = () => setIsModalOpen(true);
@@ -30,8 +30,13 @@ export default function ScoresReset({ scores, getScores, updateLastActionTime, s
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-semibold text-gray-900 max-w-xs">Réinitialisation des scores - {selectedInstitution}</h2>
                 <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition duration-200 ml-4"
+                    onClick={openModal}
+                    className={`px-4 py-2 rounded-md transition duration-200 ml-4 ${
+                        scores.length === 0 || auth.user.institution_id !== selectedInstitutionId
+                            ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                            : 'bg-red-500 text-white hover:bg-red-600'
+                    }`}
+                    disabled={scores.length === 0 || auth.user.institution_id !== selectedInstitutionId}
                 >
                     Réinitialiser
                 </button>
@@ -62,7 +67,7 @@ export default function ScoresReset({ scores, getScores, updateLastActionTime, s
                 ))}
             </div>
 
-            {isModalOpen && ( // Render the modal conditionally
+            {isModalOpen && (
                 <Modal show={isModalOpen}>
                     <div className="p-6">
                         <h2 className="text-lg font-bold mb-4">Confirmation</h2>
