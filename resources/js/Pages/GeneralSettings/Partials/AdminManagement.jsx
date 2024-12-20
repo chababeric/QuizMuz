@@ -2,10 +2,10 @@ import { useState } from "react";
 import MessageDisplay from "@/Components/MessageDisplay.jsx";
 import Modal from "@/Components/Modal.jsx";
 
-export default function AdminManagement({users, getUsers, updateLastActionTime, successMessage, setSuccessMessage, errorMessage, setErrorMessage, selectedInstitution}) {
+export default function AdminManagement({auth, users, getUsers, updateLastActionTime, successMessage, setSuccessMessage, errorMessage, setErrorMessage, selectedInstitution, selectedInstitutionId}) {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalAction, setModalAction] = useState(null); // 'promote' or 'demote'
-    const [selectedUser, setSelectedUser] = useState(null); // Store user data for modal confirmation
+    const [modalAction, setModalAction] = useState(null);
+    const [selectedUser, setSelectedUser] = useState(null);
 
     const openModal = (action, user) => {
         setModalAction(action);
@@ -65,8 +65,13 @@ export default function AdminManagement({users, getUsers, updateLastActionTime, 
                         <button
                             onClick={() => openModal(user.is_admin ? 'demote' : 'promote', user)}
                             className={`px-4 py-2 rounded-md text-white ${
-                                user.is_admin ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
+                                user.id === auth.user.id || auth.user.institution_id !== selectedInstitutionId
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : user.is_admin
+                                        ? "bg-red-500 hover:bg-red-600"
+                                        : "bg-green-500 hover:bg-green-600"
                             }`}
+                            disabled={user.id === auth.user.id || auth.user.institution_id !== selectedInstitutionId}
                         >
                             {user.is_admin ? "Rétrograder" : "Promouvoir"}
                         </button>

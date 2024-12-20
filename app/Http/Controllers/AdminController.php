@@ -86,6 +86,7 @@ class AdminController extends Controller
 
     public function makeAdmin(Request $request): JsonResponse
     {
+        $initiator = $request->user();
         $request->validate([
             'user_id' => 'required|integer',
             'name' => 'required|string',
@@ -95,11 +96,23 @@ class AdminController extends Controller
 
         if (!$user) {
             return response()->json(['message' => $request->name . ' n\'a pas été trouvé.'], 404);
+        } else if ($initiator->institution_id !== $user->institution_id) {
+            return response()->json(['message' => 'Vous ne pouvez pas promouvoir des utilisateurs d\'autres institutions.'], 403);
+        } else if ($initiator->id === $user->id) {
+            return response()->json(['message' => 'Vous ne pouvez pas vous promouvoir vous-même.'], 403);
         } else {
-            // Insert the user ID into the admin_controls table
             $adminControl = new AdminControl();
             $adminControl->user_id = $request->user_id;
             $adminControl->save();
+
+            Log::info('**********START TRANSACTION**********');
+            Log::info('ACTION: Admin promotion');
+            Log::info('INITIATOR ID: ' . $initiator->id);
+            Log::info('INITIATOR First Name: ' . $initiator->first_name);
+            Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+            Log::info('INITIATOR Username: ' . $initiator->username);
+            Log::info('User Promoted: ' . $request->name);
+            Log::info('**********END TRANSACTION**********');
 
             return response()->json(['message' => $request->name . ' a été promu·e avec succès.'], 200);
         }
@@ -107,19 +120,32 @@ class AdminController extends Controller
 
     public function removeAdmin(Request $request): JsonResponse
     {
+        $initiator = $request->user();
         $request->validate([
             'user_id' => 'required|integer',
             'name' => 'required|string',
         ]);
-
         $user = User::find($request->user_id);
 
         if (!$user) {
             return response()->json(['message' => $request->name . ' n\'a pas été trouvé.'], 404);
-        } else {
-            // Delete the user ID from the admin_controls table
+        } else if ($initiator->institution_id !== $user->institution_id) {
+            return response()->json(['message' => 'Vous ne pouvez pas rétrograder des utilisateurs d\'autres institutions.'], 403);
+        } else if ($initiator->id === $user->id) {
+            return response()->json(['message' => 'Vous ne pouvez pas vous rétrograder vous-même.'], 403);
+        }
+        else {
             $adminControl = AdminControl::where('user_id', $request->user_id)->first();
             $adminControl->delete();
+
+            Log::info('**********START TRANSACTION**********');
+            Log::info('ACTION: Admin removal');
+            Log::info('INITIATOR ID: ' . $initiator->id);
+            Log::info('INITIATOR First Name: ' . $initiator->first_name);
+            Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+            Log::info('INITIATOR Username: ' . $initiator->username);
+            Log::info('User Removed: ' . $request->name);
+            Log::info('**********END TRANSACTION**********');
 
             return response()->json(['message' => $request->name . ' a été rétrogradé.e avec succès.'], 200);
         }

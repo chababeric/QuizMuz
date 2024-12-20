@@ -83,6 +83,7 @@ Route::post('logout', [LoginUserController::class, 'destroy'])->name('logout');
 
 Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
 Route::post('register', [RegisteredUserController::class, 'store']);
+Route::get('/institutions', [InstitutionController::class, 'index'])->name('allInstitutions');
 
 Route::get('/admincontrol', function () {
     return Inertia::render('AdminControl');
@@ -143,7 +144,6 @@ Route::get('highscores', function (Illuminate\Http\Request $request) {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/update-last-action-time', [QuizSoloController::class, 'updateLastActionTime'])->name('updateLastActionTime');
-    Route::get('/institutions', [InstitutionController::class, 'index'])->name('allInstitutions');
     Route::post('/update-score', [ScoreController::class, 'store']);
     Route::get('/scores', [ScoreController::class, 'getAllScores'])->name('allScores');
     Route::get('/all-scores', [ScoreController::class, 'index']);

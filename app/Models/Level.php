@@ -11,7 +11,7 @@ class Level extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'course_id', 'institution_id'];
 
     // Define the relationship with the Piece model
     public function pieces(): HasMany
