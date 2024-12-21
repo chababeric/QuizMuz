@@ -4,7 +4,7 @@ import addIcon from "../../../../icons/add.svg";
 import Modal from "@/Components/Modal.jsx";
 import { useState } from "react";
 
-export default function LevelManagement({courses, levels, getLevels, updateLastActionTime, successMessage, errorMessage, setSuccessMessage, setErrorMessage, selectedInstitution,}) {
+export default function LevelManagement({auth, courses, levels, getLevels, updateLastActionTime, successMessage, errorMessage, setSuccessMessage, setErrorMessage, selectedInstitution, selectedInstitutionId}) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newLevelName, setNewLevelName] = useState("");
     const [selectedCourse, setSelectedCourse] = useState("");
@@ -35,6 +35,7 @@ export default function LevelManagement({courses, levels, getLevels, updateLastA
             const response = await axios.post("/admin/toggle-level-access", {
                 level_id: toggledLevel.id,
                 name: toggledLevel.name,
+                selectedInstitutionName: selectedInstitution,
             });
 
             setSuccessMessage(response.data.message);
@@ -92,12 +93,11 @@ export default function LevelManagement({courses, levels, getLevels, updateLastA
             setSuccessMessage("");
         }
 
-        closeDeleteModal(); // Close the modal after deletion
+        closeDeleteModal();
     };
 
     return (
         <section>
-            {/* Modal for adding a new level */}
             <Modal show={isModalOpen} onClose={closeModal}>
                 <div className="p-4">
                     <h2 className="text-xl font-semibold mb-4">Ajouter un niveau</h2>
@@ -198,10 +198,14 @@ export default function LevelManagement({courses, levels, getLevels, updateLastA
                                     <button
                                         onClick={() => toggleLevelAccess(level)}
                                         className={`px-4 py-2 rounded-md text-white mb-4 ${
+                                            auth.user.institution_id !== selectedInstitutionId
+                                                ? "bg-gray-400 cursor-not-allowed"
+                                                :
                                             level.is_enabled
                                                 ? "bg-red-500 hover:bg-red-600"
                                                 : "bg-green-500 hover:bg-green-600"
                                         }`}
+                                        disabled={auth.user.institution_id !== selectedInstitutionId}
                                     >
                                         {level.is_enabled
                                             ? "Désactiver l'accès"
@@ -209,7 +213,12 @@ export default function LevelManagement({courses, levels, getLevels, updateLastA
                                     </button>
                                     <button
                                         onClick={() => openDeleteModal(level)}
-                                        className="px-4 py-2 rounded-md flex items-center text-white bg-gray-700 hover:bg-gray-800"
+                                        className={`px-4 py-2 rounded-md flex items-center text-white ${
+                                            auth.user.institution_id !== selectedInstitutionId
+                                                ? "bg-gray-400 cursor-not-allowed"
+                                                : "bg-gray-700 hover:bg-gray-800"
+                                        }`}
+                                        disabled={auth.user.institution_id !== selectedInstitutionId}
                                     >
                                         <img
                                             src={deleteIcon}
@@ -222,12 +231,14 @@ export default function LevelManagement({courses, levels, getLevels, updateLastA
                             ))}
 
                             {/* Add New Level button */}
-                            <div
-                                className="p-6 border rounded-lg shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-105 bg-green-200 cursor-pointer"
-                                onClick={() => openModal(course.id)}
-                            >
-                                <img src={addIcon} alt="Add icon" className="w-14 h-14" />
-                            </div>
+                            {auth.user.institution_id === selectedInstitutionId && (
+                                <div
+                                    className="p-6 border rounded-lg shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-105 bg-green-200 cursor-pointer"
+                                    onClick={() => openModal(course.id)}
+                                >
+                                    <img src={addIcon} alt="Add icon" className="w-14 h-14" />
+                                </div>
+                            )}
                         </div>
                     </div>
                 );

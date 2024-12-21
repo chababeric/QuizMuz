@@ -179,6 +179,7 @@ export default function Edit({ auth, institution }) {
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
                         <h1 className="text-2xl font-semibold text-gray-900 mb-4">Gestion des niveaux - {selectedInstitution}</h1>
                         <LevelManagement
+                            auth={auth}
                             levels={levels}
                             getLevels={getLevels}
                             updateLastActionTime={updateLastActionTime}
@@ -188,6 +189,7 @@ export default function Edit({ auth, institution }) {
                             setErrorMessage={setErrorMessage}
                             courses={courses}
                             selectedInstitution={selectedInstitution}
+                            selectedInstitutionId={selectedInstitutionId}
                         />
                     </div>
 

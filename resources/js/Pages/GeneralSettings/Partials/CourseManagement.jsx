@@ -132,7 +132,12 @@ export default function CourseManagement({ authInstitution, courses, getCourses,
                         <h3 className="text-2xl font-semibold mb-4">{course.name}</h3>
                         <button
                             onClick={() => openDeleteModal(course)}
-                            className="px-4 py-2 rounded-md flex items-center text-white bg-gray-700 hover:bg-gray-800"
+                            className={`px-4 py-2 rounded-md flex items-center text-white ${
+                                authInstitution !== selectedInstitution
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-gray-700 hover:bg-gray-800"
+                            }`}
+                            disabled={authInstitution !== selectedInstitution}
                         >
                             <img src={deleteIcon} alt="Delete icon" className="w-6 h-6 mr-1"/>
                             Supprimer

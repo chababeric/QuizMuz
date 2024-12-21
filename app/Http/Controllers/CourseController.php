@@ -40,7 +40,7 @@ class CourseController extends Controller
             'institution_id' => $institution,
         ]);
 
-        return response()->json(['message' => 'Le cours a été créé avec succès pour l\'institution \''. $institution . '\'']);
+        return response()->json(['message' => 'Le cours a été créé avec succès pour l\'institution \''. $institution_name . '\'']);
     }
 
     public function destroy(Request $request): JsonResponse

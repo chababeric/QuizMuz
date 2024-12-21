@@ -50,25 +50,33 @@ class LevelController extends Controller
         $request->validate([
             'level_id' => 'required|exists:levels,id',
             'name' => 'required|string',
+            'selectedInstitutionName' => 'required|string',
         ]);
 
-        $level = Level::find($request->level_id);
-        $newStatus = !$level->is_enabled;
-        $level->is_enabled = $newStatus;
-        $level->save();
+        $institution = auth()->user()->institution_id;
+        $institution_name = Institution::where('id', $institution)->first()->name;
 
-        $message = $newStatus ? 'Le niveau ' . $request->name . ' a été activé avec succès.' : 'Le niveau ' . $request->name . ' a été désactivé avec succès.';
+        if ($request->selectedInstitutionName != $institution_name) {
+            return response()->json(['message' => 'Vous n\'avez pas l\'autorisation de modifier l\'accès d\'un niveau d\'une autre institution.'], 403);
+        } else {
+            $level = Level::find($request->level_id);
+            $newStatus = !$level->is_enabled;
+            $level->is_enabled = $newStatus;
+            $level->save();
 
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Level access toggling');
-        Log::info('INITIATOR ID: ' . $initiator->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('Level Toggled: ' . $request->name);
-        Log::info('**********END TRANSACTION**********');
+            $message = $newStatus ? 'Le niveau ' . $request->name . ' a été activé avec succès.' : 'Le niveau ' . $request->name . ' a été désactivé avec succès.';
 
-        return response()->json(['message' => $message]);
+            Log::info('**********START TRANSACTION**********');
+            Log::info('ACTION: Level access toggling');
+            Log::info('INITIATOR ID: ' . $initiator->id);
+            Log::info('INITIATOR First Name: ' . $initiator->first_name);
+            Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+            Log::info('INITIATOR Username: ' . $initiator->username);
+            Log::info('Level Toggled: ' . $request->name);
+            Log::info('**********END TRANSACTION**********');
+
+            return response()->json(['message' => $message]);
+        }
     }
 
     public function updateLastLevel(Request $request): JsonResponse
