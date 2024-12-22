@@ -77,6 +77,10 @@ Route::get('account/edit', function () {
     return Inertia::render('Account/Edit');
 })->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('account.edit');
 
+Route::get('piece/edit', function () {
+    return Inertia::render('Piece/Edit');
+})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('piece.edit');
+
 Route::get('login', [LoginUserController::class, 'create'])->name('login');
 Route::post('login', [LoginUserController::class, 'store']);
 Route::post('logout', [LoginUserController::class, 'destroy'])->name('logout');
@@ -153,7 +157,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/api/users', [AdminController::class, 'getAllUsers'])->name('allUsers');
     Route::get('/api/users-institution', [AdminController::class, 'getUsersFromInstitution'])->name('usersFromInstitution');
     Route::get('/api/levels', [LevelController::class, 'getAllLevels'])->name('allLevels');
-    Route::get('/api/all-pieces', [PieceController::class, 'getAllPieces']);
+    Route::get('/levels-from-course', [LevelController::class, 'getLevelsFromCourse'])->name('levelsFromCourse');
+    Route::get('/api/all-pieces', [PieceController::class, 'getAllPieces'])->name('allPieces');
     Route::get('/api/pieces-in-reserve', [PieceController::class, 'getPiecesInReserve']);
     Route::post('/increment-total-pieces-played', [UserStats::class, 'incrementTotalPiecesPlayed']);
     Route::post('/set-difficulty', [UserStats::class, 'setDifficulty']);

@@ -7,6 +7,7 @@ export default function Dashboard({ auth }) {
     const [totalStats, setTotalStats] = useState([]);
     const [users, setUsers] = useState([]);
     const [sortedUsers, setSortedUsers] = useState([]);
+    const [nbConnectedUsers, setNbConnectedUsers] = useState(0);
 
     useEffect(() => {
         const fetchTotalStats = async () => {
@@ -37,6 +38,8 @@ export default function Dashboard({ auth }) {
         // Sort users alphabetically by last name
         const sorted = [...users].sort((a, b) => a.last_name.localeCompare(b.last_name));
         setSortedUsers(sorted);
+
+        updateNbConnectedUsers();
     }, [users]);
 
     const getStatus = (lastActionTime) => {
@@ -49,6 +52,11 @@ export default function Dashboard({ auth }) {
     const getStatusStyle = (status) => {
         return status === 'En ligne' ? { color: 'green' } : { color: 'red' };
     }
+
+    const updateNbConnectedUsers = () => {
+        const onlineUsers = users.filter(user => getStatus(user.last_action_time) === 'En ligne').length;
+        setNbConnectedUsers(onlineUsers);
+    };
 
     return (
         <AuthenticatedLayout
@@ -83,8 +91,8 @@ export default function Dashboard({ auth }) {
                                 </div>
                                 <div className="p-4 bg-gray-200 shadow rounded-lg flex items-center justify-center">
                                     <p className="text-lg font-medium text-gray-900">
-                                        Nombre total de pièces jouées dans Quiz : <span
-                                        className="font-semibold">{totalStats.totalPiecesPlayed}</span>
+                                        Nombre d'utilisateurs connectés : <span
+                                        className="font-semibold">{nbConnectedUsers}</span>
                                     </p>
                                 </div>
                             </div>
@@ -98,7 +106,6 @@ export default function Dashboard({ auth }) {
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900">
                             <h1 className="text-2xl font-semibold text-gray-900 mb-4">Utilisateurs</h1>
-                            {/* Starts Here */}
                             <div className="flex flex-col overflow-x-auto">
                                 <div className="sm:-mx-6 lg:-mx-8">
                                     <div className="inline-block min-w-full py-2 sm:px-6 lg:px-8">
@@ -142,7 +149,6 @@ export default function Dashboard({ auth }) {
                                     </div>
                                 </div>
                             </div>
-                            {/* Ends Here */}
                         </div>
                     </div>
                 </div>

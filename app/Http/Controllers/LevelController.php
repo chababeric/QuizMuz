@@ -174,4 +174,15 @@ class LevelController extends Controller
             return response()->json(['message' => 'Le niveau \'' . $request->name . '\' a été supprimé avec succès.'], 200);
         }
     }
+
+    public function getLevelsFromCourse(Request $request): JsonResponse
+    {
+        $request->validate([
+            'course_id' => 'required|integer',
+        ]);
+
+        $levels = Level::where('course_id', $request->course_id)->get();
+
+        return response()->json($levels);
+    }
 }

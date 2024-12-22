@@ -37,7 +37,10 @@ class PieceController extends Controller
      */
     public function getAllPieces(): JsonResponse
     {
-        $pieces = Piece::all();
+//        $pieces = Piece::all();
+        $initiator = auth()->user();
+        $pieces = Piece::with('level')->where('institution_id', $initiator->institution_id)->get();
+
         return response()->json($pieces);
     }
 

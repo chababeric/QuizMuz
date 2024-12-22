@@ -1,14 +1,14 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
+import InputError from '@/Components/InputError.jsx';
+import InputLabel from '@/Components/InputLabel.jsx';
+import PrimaryButton from '@/Components/PrimaryButton.jsx';
+import TextInput from '@/Components/TextInput.jsx';
 import { useForm } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
 
 export default function UpdateProfileInformation({ className = '' }) {
     // const user = usePage().props.auth.user;
 
-    const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
+    const { data, setData, patch, reset, errors, processing, recentlySuccessful } = useForm({
         old_username: '',
         new_username: '',
     });
@@ -16,7 +16,11 @@ export default function UpdateProfileInformation({ className = '' }) {
     const submit = (e) => {
         e.preventDefault();
 
-        patch(route('admin.update-username'));
+        patch(route('admin.update-username'), {
+            onSuccess: () => {
+                reset();
+            },
+        });
     };
 
     return (

@@ -1,8 +1,8 @@
 import {Head} from "@inertiajs/react";
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.jsx';
-import UpdateProfileInformationForm from "@/Pages/Profile/Partials/UpdateProfileInformationForm.jsx";
-import UpdatePasswordForm from "@/Pages/Profile/Partials/UpdatePasswordForm.jsx";
-import DeleteUserForm from "@/Pages/Profile/Partials/DeleteUserForm.jsx";
+import UpdateProfileInformationForm from "@/Pages/Account/Partials/UpdateProfileInformationForm.jsx";
+import UpdatePasswordForm from "@/Pages/Account/Partials/UpdatePasswordForm.jsx";
+import DeleteUserForm from "@/Pages/Account/Partials/DeleteUserForm.jsx";
 import UpdateAdminKeyForm from "@/Pages/Account/Partials/UpdateAdminKeyForm.jsx";
 
 export default function Edit({ auth, user }) {
@@ -33,7 +33,6 @@ export default function Edit({ auth, user }) {
                     </div>
                 </div>
             </div>
-
         </AuthenticatedLayout>
     );
 }
