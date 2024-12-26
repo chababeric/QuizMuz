@@ -4,13 +4,13 @@ import InputError from '@/Components/InputError.jsx';
 import InputLabel from '@/Components/InputLabel.jsx';
 import PrimaryButton from '@/Components/PrimaryButton.jsx';
 import TextInput from "@/Components/TextInput.jsx";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import FilterableSelect from "@/Components/FilterableSelect.jsx";
 
 export default function AddNewPiece({ className = '', piecesList }) {
     const user = usePage().props.auth.user;
     const [coursesList, setCoursesList] = useState([]);
     const [levelsList, setLevelsList] = useState([]);
-    const [periodsList, setPeriodsList] = useState([]);
 
     const { data, setData, post, reset, errors, processing, recentlySuccessful } = useForm({
         course: '',
@@ -37,12 +37,6 @@ export default function AddNewPiece({ className = '', piecesList }) {
         }).catch(error => {
             console.log(error);
         });
-
-        if (piecesList && Array.isArray(piecesList)) {
-            const uniquePeriods = [...new Set(piecesList.map((piece) => piece.period))];
-            setPeriodsList(uniquePeriods);
-            console.log(uniquePeriods);
-        }
     }, []);
 
     useEffect(() => {
@@ -83,7 +77,7 @@ export default function AddNewPiece({ className = '', piecesList }) {
 
             <form onSubmit={submitNewPiece} className="mt-6 space-y-6">
                 <div>
-                    <InputLabel htmlFor="course" value="Cours" />
+                    <InputLabel htmlFor="course" value="Cours"/>
                     <select
                         id="course"
                         className="mt-1 block w-full rounded-md"
@@ -96,11 +90,11 @@ export default function AddNewPiece({ className = '', piecesList }) {
                             <option key={course.id} value={course.id}>{course.name}</option>
                         ))}
                     </select>
-                    <InputError className="mt-2" message={errors.course} />
+                    <InputError className="mt-2" message={errors.course}/>
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="level" value="Niveau" />
+                    <InputLabel htmlFor="level" value="Niveau"/>
                     <select
                         id="level"
                         className="mt-1 block w-full rounded-md"
@@ -113,12 +107,157 @@ export default function AddNewPiece({ className = '', piecesList }) {
                             <option key={level.id} value={level.id}>{level.name}</option>
                         ))}
                     </select>
-                    <InputError className="mt-2" message={errors.level} />
+                    <InputError className="mt-2" message={errors.level}/>
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="period" value="Période" />
+                    <InputLabel htmlFor="period" value="Période"/>
+                    <FilterableSelect
+                        value={data.period}
+                        onChange={(value) => setData('period', value)}
+                        options={piecesList.map(piece => piece.period).filter(Boolean)}
+                    />
+                    <InputError className="mt-2" message={errors.period}/>
+                </div>
 
+                <div>
+                    <InputLabel htmlFor="genre" value="Genre"/>
+                    <FilterableSelect
+                        value={data.genre}
+                        onChange={(value) => setData('genre', value)}
+                        options={piecesList.map(piece => piece.genre).filter(Boolean)}
+                    />
+                    <InputError className="mt-2" message={errors.genre}/>
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="composer" value="Compositeur"/>
+                    <FilterableSelect
+                        value={data.composer}
+                        onChange={(value) => setData('composer', value)}
+                        options={piecesList.map(piece => piece.composer).filter(Boolean)}
+                    />
+                    <InputError className="mt-2" message={errors.composer}/>
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="title" value="Titre"/>
+                    <FilterableSelect
+                        value={data.title}
+                        onChange={(value) => setData('title', value)}
+                        options={piecesList.map(piece => piece.title).filter(Boolean)}
+                    />
+                    <InputError className="mt-2" message={errors.title}/>
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="element" value="Élément"/>
+                    <FilterableSelect
+                        value={data.element}
+                        onChange={(value) => setData('element', value)}
+                        options={piecesList.map(piece => piece.element).filter(Boolean)}
+                    />
+                    <InputError className="mt-2" message={errors.element}/>
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="no_mvt" value="No. mouvement"/>
+                    <FilterableSelect
+                        value={data.no_mvt}
+                        onChange={(value) => setData('no_mvt', value)}
+                        options={piecesList.map(piece => piece.no_mvt).filter(Boolean)}
+                    />
+                    <InputError className="mt-2" message={errors.no_mvt}/>
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="mvt" value="Mouvement / Partie"/>
+                    <FilterableSelect
+                        value={data.mvt}
+                        onChange={(value) => setData('mvt', value)}
+                        options={piecesList.map(piece => piece.mvt).filter(Boolean)}
+                    />
+                    <InputError className="mt-2" message={errors.mvt}/>
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="form" value="Forme"/>
+                    <FilterableSelect
+                        value={data.form}
+                        onChange={(value) => setData('form', value)}
+                        options={piecesList.map(piece => piece.form).filter(Boolean)}
+                    />
+                    <InputError className="mt-2" message={errors.form}/>
+                </div>
+
+                <div className="flex flex-col mb-4 w-full">
+                    <InputLabel htmlFor="fileName" value="Nom du fichier audio"/>
+                    <span className="text-sm text-red-600">C'est important de suivre la convention de nom suivante:
+                    <span
+                        className="text-sm text-gray-500 italic">compositeur_titre_no_mvt_mvt.mp3</span>
+                    </span>
+                    <ul className="list-disc list-inside text-sm text-gray-500">
+                        <li>Si un des paramètres ne s'applique pas, remplacer par 0</li>
+                        <li>Si un des paramètres contient plus qu'un mot, remplacer les caractères blancs par des
+                            underscores (_)
+                        </li>
+                        <li>Toutes les lettres doivent être en minusculles</li>
+                        <li>Utiliser seulement le nom de famille du compositeur, à l'exeption des surnoms&nbsp;
+                            <span className="italic">(béatrice_de_die ou vivaldi)</span>
+                        </li>
+                        <li>Ne pas utiliser des accents</li>
+                        <li>Remplacer toute apostrophe par un underscore (_)
+                            <span className="italic">(l_hiver)</span>
+                        </li>
+                        <li>Chaque nom de fichier doit être unique</li>
+                        <li>Le nom doit obligatoirement finir par .mp3 et le fichier doit également avoir cette
+                            extension.&nbsp;
+                            <span className="text-red-500 italic">Attention: les autres formats de fichiers audio
+                                            ne sont pas acceptés par le système (ex. .wav, .m4a, etc.)
+                                        </span>
+                        </li>
+                        <li>Si le compositeur vient d'une famille de compositeurs et les autres sont également présents
+                            dans le logiciel,
+                            ajouter le nom ainsi que le prénom, séparés par un underscore (_). Ex: mendelssohn_felix,
+                            mendelssohn_fanny.
+                        </li>
+                        <li>Si plusieurs pieces ont le même nom de fichier, ajouter un underscore avec un numéro à la
+                            fin du nom (_1, _2, etc.)
+                        </li>
+                    </ul>
+                    <input
+                        id="fileName"
+                        type="text"
+                        className="mt-1 block w-full rounded-md"
+                        value={data.fileName}
+                        onChange={(e) => setData('fileName', e.target.value)}
+                    />
+                    <InputError className="mt-2" message={errors.fileName}/>
+                </div>
+
+                <div className="flex flex-col mb-4 w-full">
+                    <InputLabel htmlFor="audioFile" value="Fichier audio"/>
+                    <input
+                        id="audioFile"
+                        type="file"
+                        className="new-piece-input"
+                        onChange={(e) => setData('audioFile', e.target.files.length ? e.target.files[0] : null)}
+                    />
+                    <InputError className="mt-2" message={errors.audioFile}/>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    <PrimaryButton type="submit" disabled={processing}>Ajouter la pièce</PrimaryButton>
+
+                    <Transition
+                        show={recentlySuccessful}
+                        enter="transition ease-in-out"
+                        enterFrom="opacity-0"
+                        leave="transition ease-in-out"
+                        leaveTo="opacity-0"
+                    >
+                        <p className="text-green-500 text-sm">Pièce ajoutée!</p>
+                    </Transition>
                 </div>
             </form>
         </section>

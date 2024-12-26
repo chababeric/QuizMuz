@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-export default function FilterableSelect({ label, value, onChange, options }) {
+export default function FilterableSelect({ label='', value, onChange, options }) {
     const [filteredOptions, setFilteredOptions] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
     const containerRef = useRef(null);
@@ -49,7 +49,7 @@ export default function FilterableSelect({ label, value, onChange, options }) {
             <div className="relative">
                 <input
                     type="text"
-                    className="new-piece-input"
+                    className="mt-1 block w-full rounded-md"
                     value={value}
                     onChange={handleInputChange}
                     onFocus={() => setShowDropdown(true)}

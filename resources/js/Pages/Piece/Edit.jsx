@@ -11,7 +11,6 @@ export default function Edit({ auth, user }) {
         axios.get(route('allPieces'))
             .then(response => {
                 setAllPieces(response.data);
-                console.log(response.data);
         }).catch(error => {
             console.log(error);
         });
