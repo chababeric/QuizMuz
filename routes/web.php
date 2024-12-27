@@ -184,7 +184,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/pieces/{id}/move-to-reserve', [PieceController::class, 'moveToReserve'])->name('pieces.moveToReserve');
         Route::post('/pieces/{id}/move-to-pieces', [PieceController::class, 'moveToPieces'])->name('pieces.moveToPieces');
         Route::post('/delete-piece/{id}', [PieceController::class, 'destroy'])->name('delete-piece');
-        Route::post('/new-piece', [PieceController::class, 'store']);
+        Route::post('/new-piece', [PieceController::class, 'store'])->name('admin.new-piece');
         Route::post('/admin_key/validate', [AdminKeyController::class, 'validateKey'])->name('admin_key.validate');
         Route::post('/admin_key/update', [AdminKeyController::class, 'store'])->name('admin_key.update');
         Route::get('/admin/total-stats', [UserStatsController::class, 'getTotalStats'])->name('admin.total-stats');

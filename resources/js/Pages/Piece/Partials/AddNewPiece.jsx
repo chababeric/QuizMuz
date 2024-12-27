@@ -3,13 +3,11 @@ import { Transition } from '@headlessui/react';
 import InputError from '@/Components/InputError.jsx';
 import InputLabel from '@/Components/InputLabel.jsx';
 import PrimaryButton from '@/Components/PrimaryButton.jsx';
-import TextInput from "@/Components/TextInput.jsx";
 import React, { useState, useEffect } from "react";
 import FilterableSelect from "@/Components/FilterableSelect.jsx";
 
-export default function AddNewPiece({ className = '', piecesList }) {
-    const user = usePage().props.auth.user;
-    const [coursesList, setCoursesList] = useState([]);
+export default function AddNewPiece({ className = '', piecesList, coursesList }) {
+    // const user = usePage().props.auth.user;
     const [levelsList, setLevelsList] = useState([]);
 
     const { data, setData, post, reset, errors, processing, recentlySuccessful } = useForm({
@@ -28,18 +26,6 @@ export default function AddNewPiece({ className = '', piecesList }) {
     });
 
     useEffect(() => {
-        axios.get(route('allCourses'), {
-            params: {
-                institution_id: user.institution_id,
-            }
-        }).then(response => {
-            setCoursesList(response.data);
-        }).catch(error => {
-            console.log(error);
-        });
-    }, []);
-
-    useEffect(() => {
         if (data.course) {
             axios.get(route('levelsFromCourse'), {
                 params: {
@@ -55,10 +41,30 @@ export default function AddNewPiece({ className = '', piecesList }) {
         }
     }, [data.course]);
 
+    const generateFileName = () => {
+        const { composer, title, no_mvt, mvt } = data;
+        const replaceInvalidChars = (str) => str.toLowerCase().replace(/\s+/g, '_').replace(/'/g, '_').replace(/[^\w_]/g, '');
+
+        const extractFamilyName = (str) => str.split(',')[0] || '0';
+
+        const fileNameParts = [
+            replaceInvalidChars(extractFamilyName(composer || '0')),
+            replaceInvalidChars(title || '0'),
+            replaceInvalidChars(no_mvt || '0'),
+            replaceInvalidChars(mvt || '0'),
+        ];
+
+        return fileNameParts.join('_') + '.mp3';
+    };
+
+    useEffect(() => {
+        setData('fileName', generateFileName());
+    }, [data.composer, data.title, data.no_mvt, data.mvt]);
+
     const submitNewPiece = (e) => {
         e.preventDefault();
 
-        post(route('piece.store'), {
+        post(route('admin.new-piece'), {
             preserveScroll: true,
             onSuccess: () => reset(),
             onError: (errors) => {

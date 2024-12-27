@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Piece;
 use App\Models\PieceReserve;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -118,10 +119,12 @@ class PieceController extends Controller
         return response()->json(['message' => $pieceReserve->title . ' de ' . $pieceReserve->composer . ' est de retour dans la liste des pièces.']);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request): RedirectResponse
     {
+        $initiator = auth()->user();
         $validatedData = $request->validate(
             [
+                'course' => 'required|string',
                 'level' => 'required|string',
                 'period' => 'nullable|string',
                 'genre' => 'nullable|string',
@@ -135,6 +138,7 @@ class PieceController extends Controller
                 'audioFile' => 'nullable'
             ],
             [
+                'course.required' => 'Le cours est requis.',
                 'level.required' => 'Le niveau est requis.',
                 'composer.required' => 'Le compositeur est requis.',
                 'title.required' => 'Le titre est requis.',
@@ -161,7 +165,6 @@ class PieceController extends Controller
         $newOrder = $highestOrder !== null ? $highestOrder + 1 : 1;
 
         // Create a new piece record in the pieces table
-        //! For the future, institution_id should be the insitution of the user
         $piece = new Piece([
             'level_id' => $validatedData['level'],
             'period' => $validatedData['period'],
@@ -174,13 +177,14 @@ class PieceController extends Controller
             'form' => $validatedData['form'],
             'file_name' => $validatedData['fileName'],
             'order' => $newOrder,
-            'institution_id' => 1,
+            'institution_id' => $initiator->institution_id,
         ]);
 
         // Save the new piece to the database
         $piece->save();
 
-        return response()->json(['message' => 'La pièce a été ajoutée avec succès.']);
+//        return response()->json(['message' => 'La pièce a été ajoutée avec succès.']);
+        return redirect()->route('piece.edit');
     }
 
     public function getPiecesInReserve(): JsonResponse
