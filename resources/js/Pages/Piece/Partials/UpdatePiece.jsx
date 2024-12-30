@@ -96,10 +96,84 @@ export default function UpdatePiece({ className = '', piecesList, coursesList })
 
             <div className="mt-6 space-y-6">
                 <DragDropContext onDragEnd={handleOnDragEnd}>
-                    <div className="w-full max-h-[600px] overflow-y-auto mt-4">
+                    {/* Parent scrollable container */}
+                    <div className="w-full max-h-[600px] overflow-y-auto mt-4 bg-gray-50 dark:bg-gray-900">
+                        <Droppable droppableId="pieces">
+                            {(provided) => (
+                                <ul
+                                    className="w-full divide-y divide-gray-300 dark:divide-neutral-700"
+                                    {...provided.droppableProps}
+                                    ref={provided.innerRef}
+                                >
+                                    {piecesList.map((piece, index) => (
+                                        <Draggable
+                                            key={piece.id}
+                                            draggableId={piece.id.toString()}
+                                            index={index}
+                                        >
+                                            {(provided) => (
+                                                <li
+                                                    className="flex flex-col sm:flex-row items-start sm:items-center px-4 py-3 bg-white dark:bg-gray-800 space-y-2 sm:space-y-0 sm:space-x-4"
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    {...provided.dragHandleProps}
+                                                >
+                                                    {/* Number column */}
+                                                    <span
+                                                        className="w-9 font-medium text-gray-700 dark:text-gray-200">
+                                                        {index + 1}
+                                                    </span>
+                                                    {/* Info columns */}
+                                                    <div
+                                                        className="flex-1 flex flex-wrap sm:flex-nowrap gap-y-2 sm:gap-y-0 sm:gap-x-6">
+                                                        <span
+                                                            className="w-full sm:w-12 truncate font-semibold text-gray-900 dark:text-gray-100">
+                                                            {piece.level.name}
+                                                        </span>
+                                                        <span className="truncate text-gray-800 dark:text-gray-300">
+                                                            {piece.title} &nbsp;&nbsp;
+                                                        </span>
+                                                        <span className="truncate text-gray-600 dark:text-gray-400">
+                                                            {piece.composer} &nbsp;&nbsp;
+                                                        </span>
+                                                        {piece.no_mvt && (
+                                                            <span className="truncate text-gray-500 dark:text-gray-400">
+                                                                Mvt: {piece.no_mvt} &nbsp;&nbsp;
+                                                            </span>
+                                                        )}
+                                                        {piece.mvt && (
+                                                            <span className="truncate text-gray-500 dark:text-gray-400">
+                                                                {piece.mvt}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {/* Actions */}
+                                                    <div className="flex space-x-2">
+                                                        <button
+                                                            onClick={() => handleEdit(piece)}
+                                                            className="text-blue-500 hover:underline"
+                                                        >
+                                                            Modifier
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(piece.id)}
+                                                            className="text-red-500 hover:underline"
+                                                        >
+                                                            Supprimer
+                                                        </button>
+                                                    </div>
+                                                </li>
+                                            )}
+                                        </Draggable>
+                                    ))}
+                                    {provided.placeholder}
+                                </ul>
+                            )}
+                        </Droppable>
                     </div>
                 </DragDropContext>
             </div>
+
 
         </section>
     );

@@ -41,7 +41,7 @@ export default function Edit({ auth, user }) {
                     </div>
 
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                        <UpdatePiece className="max-w-xl" piecesList={pieces} coursesList={courses}/>
+                        <UpdatePiece piecesList={pieces} coursesList={courses}/>
                     </div>
 
                 </div>
