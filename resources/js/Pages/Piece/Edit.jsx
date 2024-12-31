@@ -30,18 +30,18 @@ export default function Edit({ auth, user }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Pièce</h2>}
+            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight dark:text-white">Pièce</h2>}
         >
             <Head title="Admin - Pièce" />
 
-            <div className="py-12">
+            <div className="py-12 dark:bg-gray-900">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                        <AddNewPiece className="max-w-xl" piecesList={pieces} coursesList={courses}/>
+                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
+                        <AddNewPiece className="max-w-xl dark:bg-gray-800" piecesList={pieces} coursesList={courses}/>
                     </div>
 
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                        <UpdatePiece piecesList={pieces} coursesList={courses}/>
+                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
+                        <UpdatePiece piecesList={pieces} setPiecesList={setPieces} coursesList={courses} className="dark:bg-gray-800"/>
                     </div>
 
                 </div>

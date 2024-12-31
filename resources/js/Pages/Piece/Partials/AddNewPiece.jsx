@@ -1,4 +1,4 @@
-import { useForm, usePage } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
 import InputError from '@/Components/InputError.jsx';
 import InputLabel from '@/Components/InputLabel.jsx';
@@ -78,15 +78,15 @@ export default function AddNewPiece({ className = '', piecesList, coursesList })
     return (
         <section className={className}>
             <header>
-                <h2 className="text-lg font-medium text-gray-900">Ajouter une nouvelle pièce</h2>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Ajouter une nouvelle pièce</h2>
             </header>
 
             <form onSubmit={submitNewPiece} className="mt-6 space-y-6">
                 <div>
-                    <InputLabel htmlFor="course" value="Cours"/>
+                    <InputLabel htmlFor="course" value="Cours" className="dark:text-white"/>
                     <select
                         id="course"
-                        className="mt-1 block w-full rounded-md"
+                        className="mt-1 block w-full rounded-md dark:bg-gray-700 dark:text-white"
                         value={data.course}
                         onChange={(e) => setData('course', e.target.value)}
                         required
@@ -100,10 +100,10 @@ export default function AddNewPiece({ className = '', piecesList, coursesList })
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="level" value="Niveau"/>
+                    <InputLabel htmlFor="level" value="Niveau" className="dark:text-white"/>
                     <select
                         id="level"
-                        className="mt-1 block w-full rounded-md"
+                        className="mt-1 block w-full rounded-md dark:bg-gray-700 dark:text-white"
                         value={data.level}
                         onChange={(e) => setData('level', e.target.value)}
                         required
@@ -117,7 +117,7 @@ export default function AddNewPiece({ className = '', piecesList, coursesList })
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="period" value="Période"/>
+                    <InputLabel htmlFor="period" value="Période" className="dark:text-white"/>
                     <FilterableSelect
                         value={data.period}
                         onChange={(value) => setData('period', value)}
@@ -127,7 +127,7 @@ export default function AddNewPiece({ className = '', piecesList, coursesList })
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="genre" value="Genre"/>
+                    <InputLabel htmlFor="genre" value="Genre" className="dark:text-white"/>
                     <FilterableSelect
                         value={data.genre}
                         onChange={(value) => setData('genre', value)}
@@ -137,7 +137,7 @@ export default function AddNewPiece({ className = '', piecesList, coursesList })
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="composer" value="Compositeur"/>
+                    <InputLabel htmlFor="composer" value="Compositeur" className="dark:text-white"/>
                     <FilterableSelect
                         value={data.composer}
                         onChange={(value) => setData('composer', value)}
@@ -147,7 +147,7 @@ export default function AddNewPiece({ className = '', piecesList, coursesList })
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="title" value="Titre"/>
+                    <InputLabel htmlFor="title" value="Titre" className="dark:text-white"/>
                     <FilterableSelect
                         value={data.title}
                         onChange={(value) => setData('title', value)}
@@ -157,7 +157,7 @@ export default function AddNewPiece({ className = '', piecesList, coursesList })
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="element" value="Élément"/>
+                    <InputLabel htmlFor="element" value="Élément" className="dark:text-white"/>
                     <FilterableSelect
                         value={data.element}
                         onChange={(value) => setData('element', value)}
@@ -167,7 +167,7 @@ export default function AddNewPiece({ className = '', piecesList, coursesList })
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="no_mvt" value="No. mouvement"/>
+                    <InputLabel htmlFor="no_mvt" value="No. mouvement" className="dark:text-white"/>
                     <FilterableSelect
                         value={data.no_mvt}
                         onChange={(value) => setData('no_mvt', value)}
@@ -177,7 +177,7 @@ export default function AddNewPiece({ className = '', piecesList, coursesList })
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="mvt" value="Mouvement / Partie"/>
+                    <InputLabel htmlFor="mvt" value="Mouvement / Partie" className="dark:text-white"/>
                     <FilterableSelect
                         value={data.mvt}
                         onChange={(value) => setData('mvt', value)}
@@ -187,7 +187,7 @@ export default function AddNewPiece({ className = '', piecesList, coursesList })
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="form" value="Forme"/>
+                    <InputLabel htmlFor="form" value="Forme" className="dark:text-white"/>
                     <FilterableSelect
                         value={data.form}
                         onChange={(value) => setData('form', value)}
@@ -197,12 +197,12 @@ export default function AddNewPiece({ className = '', piecesList, coursesList })
                 </div>
 
                 <div className="flex flex-col mb-4 w-full">
-                    <InputLabel htmlFor="fileName" value="Nom du fichier audio"/>
+                    <InputLabel htmlFor="fileName" value="Nom du fichier audio" className="dark:text-white"/>
                     <span className="text-sm text-red-600">C'est important de suivre la convention de nom suivante:
                     <span
-                        className="text-sm text-gray-500 italic">compositeur_titre_no_mvt_mvt.mp3</span>
+                        className="text-sm text-gray-500 italic dark:text-white">compositeur_titre_no_mvt_mvt.mp3</span>
                     </span>
-                    <ul className="list-disc list-inside text-sm text-gray-500">
+                    <ul className="list-disc list-inside text-sm text-gray-500 dark:text-white">
                         <li>Si un des paramètres ne s'applique pas, remplacer par 0</li>
                         <li>Si un des paramètres contient plus qu'un mot, remplacer les caractères blancs par des
                             underscores (_)
@@ -234,7 +234,7 @@ export default function AddNewPiece({ className = '', piecesList, coursesList })
                     <input
                         id="fileName"
                         type="text"
-                        className="mt-1 block w-full rounded-md"
+                        className="new-piece-input dark:bg-gray-700 dark:text-white"
                         value={data.fileName}
                         onChange={(e) => setData('fileName', e.target.value)}
                     />
@@ -242,18 +242,18 @@ export default function AddNewPiece({ className = '', piecesList, coursesList })
                 </div>
 
                 <div className="flex flex-col mb-4 w-full">
-                    <InputLabel htmlFor="audioFile" value="Fichier audio"/>
+                    <InputLabel htmlFor="audioFile" value="Fichier audio" className="dark:text-white"/>
                     <input
                         id="audioFile"
                         type="file"
-                        className="new-piece-input"
+                        className="new-piece-input dark:bg-gray-700 dark:text-white"
                         onChange={(e) => setData('audioFile', e.target.files.length ? e.target.files[0] : null)}
                     />
                     <InputError className="mt-2" message={errors.audioFile}/>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton type="submit" disabled={processing}>Ajouter la pièce</PrimaryButton>
+                    <PrimaryButton type="submit" disabled={processing} className="dark:bg-gray-500">Ajouter la pièce</PrimaryButton>
 
                     <Transition
                         show={recentlySuccessful}
