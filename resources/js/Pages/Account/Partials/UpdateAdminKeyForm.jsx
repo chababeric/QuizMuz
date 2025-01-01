@@ -60,27 +60,27 @@ export default function UpdateAdminKeyForm({ className = '' }) {
     return (
         <section className={className}>
             <header>
-                <h2 className="text-lg font-medium text-gray-900">Clé d'administrateur</h2>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Clé d'administrateur</h2>
 
-                <p className="mt-1 text-sm text-gray-600">
+                <p className="mt-1 text-sm text-gray-600 dark:text-white">
                     Modifier la clé d'administrateur.
                 </p>
             </header>
 
             <form onSubmit={validateKey} className="mt-6 space-y-6">
-                <p className="text-sm text-gray-800">
+                <p className="text-sm text-gray-800 dark:text-white">
                     Pour des raisons de sécurité, la clé d'administrateur ne peut pas être affichée à cause de son chiffrement.
                     Cependant, vous pouvez la vérifier en la saisissant dans le champ ci-dessous.
                 </p>
                 <div>
-                    <InputLabel htmlFor="key" value="Clé admin à vérifier"/>
+                    <InputLabel htmlFor="key" value="Clé admin à vérifier" className="dark:text-white"/>
 
                     <TextInput
                         id="key"
                         ref={confirmationKey}
                         value={data.key}
                         onChange={(e) => setData('key', e.target.value)}
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full dark:text-white dark:bg-gray-800"
                         autoComplete="key"
                         required
                     />
@@ -89,7 +89,7 @@ export default function UpdateAdminKeyForm({ className = '' }) {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Vérifier</PrimaryButton>
+                    <PrimaryButton disabled={processing} className="dark:bg-blue-500 dark:hover:bg-blue-700">Vérifier</PrimaryButton>
 
                     <Transition
                         show={recentlyValidated}
@@ -106,14 +106,14 @@ export default function UpdateAdminKeyForm({ className = '' }) {
             {/* Key Update Form */}
             <form onSubmit={updateKey} className="mt-10 space-y-6">
                 <div>
-                    <InputLabel htmlFor="newKey" value="Nouvelle clé admin"/>
+                    <InputLabel htmlFor="newKey" value="Nouvelle clé admin" className="dark:text-white"/>
 
                     <TextInput
                         id="newKey"
                         ref={newKey}
                         value={data.newKey}
                         onChange={(e) => setData('newKey', e.target.value)}
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full dark:text-white dark:bg-gray-800"
                         autoComplete="newKey"
                         required
                     />
@@ -122,7 +122,7 @@ export default function UpdateAdminKeyForm({ className = '' }) {
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="userPassword" value={`Mot de passe de ${user.username}`}/>
+                    <InputLabel htmlFor="userPassword" value={`Mot de passe de ${user.username}`} className="dark:text-white"/>
 
                     <TextInput
                         id="userPassword"
@@ -130,7 +130,7 @@ export default function UpdateAdminKeyForm({ className = '' }) {
                         value={data.userPassword}
                         onChange={(e) => setData('userPassword', e.target.value)}
                         type="password"
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full dark:text-white dark:bg-gray-800"
                         autoComplete="password"
                         required
                     />
@@ -139,7 +139,7 @@ export default function UpdateAdminKeyForm({ className = '' }) {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Sauvegarder</PrimaryButton>
+                    <PrimaryButton disabled={processing} className="dark:bg-blue-500 dark:hover:bg-blue-700">Sauvegarder</PrimaryButton>
 
                     <Transition
                         show={recentlyUpdated}

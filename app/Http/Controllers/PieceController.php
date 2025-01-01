@@ -40,17 +40,79 @@ class PieceController extends Controller
     {
 //        $pieces = Piece::all();
         $initiator = auth()->user();
-        $pieces = Piece::with('level')->where('institution_id', $initiator->institution_id)->get();
+
+        $pieces = Piece::with(['level.course'])
+        ->where('institution_id', $initiator->institution_id)
+            ->get();
 
         return response()->json($pieces);
     }
 
-    public function update(Request $request, $id): JsonResponse
+    public function update(Request $request): RedirectResponse
     {
-        $piece = Piece::findOrFail($id);
-        $piece->update($request->all());
+        $initiator = auth()->user();
+        $validatedData = $request->validate(
+            [
+                'id' => 'required|integer',
+                'course' => 'required|integer',
+                'level' => 'required|integer',
+                'period' => 'nullable|string',
+                'genre' => 'nullable|string',
+                'composer' => 'required|string',
+                'title' => 'required|string',
+                'element' => 'nullable|string',
+                'no_mvt' => 'nullable|string',
+                'mvt' => 'nullable|string',
+                'form' => 'nullable|string',
+                'file_name' => ['required', 'string', 'regex:/.*\.mp3$/'],
+                'audioFile' => 'nullable'
+            ],
+            [
+                'course.required' => 'Le cours est requis.',
+                'level.required' => 'Le niveau est requis.',
+                'composer.required' => 'Le compositeur est requis.',
+                'title.required' => 'Le titre est requis.',
+                'file_name.required' => 'Le nom du fichier audio est requis.',
+                'file_name.regex' => 'Le nom du fichier doit se terminer par .mp3.'
+            ]
+        );
 
-        return response()->json(['message' => 'Les modifications ont été enregistrées avec succès.']);
+        // Find the piece by id
+        $piece = Piece::findOrFail($validatedData['id']);
+
+        // Update the piece with the validated data
+        $piece->update([
+//            'course' => $validatedData['course'],
+            'level_id' => $validatedData['level'],
+            'period' => $validatedData['period'],
+            'genre' => $validatedData['genre'],
+            'composer' => $validatedData['composer'],
+            'title' => $validatedData['title'],
+            'element' => $validatedData['element'],
+            'no_mvt' => $validatedData['no_mvt'],
+            'mvt' => $validatedData['mvt'],
+            'form' => $validatedData['form'],
+            'file_name' => $validatedData['file_name'],
+        ]);
+
+        // If a new audio file is uploaded, replace the old one
+//        if ($request->hasFile('audioFile')) {
+//            $audioFile = $request->file('audioFile');
+//            $fileName = $validatedData['fileName'];
+//
+//            // Delete the old file if it exists
+//            $existingFilePath = 'public/litmus_pieces/' . $fileName;
+//            if (Storage::exists($existingFilePath)) {
+//                Storage::delete($existingFilePath);
+//            }
+//
+//            // Save the new file
+//            $audioFile->storeAs('public/litmus_pieces', $fileName);
+//        }
+
+        return redirect()
+            ->route('piece.edit')
+            ->with('success', 'Pièce mise à jour avec succès.');
     }
 
     public function destroy($id): JsonResponse

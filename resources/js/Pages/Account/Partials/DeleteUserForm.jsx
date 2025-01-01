@@ -80,9 +80,9 @@ export default function DeleteUserForm({ className = '' }) {
     return (
         <section className={`space-y-6 ${className}`}>
             <header>
-                <h2 className="text-lg font-medium text-gray-900">Suppression de compte</h2>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Suppression de compte</h2>
 
-                <p className="mt-1 text-sm text-gray-600">
+                <p className="mt-1 text-sm text-gray-600 dark:text-white">
                     Une fois un compte est supprimé, toutes ses données seront définitivement supprimées. Veuillez entrer
                     le <strong>nom d'utilisateur</strong> du compte à supprimer.
                     <br/><br/>
@@ -92,13 +92,13 @@ export default function DeleteUserForm({ className = '' }) {
 
             <form onSubmit={submit} className="mt-6 space-y-6">
                 <div>
-                    <InputLabel htmlFor="usernameToDelete" value="Nom d'utilisateur"/>
+                    <InputLabel htmlFor="usernameToDelete" value="Nom d'utilisateur" className="dark:text-white"/>
 
                     <TextInput
                         id="usernameToDelete"
                         value={data.usernameToDelete}
                         onChange={(e) => setData('usernameToDelete', e.target.value)}
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full dark:text-white dark:bg-gray-800"
                         autoComplete="usernameToDelete"
                         required
                     />
@@ -107,7 +107,7 @@ export default function DeleteUserForm({ className = '' }) {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Supprimer</PrimaryButton>
+                    <PrimaryButton disabled={processing} className="dark:bg-blue-500 dark:hover:bg-blue-700">Supprimer</PrimaryButton>
 
                     <Transition
                         show={recentlyUpdated}
@@ -124,11 +124,11 @@ export default function DeleteUserForm({ className = '' }) {
 
             <Modal show={confirmingUserDeletion} onClose={closeModal}>
                 <form onSubmit={deleteUser} className="p-6">
-                    <h2 className="text-lg font-medium text-gray-900">
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
                         Êtes-vous sûr de vouloir supprimer le compte <strong>{userToDelete?.username}</strong> de <strong>{userToDelete?.first_name} {userToDelete?.last_name}</strong>?
                     </h2>
 
-                    <div className="mt-1 text-sm text-gray-600">
+                    <div className="mt-1 text-sm text-gray-600 dark:text-white">
                         Pour confirmer la suppression de ce compte, veuillez entrer votre mot de passe.
                         <br/><br/>
 
@@ -136,7 +136,7 @@ export default function DeleteUserForm({ className = '' }) {
                     </div>
 
                     <div className="mt-6">
-                        <InputLabel htmlFor="password" value="Password" className="sr-only" />
+                        <InputLabel htmlFor="password" value="Password" className="sr-only dark:text-white"/>
 
                         <TextInput
                             id="password"
@@ -145,7 +145,7 @@ export default function DeleteUserForm({ className = '' }) {
                             ref={passwordInput}
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
-                            className="mt-1 block w-3/4"
+                            className="mt-1 block w-3/4 dark:text-white dark:bg-gray-800"
                             isFocused
                             placeholder="Mot de passe"
                             required

@@ -180,10 +180,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/admin/delete-course', [CourseController::class, 'destroy'])->name('admin.delete-course');
         Route::post('/admin/toggle-level-access', [LevelController::class, 'toggleLevelAccess'])->name('admin.toggle-level-access');
         Route::post('/admin/reset-scores', [ScoreController::class, 'resetScores'])->name('admin.reset-scores');
-        Route::put('/admin/update-piece/{id}', [PieceController::class, 'update'])->name('admin.update-piece');
+        Route::patch('/admin/update-piece', [PieceController::class, 'update'])->name('admin.update-piece');
         Route::post('/pieces/{id}/move-to-reserve', [PieceController::class, 'moveToReserve'])->name('pieces.moveToReserve');
         Route::post('/pieces/{id}/move-to-pieces', [PieceController::class, 'moveToPieces'])->name('pieces.moveToPieces');
-        Route::post('/delete-piece/{id}', [PieceController::class, 'destroy'])->name('delete-piece');
+        Route::post('/delete-piece/{id}', [PieceController::class, 'destroy'])->name('admin.delete-piece');
         Route::post('/new-piece', [PieceController::class, 'store'])->name('admin.new-piece');
         Route::post('/admin_key/validate', [AdminKeyController::class, 'validateKey'])->name('admin_key.validate');
         Route::post('/admin_key/update', [AdminKeyController::class, 'store'])->name('admin_key.update');

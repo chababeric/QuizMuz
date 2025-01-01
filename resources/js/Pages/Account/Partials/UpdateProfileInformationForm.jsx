@@ -26,20 +26,20 @@ export default function UpdateProfileInformation({ className = '' }) {
     return (
         <section className={className}>
             <header>
-                <h2 className="text-lg font-medium text-gray-900">Nom d'utilisateur</h2>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Nom d'utilisateur</h2>
 
-                <p className="mt-1 text-sm text-gray-600">
+                <p className="mt-1 text-sm text-gray-600 dark:text-white">
                     Modifier le nom d'utilisateur d'un compte.
                 </p>
             </header>
 
             <form onSubmit={submit} className="mt-6 space-y-6">
                 <div>
-                    <InputLabel htmlFor="name" value="Nom d'utilisateur actuel" />
+                    <InputLabel htmlFor="name" value="Nom d'utilisateur actuel" className="dark:text-white"/>
 
                     <TextInput
                         id="old_username"
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full dark:text-white dark:bg-gray-800"
                         value={data.old_username}
                         onChange={(e) => setData('old_username', e.target.value)}
                         required
@@ -51,11 +51,11 @@ export default function UpdateProfileInformation({ className = '' }) {
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="email" value="Nouveau nom d'utilisateur" />
+                    <InputLabel htmlFor="email" value="Nouveau nom d'utilisateur" className="dark:text-white"/>
 
                     <TextInput
                         id="new_username"
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full dark:text-white dark:bg-gray-800"
                         value={data.new_username}
                         onChange={(e) => setData('new_username', e.target.value)}
                         required
@@ -88,7 +88,7 @@ export default function UpdateProfileInformation({ className = '' }) {
                 {/*)}*/}
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Sauvegarder</PrimaryButton>
+                    <PrimaryButton disabled={processing} className="dark:bg-blue-500 dark:hover:bg-blue-700">Sauvegarder</PrimaryButton>
 
                     <Transition
                         show={recentlySuccessful}

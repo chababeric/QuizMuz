@@ -253,7 +253,7 @@ export default function AddNewPiece({ className = '', piecesList, coursesList })
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton type="submit" disabled={processing} className="dark:bg-gray-500">Ajouter la pièce</PrimaryButton>
+                    <PrimaryButton type="submit" disabled={processing} className="dark:bg-blue-500 dark:hover:bg-blue-700">Ajouter la pièce</PrimaryButton>
 
                     <Transition
                         show={recentlySuccessful}
