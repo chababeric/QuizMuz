@@ -6,7 +6,7 @@ import TextInput from '@/Components/TextInput';
 import { useForm, usePage } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
 
-export default function UpdateAdminKeyForm({ className = '' }) {
+export default function UpdateAdminKeyForm({ className = '', updateLastActionTime }) {
     const user = usePage().props.auth.user;
     const newKey = useRef();
     const confirmationKey = useRef();
@@ -23,6 +23,7 @@ export default function UpdateAdminKeyForm({ className = '' }) {
 
     const validateKey = (e) => {
         e.preventDefault();
+        updateLastActionTime();
 
         post(route('admin_key.validate'), {
             preserveScroll: true,
@@ -41,6 +42,7 @@ export default function UpdateAdminKeyForm({ className = '' }) {
 
     const updateKey = (e) => {
         e.preventDefault();
+        updateLastActionTime();
 
         post(route('admin_key.update'), {
             preserveScroll: true,

@@ -67,12 +67,12 @@ export default function CourseManagement({ authInstitution, courses, getCourses,
         <section>
             <Modal show={isAddModalOpen} close={closeAddModal}>
                 <div className="p-4">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Ajouter un nouveau cours à l'institution: {selectedInstitution}</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 dark:text-white">Ajouter un nouveau cours à l'institution: {selectedInstitution}</h2>
 
-                    <label className="block mb-2">Nom du cours:</label>
+                    <label className="block mb-2 dark:text-white">Nom du cours:</label>
                     <input
                         type="text"
-                        className="mb-4 p-2 border rounded w-full"
+                        className="mb-4 p-2 border rounded w-full dark:text-white dark:bg-gray-800"
                         value={newCourseName}
                         onChange={(e) => setNewCourseName(e.target.value)}
                     />
@@ -96,8 +96,8 @@ export default function CourseManagement({ authInstitution, courses, getCourses,
 
             <Modal show={isDeleteModalOpen} close={closeDeleteModal}>
                 <div className="p-4">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Confirmer la suppression</h2>
-                    <p>Êtes-vous sûr de vouloir supprimer le cours <strong>{currentCourseToDelete.name}</strong> de l'institution: <strong>{selectedInstitution}</strong>?</p>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 dark:text-white">Confirmer la suppression</h2>
+                    <p className="dark:text-white">Êtes-vous sûr de vouloir supprimer le cours <strong>{currentCourseToDelete.name}</strong> de l'institution: <strong>{selectedInstitution}</strong>?</p>
 
                     <div className="flex justify-end mt-4">
                         <button
@@ -127,7 +127,7 @@ export default function CourseManagement({ authInstitution, courses, getCourses,
                 {courses.map((course, index) => (
                     <div
                         key={index}
-                        className="p-6 border rounded-lg shadow-lg flex flex-col items-center justify-between transition-transform duration-200 hover:scale-105 bg-orange-200"
+                        className="p-6 border rounded-lg shadow-lg flex flex-col items-center justify-between transition-transform duration-200 hover:scale-105 bg-orange-200 dark:bg-orange-300"
                     >
                         <h3 className="text-2xl font-semibold mb-4">{course.name}</h3>
                         <button
@@ -148,7 +148,7 @@ export default function CourseManagement({ authInstitution, courses, getCourses,
                 {/* Add New Institution button */}
                 {authInstitution === selectedInstitution &&
                     <div
-                        className="p-6 border rounded-lg shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-105 bg-orange-200 cursor-pointer"
+                        className="p-6 border rounded-lg shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-105 bg-orange-200 cursor-pointer dark:bg-orange-300"
                         onClick={openAddModal}
                     >
                         <img src={addIcon} alt="Add icon" className="w-14 h-14"/>

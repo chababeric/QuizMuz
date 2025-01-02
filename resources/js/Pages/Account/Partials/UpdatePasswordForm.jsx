@@ -6,7 +6,7 @@ import TextInput from '@/Components/TextInput.jsx';
 import { useForm } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
 
-export default function UpdatePasswordForm({ className = '' }) {
+export default function UpdatePasswordForm({ className = '', updateLastActionTime }) {
     const passwordInput = useRef();
     const usernameInput = useRef();
 
@@ -18,6 +18,7 @@ export default function UpdatePasswordForm({ className = '' }) {
 
     const updatePassword = (e) => {
         e.preventDefault();
+        updateLastActionTime();
 
         put(route('password.update'), {
             preserveScroll: true,

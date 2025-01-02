@@ -28,7 +28,7 @@ export default function ScoresReset({auth, scores, getScores, updateLastActionTi
     return (
         <section>
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-semibold text-gray-900 max-w-xs">Réinitialisation des scores - {selectedInstitution}</h2>
+                <h2 className="text-2xl font-semibold text-gray-900 max-w-xs dark:text-white">Réinitialisation des scores - {selectedInstitution}</h2>
                 <button
                     onClick={openModal}
                     className={`px-4 py-2 rounded-md transition duration-200 ml-4 ${
@@ -53,13 +53,13 @@ export default function ScoresReset({auth, scores, getScores, updateLastActionTi
                 {scores.map((scoreItem, index) => (
                     <div
                         key={index}
-                        className="p-3 border rounded-lg shadow-lg flex justify-between items-center bg-gray-100 transition-transform duration-200 hover:scale-105 hover:text-blue-600"
+                        className="p-3 border rounded-lg shadow-lg flex justify-between items-center bg-gray-100 transition-transform duration-200 hover:scale-105 hover:text-blue-600 dark:bg-gray-600 dark:text-white dark:border-gray-800 dark:hover:text-blue-400"
                     >
                         <div>
                             <h3 className="text-xl font-semibold">
                                 {scoreItem.user.last_name}, {scoreItem.user.first_name}
                             </h3>
-                            <p className="text-gray-600">{scoreItem.user.username}</p>
+                            <p className="text-gray-600 dark:text-white">{scoreItem.user.username}</p>
                         </div>
 
                         <div>{scoreItem.score}</div>
@@ -70,8 +70,8 @@ export default function ScoresReset({auth, scores, getScores, updateLastActionTi
             {isModalOpen && (
                 <Modal show={isModalOpen}>
                     <div className="p-6">
-                        <h2 className="text-lg font-bold mb-4">Confirmation</h2>
-                        <p>Êtes-vous sûr de vouloir <strong>réinitialiser tous les scores</strong> de l'institution : <strong>{selectedInstitution}</strong>?</p>
+                        <h2 className="text-lg font-bold mb-4 dark:text-white">Confirmation</h2>
+                        <p className="dark:text-white">Êtes-vous sûr de vouloir <strong>réinitialiser tous les scores</strong> de l'institution : <strong>{selectedInstitution}</strong>?</p>
                         <p className="text-red-500 mt-6">Cette action est irréversible.</p>
                         <div className="mt-6 flex justify-end space-x-4">
                             <button

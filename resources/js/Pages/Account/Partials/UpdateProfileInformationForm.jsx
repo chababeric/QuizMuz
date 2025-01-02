@@ -5,7 +5,7 @@ import TextInput from '@/Components/TextInput.jsx';
 import { useForm } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
 
-export default function UpdateProfileInformation({ className = '' }) {
+export default function UpdateProfileInformation({ className = '', updateLastActionTime }) {
     // const user = usePage().props.auth.user;
 
     const { data, setData, patch, reset, errors, processing, recentlySuccessful } = useForm({
@@ -15,6 +15,7 @@ export default function UpdateProfileInformation({ className = '' }) {
 
     const submit = (e) => {
         e.preventDefault();
+        updateLastActionTime();
 
         patch(route('admin.update-username'), {
             onSuccess: () => {

@@ -9,7 +9,7 @@ import { useForm } from '@inertiajs/react';
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import {Transition} from "@headlessui/react";
 
-export default function DeleteUserForm({ className = '' }) {
+export default function DeleteUserForm({ className = '', updateLastActionTime }) {
     const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
     const [recentlyUpdated, setRecentlyUpdated] = useState(false);
@@ -30,6 +30,7 @@ export default function DeleteUserForm({ className = '' }) {
 
     const deleteUser = (e) => {
         e.preventDefault();
+        updateLastActionTime();
 
         post(route('admin.delete-user'), {
             preserveScroll: true,
@@ -49,6 +50,7 @@ export default function DeleteUserForm({ className = '' }) {
 
     const submit = async (e) => {
         e.preventDefault();
+        updateLastActionTime();
 
         try {
             const response = await axios.post(route('user.find'), {

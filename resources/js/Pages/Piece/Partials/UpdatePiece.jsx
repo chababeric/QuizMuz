@@ -11,7 +11,7 @@ import { useForm } from '@inertiajs/react';
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import DangerButton from "@/Components/DangerButton.jsx";
 
-export default function UpdatePiece({ className = '', piecesList, setPiecesList, coursesList }) {
+export default function UpdatePiece({ className = '', piecesList, setPiecesList, coursesList, updateLastActionTime }) {
     const [levelsList, setLevelsList] = useState([]);
     const [levelsModifyOptions, setLevelsModifyOptions] = useState([]);
     const [selectedFilterCourse, setSelectedFilterCourse] = useState('');
@@ -95,6 +95,7 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
 
     const handleOnDragEnd = (result) => {
         if (!result.destination) return;
+        updateLastActionTime();
 
         const items = Array.from(piecesList);
         const [reorderedItem] = items.splice(result.source.index, 1);
@@ -118,6 +119,7 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
 
     const submitModifications = (e) => {
         e.preventDefault();
+        updateLastActionTime();
 
         patch(route('admin.update-piece'), {
             onSuccess: () => {
@@ -141,6 +143,7 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
     };
 
     const handleDelete = (id) => {
+        updateLastActionTime();
         axios.post(`/pieces/${id}/move-to-reserve`)
             .then(response => {
                 setIsDeleteModalOpen(false);
@@ -462,7 +465,7 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                                                             onClick={() => openDeleteModal(piece)}
                                                             className="text-red-500 hover:underline"
                                                         >
-                                                            Supprimer
+                                                            Retirer
                                                         </button>
                                                     </div>
                                                 </li>

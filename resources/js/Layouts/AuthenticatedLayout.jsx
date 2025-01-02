@@ -9,7 +9,7 @@ export default function Authenticated({ user, header, children }) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 
     return (
-        <div className="min-h-screen bg-gray-100">
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
             <nav className="bg-white border-b border-gray-100 dark:bg-gray-900">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between h-16">
@@ -79,7 +79,7 @@ export default function Authenticated({ user, header, children }) {
                         <div className="-me-2 flex items-center sm:hidden">
                             <button
                                 onClick={() => setShowingNavigationDropdown((previousState) => !previousState)}
-                                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out"
+                                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out dark:bg-gray-700 dark:focus:bg-gray-700 dark:hover:bg-gray-600 dark:text-white dark:focus:text-white"
                             >
                                 <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                                     <path
@@ -104,20 +104,22 @@ export default function Authenticated({ user, header, children }) {
 
                 <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' sm:hidden'}>
                     <div className="pt-2 pb-3 space-y-1">
-                        <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')}>
+                        <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')} className="dark:bg-gray-900 dark:text-white">
                             Vue d'ensemble
                         </ResponsiveNavLink>
                     </div>
 
                     <div className="pt-4 pb-1 border-t border-gray-200">
                         <div className="px-4">
-                            <div className="font-medium text-base text-gray-800">{user.first_name} {user.last_name}</div>
-                            <div className="font-medium text-sm text-gray-500">{user.username}</div>
+                            <div className="font-medium text-base text-gray-800 dark:text-white">{user.first_name} {user.last_name}</div>
+                            <div className="font-medium text-sm text-gray-500 dark:text-white">{user.username}</div>
                         </div>
 
                         <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route('general.edit')} active={route().current('general.edit')}>Général</ResponsiveNavLink>
-                            <ResponsiveNavLink method="post" href={route('logout')} as="button">
+                            <ResponsiveNavLink href={route('general.edit')} active={route().current('general.edit')} className="dark:bg-gray-900 dark:text-white">Général</ResponsiveNavLink>
+                            <ResponsiveNavLink href={route('account.edit')} active={route().current('account.edit')} className="dark:bg-gray-900 dark:text-white">Compte</ResponsiveNavLink>
+                            <ResponsiveNavLink href={route('piece.edit')} active={route().current('piece.edit')} className="dark:bg-gray-900 dark:text-white">Pièce</ResponsiveNavLink>
+                            <ResponsiveNavLink method="post" href={route('logout')} as="button" className="dark:bg-gray-900 dark:text-white">
                                 Déconnexion
                             </ResponsiveNavLink>
                         </div>

@@ -54,13 +54,13 @@ export default function AdminManagement({auth, users, getUsers, updateLastAction
                 {users.map((user, index) => (
                     <div
                         key={index}
-                        className="p-3 border rounded-lg shadow-lg flex justify-between items-center bg-gray-100 transition-transform duration-200 hover:scale-105 hover:text-blue-600"
+                        className="p-3 border rounded-lg shadow-lg flex justify-between items-center bg-gray-100 transition-transform duration-200 hover:scale-105 hover:text-blue-600 dark:bg-gray-600 dark:text-white dark:border-gray-800 dark:hover:text-blue-400"
                     >
                         <div>
                             <h3 className="text-xl font-semibold">
                                 {user.last_name}, {user.first_name}
                             </h3>
-                            <p className="text-gray-600">{user.username}</p>
+                            <p className="text-gray-600 dark:text-white">{user.username}</p>
                         </div>
                         <button
                             onClick={() => openModal(user.is_admin ? 'demote' : 'promote', user)}
@@ -82,10 +82,10 @@ export default function AdminManagement({auth, users, getUsers, updateLastAction
             {/* Modal for confirming admin promotion/demotion */}
             <Modal show={isModalOpen} onClose={closeModal}>
                 <div className="p-4">
-                    <h2 className="text-xl font-semibold mb-4">
+                    <h2 className="text-xl font-semibold mb-4 dark:text-white">
                         {modalAction === 'promote' ? 'Promouvoir' : 'Rétrograder'} {selectedUser?.first_name} {selectedUser?.last_name}
                     </h2>
-                    <p>
+                    <p className="dark:text-white">
                         Êtes-vous sûr de vouloir {modalAction === 'promote' ? "donner les droits d'administrateur à" : "retirer les droits d'administrateur de"} <strong>{selectedUser?.first_name} {selectedUser?.last_name}</strong> du <strong>{selectedInstitution}</strong> ?
                     </p>
                     <div className="flex justify-end mt-4">

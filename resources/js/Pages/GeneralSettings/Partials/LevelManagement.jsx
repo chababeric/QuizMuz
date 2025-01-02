@@ -100,14 +100,14 @@ export default function LevelManagement({auth, courses, levels, getLevels, updat
         <section>
             <Modal show={isModalOpen} onClose={closeModal}>
                 <div className="p-4">
-                    <h2 className="text-xl font-semibold mb-4">Ajouter un niveau</h2>
+                    <h2 className="text-xl font-semibold mb-4 dark:text-white">Ajouter un niveau</h2>
 
                     {/* Select Course */}
-                    <label className="block mb-2">Cours:</label>
+                    <label className="block mb-2 dark:text-white">Cours:</label>
                     <select
                         value={selectedCourse}
                         onChange={(e) => setSelectedCourse(e.target.value)}
-                        className="mb-4 p-2 border rounded w-full"
+                        className="mb-4 p-2 border rounded w-full dark:text-white dark:bg-gray-800"
                     >
                         {courses.map((course) => (
                             <option key={course.id} value={course.id}>
@@ -117,12 +117,12 @@ export default function LevelManagement({auth, courses, levels, getLevels, updat
                     </select>
 
                     {/* New Level Name */}
-                    <label className="block mb-2">Nom du niveau:</label>
+                    <label className="block mb-2 dark:text-white">Nom du niveau:</label>
                     <input
                         type="text"
                         value={newLevelName}
                         onChange={(e) => setNewLevelName(e.target.value)}
-                        className="mb-4 p-2 border rounded w-full"
+                        className="mb-4 p-2 border rounded w-full dark:text-white dark:bg-gray-800"
                     />
 
                     {/* Buttons */}
@@ -146,8 +146,8 @@ export default function LevelManagement({auth, courses, levels, getLevels, updat
             {/* Modal for confirming delete */}
             <Modal show={isDeleteModalOpen} onClose={closeDeleteModal}>
                 <div className="p-4">
-                    <h2 className="text-xl font-semibold mb-4">Confirmer la suppression</h2>
-                    <p className="mb-4">
+                    <h2 className="text-xl font-semibold mb-4 dark:text-white">Confirmer la suppression</h2>
+                    <p className="mb-4 dark:text-white">
                         Êtes-vous sûr de vouloir supprimer le niveau{" "}
                         <strong>{levelToDelete?.name}</strong> du cours:{" "}
                         <strong>{levelToDelete?.course.name}</strong>?
@@ -184,14 +184,14 @@ export default function LevelManagement({auth, courses, levels, getLevels, updat
 
                 return (
                     <div key={courseIndex} className="mb-8">
-                        <h2 className="text-xl font-semibold mb-4">{course.name}</h2>
+                        <h2 className="text-xl font-semibold mb-4 dark:text-white">{course.name}</h2>
 
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                             {courseLevels.map((level, levelIndex) => (
                                 <div
                                     key={levelIndex}
                                     className={`p-6 border rounded-lg shadow-lg flex flex-col items-center justify-between transition-transform duration-200 hover:scale-105 ${
-                                        level.is_enabled ? "bg-green-200" : "bg-red-200"
+                                        level.is_enabled ? "bg-green-200 dark:bg-green-300" : "bg-red-200 dark:bg-red-300"
                                     }`}
                                 >
                                     <h3 className="text-2xl font-semibold mb-4">{level.name}</h3>
@@ -233,7 +233,7 @@ export default function LevelManagement({auth, courses, levels, getLevels, updat
                             {/* Add New Level button */}
                             {auth.user.institution_id === selectedInstitutionId && (
                                 <div
-                                    className="p-6 border rounded-lg shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-105 bg-green-200 cursor-pointer"
+                                    className="p-6 border rounded-lg shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-105 bg-green-200 cursor-pointer dark:bg-green-300"
                                     onClick={() => openModal(course.id)}
                                 >
                                     <img src={addIcon} alt="Add icon" className="w-14 h-14" />

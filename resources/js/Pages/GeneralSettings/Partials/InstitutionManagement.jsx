@@ -67,22 +67,22 @@ export default function InstitutionManagement({ institutions, getInstitutions, u
             {/* Modal for adding a new institution */}
             <Modal show={isAddModalOpen} onClose={closeAddModal}>
                 <div className="p-4">
-                    <h2 className="text-xl font-semibold mb-4">Ajouter une nouvelle institution</h2>
+                    <h2 className="text-xl font-semibold mb-4 dark:text-white">Ajouter une nouvelle institution</h2>
 
                     {/* New Institution Name */}
-                    <label className="block mb-2">Nom de l'institution:</label>
+                    <label className="block mb-2 dark:text-white">Nom de l'institution:</label>
                     <input
                         type="text"
                         value={newInstitutionName}
                         onChange={(e) => setNewInstitutionName(e.target.value)}
-                        className="mb-4 p-2 border rounded w-full"
+                        className="mb-4 p-2 border rounded w-full dark:text-white dark:bg-gray-800"
                     />
 
                     {/* Buttons */}
                     <div className="flex justify-end">
                         <button
                             onClick={addInstitution}
-                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
                         >
                             Ajouter
                         </button>
@@ -99,8 +99,8 @@ export default function InstitutionManagement({ institutions, getInstitutions, u
             {/* Modal for delete confirmation */}
             <Modal show={isDeleteModalOpen} onClose={closeDeleteModal}>
                 <div className="p-4">
-                    <h2 className="text-xl font-semibold mb-4">Confirmer la suppression</h2>
-                    <p>Êtes-vous sûr de vouloir supprimer l'institution '{currentInstitutionToDelete?.name}' ?</p>
+                    <h2 className="text-xl font-semibold mb-4 dark:text-white">Confirmer la suppression</h2>
+                    <p className="dark:text-white">Êtes-vous sûr de vouloir supprimer l'institution '{currentInstitutionToDelete?.name}' ?</p>
 
                     {/* Buttons */}
                     <div className="flex justify-end mt-4">
@@ -132,7 +132,7 @@ export default function InstitutionManagement({ institutions, getInstitutions, u
                 {institutions.map((institution, index) => (
                     <div
                         key={index}
-                        className="p-6 border rounded-lg shadow-lg flex flex-col items-center justify-between transition-transform duration-200 hover:scale-105 bg-blue-200"
+                        className="p-6 border rounded-lg shadow-lg flex flex-col items-center justify-between transition-transform duration-200 hover:scale-105 bg-blue-200 dark:bg-blue-400"
                     >
                         <h3 className="text-2xl font-semibold mb-4">{institution.name}</h3>
                         <button
@@ -147,7 +147,7 @@ export default function InstitutionManagement({ institutions, getInstitutions, u
 
                 {/* Add New Institution button */}
                 <div
-                    className="p-6 border rounded-lg shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-105 bg-blue-200 cursor-pointer"
+                    className="p-6 border rounded-lg shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-105 bg-blue-200 cursor-pointer dark:bg-blue-400"
                     onClick={openAddModal}
                 >
                     <img src={addIcon} alt="Add icon" className="w-14 h-14" />
