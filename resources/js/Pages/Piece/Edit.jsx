@@ -3,16 +3,24 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.jsx';
 import AddNewPiece from "@/Pages/Piece/Partials/AddNewPiece.jsx";
 import UpdatePiece from "@/Pages/Piece/Partials/UpdatePiece.jsx";
 import { useEffect, useState } from "react";
+import PiecesReserve from "@/Pages/Piece/Partials/PiecesReserve.jsx";
 
 export default function Edit({ auth, user }) {
     const [pieces, setPieces] = useState([]);
     const [courses, setCourses] = useState([]);
+    const [piecesInReserve, setPiecesInReserve] = useState([]);
+    const [groupedPieces, setGroupedPieces] = useState({});
 
     useEffect( () => {
+        getAllPieces();
+        getPiecesInReserve();
+    }, []);
+
+    const getAllPieces = () => {
         axios.get(route('allPieces'))
             .then(response => {
                 setPieces(response.data);
-        }).catch(error => {
+            }).catch(error => {
             console.log(error);
         });
 
@@ -25,7 +33,34 @@ export default function Edit({ auth, user }) {
         }).catch(error => {
             console.log(error);
         });
-    }, []);
+    }
+
+    const getPiecesInReserve = () => {
+        axios.get(route('piecesInReserve'))
+            .then(response => {
+                const pieces = response.data;
+
+                const grouped = pieces.reduce((acc, piece) => {
+                    const courseId = piece.level?.course_id;
+                    const course = courses.find(course => course.id === courseId);
+
+                    const courseName = course ? course.name : 'Non Catégorisé';
+
+                    if (!acc[courseName]) {
+                        acc[courseName] = [];
+                    }
+                    acc[courseName].push(piece);
+
+                    return acc;
+                }, {});
+
+                setPiecesInReserve(pieces);
+                setGroupedPieces(grouped);
+            })
+            .catch(error => {
+                console.error('Error fetching pieces:', error);
+            });
+    }
 
     const updateLastActionTime = () => {
         axios.post(route('updateLastActionTime'))
@@ -45,11 +80,36 @@ export default function Edit({ auth, user }) {
             <div className="py-12 dark:bg-gray-900">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                        <AddNewPiece className="max-w-xl dark:bg-gray-800" piecesList={pieces} coursesList={courses} updateLastActionTime={updateLastActionTime}/>
+                        <AddNewPiece
+                            className="max-w-xl dark:bg-gray-800"
+                            piecesList={pieces}
+                            coursesList={courses}
+                            updateLastActionTime={updateLastActionTime}
+                            getAllPices={getAllPieces}
+                        />
                     </div>
 
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                        <UpdatePiece piecesList={pieces} setPiecesList={setPieces} coursesList={courses} className="dark:bg-gray-800" updateLastActionTime={updateLastActionTime}/>
+                        <UpdatePiece
+                            piecesList={pieces}
+                            setPiecesList={setPieces}
+                            coursesList={courses}
+                            className="dark:bg-gray-800"
+                            updateLastActionTime={updateLastActionTime}
+                            getPiecesInReserve={getPiecesInReserve}
+                        />
+                    </div>
+
+                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
+                        <PiecesReserve
+                            className="dark:bg-gray-800"
+                            updateLastActionTime={updateLastActionTime}
+                            coursesList={courses}
+                            getAllPices={getAllPieces}
+                            piecesInReserve={piecesInReserve}
+                            groupedPieces={groupedPieces}
+                            getPiecesInReserve={getPiecesInReserve}
+                        />
                     </div>
 
                 </div>

@@ -11,7 +11,7 @@ import { useForm } from '@inertiajs/react';
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import DangerButton from "@/Components/DangerButton.jsx";
 
-export default function UpdatePiece({ className = '', piecesList, setPiecesList, coursesList, updateLastActionTime }) {
+export default function UpdatePiece({ className = '', piecesList, setPiecesList, coursesList, updateLastActionTime, getPiecesInReserve }) {
     const [levelsList, setLevelsList] = useState([]);
     const [levelsModifyOptions, setLevelsModifyOptions] = useState([]);
     const [selectedFilterCourse, setSelectedFilterCourse] = useState('');
@@ -149,6 +149,7 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                 setIsDeleteModalOpen(false);
                 setSuccessMessage(response.data.message);
                 setErrorMessage('');
+                getPiecesInReserve();
                 axios.get(route('allPieces'))
                     .then(response => {
                         setPiecesList(response.data);
@@ -218,15 +219,15 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
 
             <Modal show={isDeleteModalOpen} close={() => setIsDeleteModalOpen(false)}>
                 <div className="p-4">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Supprimer une pièce</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Retirer une pièce</h2>
 
                     <p className="text-gray-800 dark:text-gray-200">
-                        Êtes-vous sûr de vouloir supprimer la pièce <span className="font-semibold">{currentPiece.current?.title}</span>
+                        Êtes-vous sûr de vouloir retirer la pièce <span className="font-semibold">{currentPiece.current?.title}</span>
                         &nbsp;de <span className="font-semibold">{currentPiece.current?.composer}</span> du
                         niveau <span className="font-semibold">{currentPiece.current?.level.name}</span> ?
                     </p>
 
-                    <div className="flex justify-start mt-4">
+                    <div className="flex justify-end mt-4">
                         <button
                             onClick={() => setIsDeleteModalOpen(false)}
                             className="mr-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
@@ -236,7 +237,7 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                         </button>
 
                         <DangerButton disabled={processing} onClick={() => handleDelete(currentPiece.current?.id)}>
-                            Supprimer
+                            Retirer
                         </DangerButton>
                     </div>
                 </div>

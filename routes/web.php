@@ -159,7 +159,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/api/levels', [LevelController::class, 'getAllLevels'])->name('allLevels');
     Route::get('/levels-from-course', [LevelController::class, 'getLevelsFromCourse'])->name('levelsFromCourse');
     Route::get('/api/all-pieces', [PieceController::class, 'getAllPieces'])->name('allPieces');
-    Route::get('/api/pieces-in-reserve', [PieceController::class, 'getPiecesInReserve']);
+    Route::get('/api/pieces-in-reserve', [PieceController::class, 'getPiecesInReserve'])->name('piecesInReserve');
     Route::post('/increment-total-pieces-played', [UserStats::class, 'incrementTotalPiecesPlayed']);
     Route::post('/set-difficulty', [UserStats::class, 'setDifficulty']);
     Route::post('/updateLastLevel', [LevelController::class, 'updateLastLevel'])->name('updateLastLevel');

@@ -6,7 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton.jsx';
 import React, { useState, useEffect } from "react";
 import FilterableSelect from "@/Components/FilterableSelect.jsx";
 
-export default function AddNewPiece({ className = '', piecesList, coursesList, updateLastActionTime }) {
+export default function AddNewPiece({ className = '', piecesList, coursesList, updateLastActionTime, getAllPices }) {
     // const user = usePage().props.auth.user;
     const [levelsList, setLevelsList] = useState([]);
 
@@ -67,7 +67,10 @@ export default function AddNewPiece({ className = '', piecesList, coursesList, u
 
         post(route('admin.new-piece'), {
             preserveScroll: true,
-            onSuccess: () => reset(),
+            onSuccess: () => {
+                reset();
+                getAllPices();
+            },
             onError: (errors) => {
                 if (errors.level) {
                     reset('course', 'level', 'period', 'genre', 'composer', 'title', 'element', 'no_mvt', 'mvt', 'form', 'fileName', 'audioFile');
