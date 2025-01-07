@@ -6,7 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton.jsx';
 import React, { useState, useEffect } from "react";
 import FilterableSelect from "@/Components/FilterableSelect.jsx";
 
-export default function AddNewPiece({ className = '', piecesList, coursesList, updateLastActionTime, getAllPices }) {
+export default function AddNewPiece({ className = '', piecesList, coursesList, updateLastActionTime, getAllPieces }) {
     // const user = usePage().props.auth.user;
     const [levelsList, setLevelsList] = useState([]);
 
@@ -69,7 +69,7 @@ export default function AddNewPiece({ className = '', piecesList, coursesList, u
             preserveScroll: true,
             onSuccess: () => {
                 reset();
-                getAllPices();
+                getAllPieces();
             },
             onError: (errors) => {
                 if (errors.level) {

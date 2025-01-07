@@ -4,7 +4,7 @@ import MessageDisplay from "@/Components/MessageDisplay.jsx";
 import DangerButton from "@/Components/DangerButton.jsx";
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 
-export default function PiecesReserve({ className = '', updateLastActionTime, coursesList, getAllPices, piecesInReserve, groupedPieces, getPiecesInReserve }) {
+export default function PiecesReserve({ className = '', updateLastActionTime, coursesList, getAllPieces, piecesInReserve, groupedPieces, getPiecesInReserve }) {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const currentPiece = useRef(piecesInReserve[0] || null);
@@ -34,7 +34,7 @@ export default function PiecesReserve({ className = '', updateLastActionTime, co
                 setSuccessMessage(response.data.message);
                 setErrorMessage('');
                 setIsAddModalOpen(false);
-                getAllPices();
+                getAllPieces();
             })
             .catch(error => {
                 console.error('Error moving piece:', error);
@@ -52,7 +52,7 @@ export default function PiecesReserve({ className = '', updateLastActionTime, co
                 setSuccessMessage(response.data.message);
                 setErrorMessage('');
                 setIsDeleteModalOpen(false);
-                getAllPices();
+                getAllPieces();
             })
             .catch(error => {
                 console.error('Error deleting piece:', error);

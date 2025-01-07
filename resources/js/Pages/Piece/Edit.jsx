@@ -18,11 +18,15 @@ export default function Edit({ auth, user }) {
 
     const getAllPieces = () => {
         axios.get(route('allPieces'))
-            .then(response => {
-                setPieces(response.data);
-            }).catch(error => {
-            console.log(error);
-        });
+            .then((response) => {
+                // Sort the piecesList by order
+                const sortedPieces = response.data.sort((a, b) => a.order - b.order);
+
+                setPieces(sortedPieces);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
 
         axios.get(route('allCourses'), {
             params: {
@@ -85,7 +89,7 @@ export default function Edit({ auth, user }) {
                             piecesList={pieces}
                             coursesList={courses}
                             updateLastActionTime={updateLastActionTime}
-                            getAllPices={getAllPieces}
+                            getAllPieces={getAllPieces}
                         />
                     </div>
 
@@ -105,7 +109,7 @@ export default function Edit({ auth, user }) {
                             className="dark:bg-gray-800"
                             updateLastActionTime={updateLastActionTime}
                             coursesList={courses}
-                            getAllPices={getAllPieces}
+                            getAllPieces={getAllPieces}
                             piecesInReserve={piecesInReserve}
                             groupedPieces={groupedPieces}
                             getPiecesInReserve={getPiecesInReserve}

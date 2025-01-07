@@ -151,22 +151,22 @@ export default function QuizSolo({ auth, pieces, difficulty, level, courseId }) 
         }
     };
 
-    const incrementTotalPiecesPlayed = async () => {
-        try {
-            await axios.post('/increment-total-pieces-played',
-                { userId: auth.user.id }
-            );
-        } catch (error) {
-            console.error('Error incrementing total pieces played:', error);
-        }
-    };
+    // const incrementTotalPiecesPlayed = async () => {
+    //     try {
+    //         await axios.post('/increment-total-pieces-played',
+    //             { userId: auth.user.id }
+    //         );
+    //     } catch (error) {
+    //         console.error('Error incrementing total pieces played:', error);
+    //     }
+    // };
 
     const grade = (action) => {
         stopMusic();
         switch (action) {
             case 'Vérifier':
                 updateLastActionTime().then(r => {});
-                incrementTotalPiecesPlayed().then(r => {});
+                // incrementTotalPiecesPlayed().then(r => {});
                 setGrading(true);
                 setActionText('Continuer');
                 break;
@@ -174,7 +174,6 @@ export default function QuizSolo({ auth, pieces, difficulty, level, courseId }) 
                 if (playPieceOnce && randomPiece) {
                     setPlayedPieces(prevPlayedPieces => [...prevPlayedPieces, randomPiece.id]);
                 }
-                fetchRandomPiece();
                 setGrading(false);
                 setLastCheckTime(new Date().getTime());
                 setActionText('Vérifier');
@@ -188,6 +187,7 @@ export default function QuizSolo({ auth, pieces, difficulty, level, courseId }) 
                     mvt: '',
                     form: ''
                 });
+                fetchRandomPiece();
                 break;
         }
     };
@@ -259,6 +259,7 @@ export default function QuizSolo({ auth, pieces, difficulty, level, courseId }) 
                                 lastUpdatedTime={lastCheckTime}
                                 elements={elements}
                                 updateScore={setScore}
+                                difficulty={difficulty}
                             />
                         ) : (
                             <div className="flex flex-col items-center w-full">
