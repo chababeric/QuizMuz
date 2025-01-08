@@ -36,6 +36,14 @@ export default function Authenticated({ user, header, children }) {
                                 <NavLink href={route('piece.edit')} active={route().current('piece.edit')} className="dark:text-white">
                                     Pièce
                                 </NavLink>
+
+                                <NavLink href={route('welcome')} className="dark:text-white">
+                                    Retour
+                                </NavLink>
+
+                                <NavLink method="post" href={route('logout')} as="button" className="dark:text-white">
+                                    Déconnexion
+                                </NavLink>
                             </div>
                         </div>
 
@@ -119,6 +127,7 @@ export default function Authenticated({ user, header, children }) {
                             <ResponsiveNavLink href={route('general.edit')} active={route().current('general.edit')} className="dark:bg-gray-900 dark:text-white">Général</ResponsiveNavLink>
                             <ResponsiveNavLink href={route('account.edit')} active={route().current('account.edit')} className="dark:bg-gray-900 dark:text-white">Compte</ResponsiveNavLink>
                             <ResponsiveNavLink href={route('piece.edit')} active={route().current('piece.edit')} className="dark:bg-gray-900 dark:text-white">Pièce</ResponsiveNavLink>
+                            <ResponsiveNavLink href={route('welcome')} className="dark:bg-gray-900 dark:text-white">Retour</ResponsiveNavLink>
                             <ResponsiveNavLink method="post" href={route('logout')} as="button" className="dark:bg-gray-900 dark:text-white">
                                 Déconnexion
                             </ResponsiveNavLink>
