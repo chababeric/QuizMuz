@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import levenshtein from 'js-levenshtein';
 import axios from "axios";
 
-export default function Grader({ auth, piece, userAnswers, lastUpdatedTime, elements, updateScore }) {
+export default function Grader({ auth, piece, userAnswers, lastUpdatedTime, elements, updateScore, difficulty }) {
     const [updateTime, setUpdateTime] = useState(lastUpdatedTime);
     const prevScore = useRef(null);
 
@@ -38,7 +38,13 @@ export default function Grader({ auth, piece, userAnswers, lastUpdatedTime, elem
                 }
 
                 if (isCorrect || similarityPercentage >= 70) {
-                    score += 2;
+                    if (difficulty === '1') {
+                        score += 2;
+                    } else if (difficulty === '2') {
+                        score += 3;
+                    } else if (difficulty === '3') {
+                        score += 5;
+                    }
                 }
             });
 

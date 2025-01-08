@@ -5,14 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Score;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ScoreController extends Controller
 {
-    public function getAllScores(): JsonResponse
+    public function getAllScores(Request $request): JsonResponse
     {
+        $request->validate([
+            'institution_id' => 'required|exists:institutions,id',
+        ]);
+
         $scores = Score::with('user')
             ->join('users', 'scores.user_id', '=', 'users.id')
-            ->orderBy('users.username', 'asc')
+            ->where('users.institution_id', $request->institution_id)
+            ->orderBy('score', 'desc')
             ->select('scores.*') // Select scores columns to avoid ambiguity
             ->get();
 
@@ -74,7 +80,25 @@ class ScoreController extends Controller
 
     public function resetScores(): JsonResponse
     {
-        Score::truncate();
+        $initiator = auth()->user();
+
+        if (!$initiator || !$initiator->institution_id) {
+            return response()->json(['message' => 'User or institution not found.'], 400);
+        }
+
+        Score::whereHas('user', function ($query) use ($initiator) {
+            $query->where('institution_id', $initiator->institution_id);
+        })->update(['score' => 0]);
+
+        Log::info('**********START TRANSACTION**********');
+        Log::info('ACTION: Reset scores');
+        Log::info('INITIATOR ID: ' . $initiator->id);
+        Log::info('INITIATOR First Name: ' . $initiator->first_name);
+        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+        Log::info('INITIATOR Username: ' . $initiator->username);
+        Log::info('Institution name: ' . $initiator->institution->name);
+        Log::info('**********END TRANSACTION**********');
+
         return response()->json(['message' => 'Les scores ont été réinitialisés avec succès.']);
     }
 

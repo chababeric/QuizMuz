@@ -6,7 +6,10 @@ use App\Models\AdminControl;
 use App\Models\Level;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,7 +22,6 @@ class AdminController extends Controller
 
     public function getAllUsers(): JsonResponse
     {
-        // Eager load the institution relationship
         $users = User::with('institution')->get();
 
         foreach ($users as $user) {
@@ -31,55 +33,60 @@ class AdminController extends Controller
         return response()->json($users);
     }
 
-    public function updateUsername(Request $request): JsonResponse
+    public function getUsersFromInstitution(Request $request): JsonResponse
     {
         $request->validate([
-            'current_username' => 'required|string',
-            'new_username' => 'required|string|unique:users,username|max:18',
+            'institution_id' => 'required|exists:institutions,id',
         ]);
 
+        $users = User::where('institution_id', $request->institution_id)->get();
+
+        foreach ($users as $user) {
+            $user->is_admin = $user->administrator()->exists();
+            // Access the institution name directly
+            $user->institution_name = $user->institution ? $user->institution->name : null;
+        }
+
+        return response()->json($users);
+    }
+
+    public function updateUsername(Request $request): RedirectResponse
+    {
+        $initiator = $request->user();
+        $request->validate([
+            'old_username' => 'required|string',
+            'new_username' => 'required|string|unique:users,username|max:18',
+        ],
+        [
+            'new_username.unique' => 'Le nouveau nom d\'utilisateur est déjà pris.',
+            'new_username.max' => 'Le nom d\'utilisateur ne doit pas dépasser 16 caractères.',
+        ]);
         // Find the user by current username
-        $user = User::where('username', $request->current_username)->first();
+        $user = User::where('username', $request->old_username)->first();
 
         if (!$user) {
-            return response()->json(['message' => 'Le nom d\'utilisateur actuel n\'est pas trouvé.'], 404);
+            return Redirect::back()->withErrors(['old_username' => 'Le nom d\'utilisateur n\'a pas été trouvé.']);
         }
 
         $user->username = $request->new_username;
         $user->save();
 
-        return response()->json(['message' => 'Le nom d\'utilisateur a été mis à jour avec succès.'], 200);
-    }
+        // Log the action
+        Log::info('**********START TRANSACTION**********');
+        Log::info('ACTION: Username update');
+        Log::info('INITIATOR ID: ' . $user->id);
+        Log::info('INITIATOR First Name: ' . $initiator->first_name);
+        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+        Log::info('INITIATOR Username: ' . $initiator->username);
+        Log::info('Usernames Updated: ' . $request->old_username . ' -> ' . $request->new_username);
+        Log::info('**********END TRANSACTION**********');
 
-    public function updatePassword(Request $request): JsonResponse
-    {
-        $request->validate([
-            'current_username' => 'required|string',
-            'new_password' => 'required|string|min:8',
-            'confirm_password' => 'required|string|same:new_password',
-        ]);
-
-        $user = User::where('username', $request->current_username)->first();
-
-        if (!$user) {
-            return response()->json(['message' => 'Le nom d\'utilisateur n\'est pas trouvé.'], 404);
-        }
-        else {
-            // Check if new password and confirm password are the same
-            if ($request->new_password !== $request->confirm_password) {
-                return response()->json(['message' => 'Les mots de passe ne correspondent pas.'], 400);
-            }
-            else {
-                $user->password = bcrypt($request->new_password);
-                $user->save();
-
-                return response()->json(['message' => 'Le mot de passe a été mis à jour avec succès.'], 200);
-            }
-        }
+        return Redirect::route('account.edit');
     }
 
     public function makeAdmin(Request $request): JsonResponse
     {
+        $initiator = $request->user();
         $request->validate([
             'user_id' => 'required|integer',
             'name' => 'required|string',
@@ -89,11 +96,24 @@ class AdminController extends Controller
 
         if (!$user) {
             return response()->json(['message' => $request->name . ' n\'a pas été trouvé.'], 404);
+        }
+//        else if ($initiator->institution_id !== $user->institution_id) {
+//            return response()->json(['message' => 'Vous ne pouvez pas promouvoir des utilisateurs d\'autres institutions.'], 403);}
+        else if ($initiator->id === $user->id) {
+            return response()->json(['message' => 'Vous ne pouvez pas vous promouvoir vous-même.'], 403);
         } else {
-            // Insert the user ID into the admin_controls table
             $adminControl = new AdminControl();
             $adminControl->user_id = $request->user_id;
             $adminControl->save();
+
+            Log::info('**********START TRANSACTION**********');
+            Log::info('ACTION: Admin promotion');
+            Log::info('INITIATOR ID: ' . $initiator->id);
+            Log::info('INITIATOR First Name: ' . $initiator->first_name);
+            Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+            Log::info('INITIATOR Username: ' . $initiator->username);
+            Log::info('User Promoted: ' . $request->name);
+            Log::info('**********END TRANSACTION**********');
 
             return response()->json(['message' => $request->name . ' a été promu·e avec succès.'], 200);
         }
@@ -101,72 +121,95 @@ class AdminController extends Controller
 
     public function removeAdmin(Request $request): JsonResponse
     {
+        $initiator = $request->user();
         $request->validate([
             'user_id' => 'required|integer',
             'name' => 'required|string',
         ]);
-
         $user = User::find($request->user_id);
 
         if (!$user) {
             return response()->json(['message' => $request->name . ' n\'a pas été trouvé.'], 404);
-        } else {
-            // Delete the user ID from the admin_controls table
+        } else if ($initiator->institution_id !== $user->institution_id) {
+            return response()->json(['message' => 'Vous ne pouvez pas rétrograder des utilisateurs d\'autres institutions.'], 403);
+        } else if ($initiator->id === $user->id) {
+            return response()->json(['message' => 'Vous ne pouvez pas vous rétrograder vous-même.'], 403);
+        }
+        else {
             $adminControl = AdminControl::where('user_id', $request->user_id)->first();
             $adminControl->delete();
+
+            Log::info('**********START TRANSACTION**********');
+            Log::info('ACTION: Admin removal');
+            Log::info('INITIATOR ID: ' . $initiator->id);
+            Log::info('INITIATOR First Name: ' . $initiator->first_name);
+            Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+            Log::info('INITIATOR Username: ' . $initiator->username);
+            Log::info('User Removed: ' . $request->name);
+            Log::info('**********END TRANSACTION**********');
 
             return response()->json(['message' => $request->name . ' a été rétrogradé.e avec succès.'], 200);
         }
     }
 
-    public function removeLevel(Request $request): JsonResponse
+    public function findUser(Request $request): JsonResponse
     {
         $request->validate([
-            'level_id' => 'required|integer',
-            'name' => 'required|string',
+            'usernameToDelete' => 'required|string',
         ]);
 
-        $level = Level::find($request->level_id);
+        $initiator = $request->user();
+        $userToDelete = User::where('username', $request->usernameToDelete)->first();
 
-        if (!$level) {
-            return response()->json(['message' => 'Le niveau \'' . $request->name . '\' n\'a pas été trouvé.'], 404);
-        } else {
-            // Delete the level ID from the levels table
-            $level->delete();
-
-            return response()->json(['message' => 'Le niveau \'' . $request->name . '\' a été supprimé avec succès.'], 200);
+        if (!$userToDelete) {
+            return response()->json(['error' => 'L\'utilisateur n\'a pas été trouvé.'], 404);
         }
+
+        // Make sure the user is not an admin
+        if ($userToDelete->administrator()->exists()) {
+            return response()->json(['error' => 'Vous ne pouvez pas supprimer le compte d\'un administrateur.'], 403);
+        }
+
+        // Make sure the user is in the same institution as the current user
+        if ($userToDelete->institution_id !== $initiator->institution_id) {
+            return response()->json(['error' => 'Vous ne pouvez pas supprimer le compte d\'un utilisateur d\'une autre institution.'], 403);
+        }
+
+        return response()->json(['user' => $userToDelete], 200);
     }
 
-    public function addLevel(Request $request): JsonResponse
+    public function deleteUser(Request $request): RedirectResponse
     {
         $request->validate([
-            'nom' => 'required|digits:3|unique:levels,name',
+            'usernameToDelete' => 'required|string',
+            'password' => 'required|string',
         ]);
 
-        $level = new Level();
-        $level->name = $request->nom;
-        $level->save();
+        $initiator = $request->user();
+        if (!password_verify($request->password, $initiator->password)) {
+            return Redirect::back()->withErrors(['password' => 'Le mot de passe est incorrect.']);
+        }
+        else {
+            $user = User::where('username', $request->usernameToDelete)->first();
 
-        return response()->json(['message' => 'Le niveau \'' . $request->nom . '\' a été ajouté avec succès.'], 200);
-    }
+            if (!$user) {
+                return Redirect::back()->withErrors(['usernameToDelete' => 'L\'utilisateur n\'a pas été trouvé.']);
+            } else {
+                // Delete the user ID from the users table
+                $user->delete();
 
-    public function deleteUser(Request $request): JsonResponse
-    {
-        $request->validate([
-            'user_id' => 'required|integer',
-            'name' => 'required|string',
-        ]);
+                // Log the action
+                Log::info('**********START TRANSACTION**********');
+                Log::info('ACTION: User deletion');
+                Log::info('INITIATOR ID: ' . $user->id);
+                Log::info('INITIATOR First Name: ' . $initiator->first_name);
+                Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+                Log::info('INITIATOR Username: ' . $initiator->username);
+                Log::info('User Deleted: ' . $request->usernameToDelete);
+                Log::info('**********END TRANSACTION**********');
 
-        $user = User::find($request->user_id);
-
-        if (!$user) {
-            return response()->json(['message' => 'L\'utilisateur n\'a pas été trouvé.'], 404);
-        } else {
-            // Delete the user ID from the users table
-            $user->delete();
-
-            return response()->json(['message' => 'Le compte de ' . $request->name . ' a été supprimé avec succès.'], 200);
+                return Redirect::route('account.edit');
+            }
         }
     }
 }

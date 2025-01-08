@@ -4,7 +4,8 @@ import axios from 'axios';
 
 export default function MainMenu({ auth }) {
     const { levels } = usePage().props;
-
+    const { courseId } = usePage().props;
+    const { courseName } = usePage().props;
     const [selectedLevel, setSelectedLevel] = useState(auth.user.last_level);
 
     useEffect(() => {
@@ -34,7 +35,7 @@ export default function MainMenu({ auth }) {
             <div className="background-container"></div>
             <Head title="Menu Principal - QuizMuz"/>
             <h1 className="text-6xl font-bold text-white hover:cursor-default mb-4">Menu Principal</h1>
-            <h3 className="text-2xl font-bold text-white hover:cursor-default mb-6">Bienvenue, {auth.user.username} !</h3>
+            <h2 className="text-4xl font-bold text-white hover:cursor-default mb-8">{courseName}</h2>
 
             <div className="w-full px-4">
                 <h3 className="text-5xl text-white text-center hover:cursor-default mb-6 font-bold">Niveau</h3>
@@ -53,18 +54,18 @@ export default function MainMenu({ auth }) {
                     ))}
                 </div>
 
-                <h3 className="text-5xl text-white text-center hover:cursor-default mb-6 mt-10 font-bold">Mode de
-                    Jeu
+                <h3 className="text-5xl text-white text-center hover:cursor-default mb-6 mt-10 font-bold">
+                    Mode de Jeu
                 </h3>
                 <div className="flex flex-wrap justify-center gap-4 mb-6 w-full flex-col items-center">
                     <Link
-                        href={route('practice', {level: selectedLevel})}
+                        href={route('practice', {level: selectedLevel, courseId: courseId, courseName: courseName})}
                         className="game-mode"
                     >
                         Pratique
                     </Link>
                     <Link
-                        href={route('optionsmenu', {level: selectedLevel})}
+                        href={route('optionsmenu', {level: selectedLevel, courseId: courseId, courseName: courseName})}
                         className="game-mode"
                     >
                         Quiz
@@ -76,7 +77,7 @@ export default function MainMenu({ auth }) {
                 </h3>
                 <div className="flex flex-wrap justify-center gap-4 mb-6 w-full flex-col items-center">
                     <Link
-                        href={route('highscores')}
+                        href={route('highscores', {courseId: courseId})}
                         className="game-mode"
                     >
                         Meilleurs Scores

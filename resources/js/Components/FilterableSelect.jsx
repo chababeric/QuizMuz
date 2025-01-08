@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-export default function FilterableSelect({ label, value, onChange, options }) {
+export default function FilterableSelect({ label='', value, onChange, options }) {
     const [filteredOptions, setFilteredOptions] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
     const containerRef = useRef(null);
@@ -49,7 +49,7 @@ export default function FilterableSelect({ label, value, onChange, options }) {
             <div className="relative">
                 <input
                     type="text"
-                    className="new-piece-input"
+                    className="mt-1 block w-full rounded-md dark:bg-gray-700 dark:text-white"
                     value={value}
                     onChange={handleInputChange}
                     onFocus={() => setShowDropdown(true)}
@@ -65,11 +65,11 @@ export default function FilterableSelect({ label, value, onChange, options }) {
                 </div>
             </div>
             {showDropdown && filteredOptions.length > 0 && (
-                <ul className="absolute z-10 bg-white border border-gray-300 w-full mt-1 max-h-40 overflow-y-auto">
+                <ul className="absolute z-10 bg-white border border-gray-300 w-full mt-1 max-h-40 overflow-y-auto dark:bg-gray-700 dark:text-white rounded-md">
                     {filteredOptions.map((option, index) => (
                         <li
                             key={index}
-                            className="cursor-pointer px-4 py-2 hover:bg-gray-200"
+                            className="cursor-pointer px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-600"
                             onClick={() => handleOptionClick(option)}
                         >
                             {option}

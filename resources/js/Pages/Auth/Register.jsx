@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import GuestLayout from '@/Layouts/GuestLayout';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
@@ -7,14 +7,30 @@ import TextInput from '@/Components/TextInput';
 import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Register() {
+    const [institutions, setInstitutions] = useState([]);
     const { data, setData, post, processing, errors, reset } = useForm({
         first_name: '',
         last_name: '',
+        institution: 0,
         username: '',
         password: '',
         password_confirmation: '',
         admin_password: '',
     });
+
+    useEffect(() => {
+        getInstitutions();
+    }, []);
+
+    const getInstitutions = () => {
+        axios.get(route('allInstitutions'))
+            .then(response => {
+                setInstitutions(response.data);
+            })
+            .catch(error => {
+                console.error('Error fetching institutions:', error);
+            });
+    };
 
     useEffect(() => {
         if (Object.keys(errors).length > 0) {
@@ -66,6 +82,28 @@ export default function Register() {
                     />
 
                     <InputError message={errors.last_name} className="mt-2"/>
+                </div>
+
+                <div className="mt-4">
+                    <InputLabel htmlFor="institution" value="Institution" className="text-white"/>
+
+                    <select
+                        id="institution"
+                        name="institution"
+                        value={data.institution}
+                        className="login-form-field rounded-md"
+                        onChange={(e) => setData('institution', e.target.value)}
+                        required
+                    >
+                        <option value=""></option>
+                        {institutions.map((institution) => (
+                            <option key={institution.id} value={institution.id}>
+                                {institution.name}
+                            </option>
+                        ))}
+                    </select>
+
+                    <InputError message={errors.institution} className="mt-2"/>
                 </div>
 
                 <div className="mt-4">

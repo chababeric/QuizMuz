@@ -17,18 +17,24 @@ export default function Welcome({ auth }) {
                             {auth.user ? (
                                 <>
                                     <Link
-                                        href={route('mainmenu')}
+                                        href={route('course')}
                                         className="login-links"
                                     >
-                                        Menu Principal
+                                        Cours
                                     </Link>
 
                                     {auth.isAdmin && (
+                                        // <Link
+                                        //     href={route('admincontrol')}
+                                        //     className="login-links"
+                                        // >
+                                        //     Admin
+                                        // </Link>
                                         <Link
-                                            href={route('admincontrol')}
+                                            href={route('dashboard')}
                                             className="login-links"
                                         >
-                                            Page Admin
+                                            Admin
                                         </Link>
                                     )}
 
@@ -38,6 +44,7 @@ export default function Welcome({ auth }) {
                                     >
                                         Support
                                     </Link>
+
 
                                     {/*<Link*/}
                                     {/*    href={route('logout')}*/}

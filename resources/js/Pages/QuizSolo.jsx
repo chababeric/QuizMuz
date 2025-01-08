@@ -5,7 +5,7 @@ import Grader from "@/Components/Grader.jsx";
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 
-export default function QuizSolo({ auth, pieces, difficulty, level }) {
+export default function QuizSolo({ auth, pieces, difficulty, level, courseId }) {
     const [lastCheckTime, setLastCheckTime] = useState(0);
     const [piecesData, setPiecesData] = useState([]);
     const [selectListData, setSelectListData] = useState([]);
@@ -151,22 +151,22 @@ export default function QuizSolo({ auth, pieces, difficulty, level }) {
         }
     };
 
-    const incrementTotalPiecesPlayed = async () => {
-        try {
-            await axios.post('/increment-total-pieces-played',
-                { userId: auth.user.id }
-            );
-        } catch (error) {
-            console.error('Error incrementing total pieces played:', error);
-        }
-    };
+    // const incrementTotalPiecesPlayed = async () => {
+    //     try {
+    //         await axios.post('/increment-total-pieces-played',
+    //             { userId: auth.user.id }
+    //         );
+    //     } catch (error) {
+    //         console.error('Error incrementing total pieces played:', error);
+    //     }
+    // };
 
     const grade = (action) => {
         stopMusic();
         switch (action) {
             case 'Vérifier':
                 updateLastActionTime().then(r => {});
-                incrementTotalPiecesPlayed().then(r => {});
+                // incrementTotalPiecesPlayed().then(r => {});
                 setGrading(true);
                 setActionText('Continuer');
                 break;
@@ -174,7 +174,6 @@ export default function QuizSolo({ auth, pieces, difficulty, level }) {
                 if (playPieceOnce && randomPiece) {
                     setPlayedPieces(prevPlayedPieces => [...prevPlayedPieces, randomPiece.id]);
                 }
-                fetchRandomPiece();
                 setGrading(false);
                 setLastCheckTime(new Date().getTime());
                 setActionText('Vérifier');
@@ -188,6 +187,7 @@ export default function QuizSolo({ auth, pieces, difficulty, level }) {
                     mvt: '',
                     form: ''
                 });
+                fetchRandomPiece();
                 break;
         }
     };
@@ -224,7 +224,7 @@ export default function QuizSolo({ auth, pieces, difficulty, level }) {
     return (
         <div className="main-app pb-5">
             <div className="background-container"></div>
-            <Head title="Quiz Solo - QuizMuz"/>
+            <Head title="Quiz - QuizMuz"/>
             <h1 className="text-6xl font-bold text-white hover:cursor-default mb-4">Quiz</h1>
 
             {loading ? (
@@ -259,6 +259,7 @@ export default function QuizSolo({ auth, pieces, difficulty, level }) {
                                 lastUpdatedTime={lastCheckTime}
                                 elements={elements}
                                 updateScore={setScore}
+                                difficulty={difficulty}
                             />
                         ) : (
                             <div className="flex flex-col items-center w-full">
@@ -279,7 +280,7 @@ export default function QuizSolo({ auth, pieces, difficulty, level }) {
 
                     <div className="flex justify-center mt-5">
                         <Link
-                            href={route('mainmenu')}
+                            href={route('mainmenu', { courseId: courseId })}
                             className="flex items-center text-white font-bold py-2 px-4 rounded-lg bg-gray-700 hover:bg-gray-900 mr-4 border border-white"
                             onClick={() => {
                                 if (audioRef.current) {

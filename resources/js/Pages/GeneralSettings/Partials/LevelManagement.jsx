@@ -1,0 +1,248 @@
+import MessageDisplay from "@/Components/MessageDisplay.jsx";
+import deleteIcon from "../../../../icons/delete.svg";
+import addIcon from "../../../../icons/add.svg";
+import Modal from "@/Components/Modal.jsx";
+import { useState } from "react";
+
+export default function LevelManagement({auth, courses, levels, getLevels, updateLastActionTime, successMessage, errorMessage, setSuccessMessage, setErrorMessage, selectedInstitution, selectedInstitutionId}) {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [newLevelName, setNewLevelName] = useState("");
+    const [selectedCourse, setSelectedCourse] = useState("");
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [levelToDelete, setLevelToDelete] = useState(null); // Track the level to be deleted
+
+    const openModal = (course = "") => {
+        setSelectedCourse(course); // Set the default course
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => setIsModalOpen(false);
+
+    const openDeleteModal = (level) => {
+        setLevelToDelete(level);
+        setIsDeleteModalOpen(true);
+    };
+
+    const closeDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+        setLevelToDelete(null);
+    };
+
+    const toggleLevelAccess = async (toggledLevel) => {
+        updateLastActionTime();
+
+        try {
+            const response = await axios.post("/admin/toggle-level-access", {
+                level_id: toggledLevel.id,
+                name: toggledLevel.name,
+                selectedInstitutionName: selectedInstitution,
+            });
+
+            setSuccessMessage(response.data.message);
+            setErrorMessage("");
+
+            getLevels();
+        } catch (error) {
+            setErrorMessage(error.response?.data?.message || "An error occurred");
+            setSuccessMessage("");
+        }
+    };
+
+    const addLevel = async () => {
+        updateLastActionTime();
+        closeModal();
+
+        try {
+            const response = await axios.post(route("admin.add-level"), {
+                name: newLevelName,
+                course_id: selectedCourse,
+                institution_name: selectedInstitution,
+            });
+
+            setSuccessMessage(response.data.message);
+            setErrorMessage("");
+
+            getLevels();
+        } catch (error) {
+            setErrorMessage(error.response?.data?.message || "An error occurred");
+            setSuccessMessage("");
+        }
+
+        setNewLevelName("");
+        setSelectedCourse("");
+    };
+
+    const deleteLevel = async () => {
+        if (!levelToDelete) return;
+
+        updateLastActionTime();
+
+        try {
+            const response = await axios.post(route("admin.delete-level"), {
+                level_id: levelToDelete.id,
+                name: levelToDelete.name,
+                institution_name: selectedInstitution,
+            });
+
+            setSuccessMessage(response.data.message);
+            setErrorMessage("");
+
+            getLevels();
+        } catch (error) {
+            setErrorMessage(error.response?.data?.message || "An error occurred");
+            setSuccessMessage("");
+        }
+
+        closeDeleteModal();
+    };
+
+    return (
+        <section>
+            <Modal show={isModalOpen} onClose={closeModal}>
+                <div className="p-4">
+                    <h2 className="text-xl font-semibold mb-4 dark:text-white">Ajouter un niveau</h2>
+
+                    {/* Select Course */}
+                    <label className="block mb-2 dark:text-white">Cours:</label>
+                    <select
+                        value={selectedCourse}
+                        onChange={(e) => setSelectedCourse(e.target.value)}
+                        className="mb-4 p-2 border rounded w-full dark:text-white dark:bg-gray-800"
+                    >
+                        {courses.map((course) => (
+                            <option key={course.id} value={course.id}>
+                                {course.name}
+                            </option>
+                        ))}
+                    </select>
+
+                    {/* New Level Name */}
+                    <label className="block mb-2 dark:text-white">Nom du niveau:</label>
+                    <input
+                        type="text"
+                        value={newLevelName}
+                        onChange={(e) => setNewLevelName(e.target.value)}
+                        className="mb-4 p-2 border rounded w-full dark:text-white dark:bg-gray-800"
+                    />
+
+                    {/* Buttons */}
+                    <div className="flex justify-end">
+                        <button
+                            onClick={addLevel}
+                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                        >
+                            Ajouter
+                        </button>
+                        <button
+                            onClick={closeModal}
+                            className="ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                        >
+                            Annuler
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Modal for confirming delete */}
+            <Modal show={isDeleteModalOpen} onClose={closeDeleteModal}>
+                <div className="p-4">
+                    <h2 className="text-xl font-semibold mb-4 dark:text-white">Confirmer la suppression</h2>
+                    <p className="mb-4 dark:text-white">
+                        Êtes-vous sûr de vouloir supprimer le niveau{" "}
+                        <strong>{levelToDelete?.name}</strong> du cours:{" "}
+                        <strong>{levelToDelete?.course.name}</strong>?
+                    </p>
+
+                    {/* Buttons */}
+                    <div className="flex justify-end">
+                        <button
+                            onClick={deleteLevel}
+                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                        >
+                            Supprimer
+                        </button>
+                        <button
+                            onClick={closeDeleteModal}
+                            className="ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                        >
+                            Annuler
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            <MessageDisplay
+                successMessage={successMessage}
+                errorMessage={errorMessage}
+                setErrorMessage={setErrorMessage}
+                setSuccessMessage={setSuccessMessage}
+            />
+
+            {/* Iterate over all courses */}
+            {courses.map((course, courseIndex) => {
+                const courseLevels = levels.filter((level) => level.course_id === course.id);
+
+                return (
+                    <div key={courseIndex} className="mb-8">
+                        <h2 className="text-xl font-semibold mb-4 dark:text-white">{course.name}</h2>
+
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                            {courseLevels.map((level, levelIndex) => (
+                                <div
+                                    key={levelIndex}
+                                    className={`p-6 border rounded-lg shadow-lg flex flex-col items-center justify-between transition-transform duration-200 hover:scale-105 ${
+                                        level.is_enabled ? "bg-green-200 dark:bg-green-300" : "bg-red-200 dark:bg-red-300"
+                                    }`}
+                                >
+                                    <h3 className="text-2xl font-semibold mb-4">{level.name}</h3>
+                                    <button
+                                        onClick={() => toggleLevelAccess(level)}
+                                        className={`px-4 py-2 rounded-md text-white mb-4 ${
+                                            auth.user.institution_id !== selectedInstitutionId
+                                                ? "bg-gray-400 cursor-not-allowed"
+                                                :
+                                            level.is_enabled
+                                                ? "bg-red-500 hover:bg-red-600"
+                                                : "bg-green-500 hover:bg-green-600"
+                                        }`}
+                                        disabled={auth.user.institution_id !== selectedInstitutionId}
+                                    >
+                                        {level.is_enabled
+                                            ? "Désactiver l'accès"
+                                            : "Activer l'accès"}
+                                    </button>
+                                    <button
+                                        onClick={() => openDeleteModal(level)}
+                                        className={`px-4 py-2 rounded-md flex items-center text-white ${
+                                            auth.user.institution_id !== selectedInstitutionId
+                                                ? "bg-gray-400 cursor-not-allowed"
+                                                : "bg-gray-700 hover:bg-gray-800"
+                                        }`}
+                                        disabled={auth.user.institution_id !== selectedInstitutionId}
+                                    >
+                                        <img
+                                            src={deleteIcon}
+                                            alt="Delete icon"
+                                            className="w-6 h-6 mr-1"
+                                        />
+                                        Supprimer
+                                    </button>
+                                </div>
+                            ))}
+
+                            {/* Add New Level button */}
+                            {auth.user.institution_id === selectedInstitutionId && (
+                                <div
+                                    className="p-6 border rounded-lg shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-105 bg-green-200 cursor-pointer dark:bg-green-300"
+                                    onClick={() => openModal(course.id)}
+                                >
+                                    <img src={addIcon} alt="Add icon" className="w-14 h-14" />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            })}
+        </section>
+    );
+}

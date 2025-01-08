@@ -36,6 +36,7 @@ class RegisteredUserController extends Controller
         $request->validate([
             'first_name' => 'required|string|max:64',
             'last_name' => 'required|string|max:64',
+            'institution' => 'required|int|exists:institutions,id',
             'username' => [
                 'required',
                 'string',
@@ -49,6 +50,7 @@ class RegisteredUserController extends Controller
             'username.regex' => 'Le nom d\'utilisateur ne peut contenir que des lettres, des chiffres, des tirets et des underscores.',
             'password.confirmed' => 'Les mots de passe ne correspondent pas.',
             'password.min' => 'Le mot de passe doit contenir au moins :min caractères.',
+            'institution.exists' => 'Sélectionnez une institution valide.',
         ]);
 
         $adminKey = AdminKey::first();
@@ -60,6 +62,7 @@ class RegisteredUserController extends Controller
         $user = User::create([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
+            'institution_id' => $request->institution,
             'username' => $request->username,
             'password' => Hash::make($request->password),
         ]);
@@ -68,6 +71,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('mainmenu', absolute: false));
+        return redirect(route('welcome', absolute: false));
     }
 }
