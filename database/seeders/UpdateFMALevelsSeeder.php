@@ -17,32 +17,38 @@ class UpdateFMALevelsSeeder extends Seeder
             [
                 'name' => '201',
                 'is_enabled' => true,
-                'course_id' => 1
+                'course_id' => 1,
+                'institution_id' => 1
             ],
             [
                 'name' => '202',
                 'is_enabled' => true,
-                'course_id' => 1
+                'course_id' => 1,
+                'institution_id' => 1
             ],
             [
                 'name' => '203',
                 'is_enabled' => true,
-                'course_id' => 1
+                'course_id' => 1,
+                'institution_id' => 1
             ],
             [
                 'name' => '204',
                 'is_enabled' => true,
-                'course_id' => 1
+                'course_id' => 1,
+                'institution_id' => 1
             ],
             [
                 'name' => '301',
                 'is_enabled' => true,
-                'course_id' => 1
+                'course_id' => 1,
+                'institution_id' => 1
             ],
             [
                 'name' => '302',
                 'is_enabled' => true,
-                'course_id' => 1
+                'course_id' => 1,
+                'institution_id' => 1
             ],
         ];
 
