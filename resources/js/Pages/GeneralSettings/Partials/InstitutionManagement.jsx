@@ -100,7 +100,7 @@ export default function InstitutionManagement({ institutions, getInstitutions, u
             <Modal show={isDeleteModalOpen} onClose={closeDeleteModal}>
                 <div className="p-4">
                     <h2 className="text-xl font-semibold mb-4 dark:text-white">Confirmer la suppression</h2>
-                    <p className="dark:text-white">Êtes-vous sûr de vouloir supprimer l'institution '{currentInstitutionToDelete?.name}' ?</p>
+                    <p className="dark:text-white">Êtes-vous sûr de vouloir supprimer l'institution <span className="font-bold">{currentInstitutionToDelete?.name}</span> ?</p>
 
                     {/* Buttons */}
                     <div className="flex justify-end mt-4">

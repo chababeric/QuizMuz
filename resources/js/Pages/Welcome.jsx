@@ -45,6 +45,14 @@ export default function Welcome({ auth }) {
                                         Support
                                     </Link>
 
+                                    <Link
+                                        href={route('logout')}
+                                        method="post"
+                                        as="button"
+                                        className="login-links"
+                                    >
+                                        Déconnexion
+                                    </Link>
 
                                     {/*<Link*/}
                                     {/*    href={route('logout')}*/}
