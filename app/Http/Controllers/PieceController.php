@@ -7,6 +7,7 @@ use App\Models\PieceReserve;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class PieceController extends Controller
@@ -110,6 +111,18 @@ class PieceController extends Controller
 //            $audioFile->storeAs('public/litmus_pieces', $fileName);
 //        }
 
+        Log::info('**********START TRANSACTION**********');
+        Log::info('ACTION: Piece updated');
+        Log::info('PIECE ID: ' . $piece->id);
+        Log::info('PIECE Title: ' . $piece->title);
+        Log::info('PIECE Composer: ' . $piece->composer);
+        Log::info('PIECE Level: ' . $piece->level_id);
+        Log::info('INITIATOR ID: ' . $initiator->id);
+        Log::info('INITIATOR First Name: ' . $initiator->first_name);
+        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+        Log::info('INITIATOR Username: ' . $initiator->username);
+        Log::info('**********END TRANSACTION**********');
+
         return redirect()
             ->route('piece.edit')
             ->with('success', 'Pièce mise à jour avec succès.');
@@ -117,8 +130,21 @@ class PieceController extends Controller
 
     public function destroy($id): JsonResponse
     {
+        $initiator = auth()->user();
         $piece = PieceReserve::findOrFail($id);
         $piece->delete();
+
+        Log::info('**********START TRANSACTION**********');
+        Log::info('ACTION: Piece deleted');
+        Log::info('PIECE ID: ' . $piece->id);
+        Log::info('PIECE Title: ' . $piece->title);
+        Log::info('PIECE Composer: ' . $piece->composer);
+        Log::info('PIECE Level: ' . $piece->level_id);
+        Log::info('INITIATOR ID: ' . $initiator->id);
+        Log::info('INITIATOR First Name: ' . $initiator->first_name);
+        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+        Log::info('INITIATOR Username: ' . $initiator->username);
+        Log::info('**********END TRANSACTION**********');
 
         return response()->json(['message' => 'La pièce a été supprimée avec succès.']);
     }
@@ -127,6 +153,7 @@ class PieceController extends Controller
     {
         // Find the piece
         $piece = Piece::findOrFail($id);
+        $initiator = auth()->user();
 
         // Create a new piece reserve entry
         $piecesReserve = new PieceReserve([
@@ -149,6 +176,18 @@ class PieceController extends Controller
         // Delete the piece from the original table
         $piece->delete();
 
+        Log::info('**********START TRANSACTION**********');
+        Log::info('ACTION: Piece moved to reserve');
+        Log::info('PIECE ID: ' . $piece->id);
+        Log::info('PIECE Title: ' . $piece->title);
+        Log::info('PIECE Composer: ' . $piece->composer);
+        Log::info('PIECE Level: ' . $piece->level_id);
+        Log::info('INITIATOR ID: ' . $initiator->id);
+        Log::info('INITIATOR First Name: ' . $initiator->first_name);
+        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+        Log::info('INITIATOR Username: ' . $initiator->username);
+        Log::info('**********END TRANSACTION**********');
+
         return response()->json(['message' => $piece->title . ' de ' . $piece->composer . ' a été déplacé en réserve.']);
     }
 
@@ -156,6 +195,7 @@ class PieceController extends Controller
     {
         // Find the piece
         $pieceReserve = PieceReserve::findOrFail($id);
+        $initiator = auth()->user();
 
         // Create a new piece entry
         $piece = new Piece([
@@ -177,6 +217,18 @@ class PieceController extends Controller
 
         // Delete the piece from the original table
         $pieceReserve->delete();
+
+        Log::info('**********START TRANSACTION**********');
+        Log::info('ACTION: Piece moved to pieces');
+        Log::info('PIECE ID: ' . $pieceReserve->id);
+        Log::info('PIECE Title: ' . $pieceReserve->title);
+        Log::info('PIECE Composer: ' . $pieceReserve->composer);
+        Log::info('PIECE Level: ' . $pieceReserve->level_id);
+        Log::info('INITIATOR ID: ' . $initiator->id);
+        Log::info('INITIATOR First Name: ' . $initiator->first_name);
+        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+        Log::info('INITIATOR Username: ' . $initiator->username);
+        Log::info('**********END TRANSACTION**********');
 
         return response()->json(['message' => $pieceReserve->title . ' de ' . $pieceReserve->composer . ' est de retour dans la liste des pièces.']);
     }
@@ -244,6 +296,17 @@ class PieceController extends Controller
 
         // Save the new piece to the database
         $piece->save();
+        Log::info('**********START TRANSACTION**********');
+        Log::info('ACTION: Piece created');
+        Log::info('PIECE ID: ' . $piece->id);
+        Log::info('PIECE Title: ' . $piece->title);
+        Log::info('PIECE Composer: ' . $piece->composer);
+        Log::info('PIECE Level: ' . $piece->level_id);
+        Log::info('INITIATOR ID: ' . $initiator->id);
+        Log::info('INITIATOR First Name: ' . $initiator->first_name);
+        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+        Log::info('INITIATOR Username: ' . $initiator->username);
+        Log::info('**********END TRANSACTION**********');
 
 //        return response()->json(['message' => 'La pièce a été ajoutée avec succès.']);
         return redirect()->route('piece.edit');
@@ -258,12 +321,21 @@ class PieceController extends Controller
     public function updateOrder(Request $request): JsonResponse
     {
         $pieces = $request->input('pieces');
+        $initiator = auth()->user();
 
         foreach ($pieces as $pieceData) {
             $piece = Piece::findOrFail($pieceData['id']);
             $piece->order = $pieceData['order'];
             $piece->save();
         }
+
+        Log::info('**********START TRANSACTION**********');
+        Log::info('ACTION: Pieces order updated');
+        Log::info('INITIATOR ID: ' . $initiator->id);
+        Log::info('INITIATOR First Name: ' . $initiator->first_name);
+        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+        Log::info('INITIATOR Username: ' . $initiator->username);
+        Log::info('**********END TRANSACTION**********');
 
         return response()->json(['message' => 'L\'ordre des pièces a été mis à jour avec succès.']);
     }

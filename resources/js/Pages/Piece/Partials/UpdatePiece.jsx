@@ -10,6 +10,7 @@ import TextInput from "@/Components/TextInput.jsx";
 import { useForm } from '@inertiajs/react';
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import DangerButton from "@/Components/DangerButton.jsx";
+import { Transition } from "@headlessui/react";
 
 export default function UpdatePiece({ className = '', piecesList, setPiecesList, coursesList, updateLastActionTime, getPiecesInReserve }) {
     const [levelsList, setLevelsList] = useState([]);
@@ -221,10 +222,18 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                 </button>
             </header>
 
-            {filterDisplay && (
-                <div className="mt-6 space-y-6">
+            <Transition
+                show={filterDisplay}
+                enter="transition duration-300 ease-out"
+                enterFrom="transform scale-y-0 opacity-0"
+                enterTo="transform scale-y-100 opacity-100"
+                leave="transition duration-300 ease-in"
+                leaveFrom="transform scale-y-100 opacity-100"
+                leaveTo="transform scale-y-0 opacity-0"
+            >
+                <div className="origin-top mt-6 space-y-6">
                     <div>
-                        <InputLabel htmlFor="course" value="Cours" className="dark:text-white"/>
+                        <InputLabel htmlFor="course" value="Cours" className="dark:text-white" />
                         <select
                             id="course"
                             className="mt-1 block w-full rounded-md dark:text-white dark:bg-gray-800"
@@ -233,27 +242,33 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                         >
                             <option value="">Choisir un cours</option>
                             {coursesList.map((course) => (
-                                <option key={course.id} value={course.id}>{course.name}</option>
+                                <option key={course.id} value={course.id}>
+                                    {course.name}
+                                </option>
                             ))}
                         </select>
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="level" value="Niveau" className="dark:text-white"/>
+                        <InputLabel htmlFor="level" value="Niveau" className="dark:text-white" />
                         <select
                             id="level"
                             className="mt-1 block w-full rounded-md dark:text-white dark:bg-gray-800"
                             value={selectedFilterLevel}
                             onChange={(e) => setSelectedFilterLevel(e.target.value)}
                         >
-                            <option value="">Choisir un niveau</option>
+                            <option value="">
+                                Choisir un niveau {!selectedFilterCourse && "-- choisissez un cours pour voir les niveaux"}
+                            </option>
                             {levelsList.map((level) => (
-                                <option key={level.id} value={level.id}>{level.name}</option>
+                                <option key={level.id} value={level.id}>
+                                    {level.name}
+                                </option>
                             ))}
                         </select>
                     </div>
                 </div>
-            )}
+            </Transition>
 
             <MessageDisplay successMessage={successMessage} errorMessage={errorMessage} setSuccessMessage={setSuccessMessage} setErrorMessage={setErrorMessage}/>
 
