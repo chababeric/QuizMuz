@@ -1,16 +1,16 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import MessageDisplay from "@/Components/MessageDisplay.jsx";
-import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
+import {DragDropContext, Draggable, Droppable} from '@hello-pangea/dnd';
 import InputLabel from "@/Components/InputLabel.jsx";
 import settingsIcon from '../../../../icons/settings-black.svg';
 import settingsWhiteIcon from '../../../../icons/settings.svg';
 import Modal from "@/Components/Modal.jsx";
 import axios from "axios";
 import TextInput from "@/Components/TextInput.jsx";
-import { useForm } from '@inertiajs/react';
+import {useForm} from '@inertiajs/react';
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import DangerButton from "@/Components/DangerButton.jsx";
-import { Transition } from "@headlessui/react";
+import {Transition} from "@headlessui/react";
 
 export default function UpdatePiece({ className = '', piecesList, setPiecesList, coursesList, updateLastActionTime, getPiecesInReserve }) {
     const [levelsList, setLevelsList] = useState([]);
@@ -96,23 +96,45 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
 
     const handleOnDragEnd = (result) => {
         if (!result.destination) return;
-        updateLastActionTime();
 
-        const items = Array.from(piecesList);
-        const [reorderedItem] = items.splice(result.source.index, 1);
-        items.splice(result.destination.index, 0, reorderedItem);
+        const { source, destination, draggableId } = result;
 
-        // Update the state with the new order (sorted by order)
-        const updatedItems = items.map((item, index) => ({ ...item, order: index + 1 }));
+        // Extract the level from the droppableId (e.g., 'level-LevelName')
+        const sourceLevelName = source.droppableId.split('-')[1];
+        const destinationLevelName = destination.droppableId.split('-')[1];
 
-        // Sort by `order` to ensure proper display even if order changes externally
-        const sortedUpdatedItems = updatedItems.sort((a, b) => a.order - b.order);
+        // Ensure the source and destination levels are the same
+        if (sourceLevelName !== destinationLevelName) return;
 
-        setPiecesList(sortedUpdatedItems);
+        // Clone the list of pieces
+        const updatedPiecesList = [...piecesList];
 
-        // Update the order in the database
+        // Group pieces by level
+        const groupedPieces = groupAndSortPieces(updatedPiecesList);
+
+        // Get the array of pieces for the specific level
+        const levelPieces = groupedPieces[sourceLevelName];
+
+        // Rearrange items only within the specific level
+        const [movedItem] = levelPieces.splice(source.index, 1);
+        levelPieces.splice(destination.index, 0, movedItem);
+
+        // Update the order of the items in the specific level
+        // Update the grouped pieces with the new level arrangement
+        groupedPieces[sourceLevelName] = levelPieces.map((item, index) => ({
+            ...item,
+            order: index + 1,
+        }));
+
+        // Flatten the grouped pieces back to a single array
+        const flattenedUpdatedPieces = Object.values(groupedPieces).flat();
+
+        // Update state with the new list
+        setPiecesList(flattenedUpdatedPieces);
+
+        // Update the order in the database for the specific level
         axios
-            .post('/admin/update-order', { pieces: sortedUpdatedItems })
+            .post('/admin/update-order', { pieces: flattenedUpdatedPieces })
             .then((response) => {
                 setSuccessMessage(response.data.message);
                 setErrorMessage('');
@@ -486,29 +508,30 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                                                             {...provided.dragHandleProps}
                                                         >
                                                             {/* Number Column */}
-                                                            <span className="w-9 font-medium text-gray-700 dark:text-gray-200">
-                                                {piece.order}
-                                            </span>
+                                                            <span
+                                                                className="w-9 font-medium text-gray-700 dark:text-gray-200">
+                                                                {index + 1}
+                                                            </span>
                                                             {/* Info Columns */}
                                                             <div className="flex-1 flex flex-wrap sm:flex-nowrap gap-y-2 sm:gap-y-0 sm:gap-x-6">
-                                                <span className="w-full sm:w-12 truncate font-semibold text-gray-900 dark:text-gray-100">
-                                                    {piece.level.name}
-                                                </span>
+                                                                <span className="w-full sm:w-12 truncate font-semibold text-gray-900 dark:text-gray-100">
+                                                                    {piece.level.name}
+                                                                </span>
                                                                 <span className="truncate text-gray-800 dark:text-gray-300">
-                                                    {piece.title} &nbsp;&nbsp;
-                                                </span>
+                                                                    {piece.title} &nbsp;&nbsp;
+                                                                </span>
                                                                 <span className="truncate text-gray-600 dark:text-gray-400">
-                                                    {piece.composer} &nbsp;&nbsp;
-                                                </span>
+                                                                    {piece.composer} &nbsp;&nbsp;
+                                                                </span>
                                                                 {piece.no_mvt && (
                                                                     <span className="truncate text-gray-500 dark:text-gray-400">
-                                                        Mvt: {piece.no_mvt} &nbsp;&nbsp;
-                                                    </span>
+                                                                        Mvt: {piece.no_mvt} &nbsp;&nbsp;
+                                                                    </span>
                                                                 )}
                                                                 {piece.mvt && (
                                                                     <span className="truncate text-gray-500 dark:text-gray-400">
-                                                        {piece.mvt}
-                                                    </span>
+                                                                        {piece.mvt}
+                                                                    </span>
                                                                 )}
                                                             </div>
                                                             {/* Actions */}

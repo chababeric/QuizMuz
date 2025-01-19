@@ -115,7 +115,6 @@ export default function Edit({ auth, user }) {
                             getPiecesInReserve={getPiecesInReserve}
                         />
                     </div>
-
                 </div>
             </div>
         </AuthenticatedLayout>
