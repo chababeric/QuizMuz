@@ -131,6 +131,8 @@ Route::get('/quizsolo', function (Illuminate\Http\Request $request) {
     ]);
 })->name('quizsolo')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
 
+Route::post('/quizsolo/store', [QuizSoloController::class, 'store'])->name('quizsolo.store')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
+
 Route::get('/quizfma', function (Illuminate\Http\Request $request) {
     return Inertia::render('QuizFMA', [
         'chords' => $request->input('chords'),
