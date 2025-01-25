@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Piece;
 use App\Models\SoloGame;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -18,19 +19,31 @@ class QuizSoloController extends Controller
         return Inertia::render('QuizSolo');
     }
 
+
+    public function ensureSingleSoloGame(int $userId): void
+    {
+        // Fetch all solo games for the user
+        $existingGames = SoloGame::where('user_id', $userId)->get();
+
+        // If more than one game exists, delete them all
+        if ($existingGames->count() > 0) {
+            SoloGame::where('user_id', $userId)->delete();
+        }
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'pieces_list_id' => 'required|array|min:1',
             'pieces_list_id.*' => 'integer',
             'difficulty' => 'required|integer',
-//            'current_piece_id' => 'required|array',
-//            'correct_answers' => 'required|array',
             'level' => 'required|integer',
             'courseId' => 'required|integer',
         ]);
 
         $data['user_id'] = auth()->id();
+
+        $this->ensureSingleSoloGame($data['user_id']);
 
         try {
             // Store the game data in the database
@@ -42,11 +55,11 @@ class QuizSoloController extends Controller
                 $selectedPieceIndex = $this->rng(count($shuffledPieces));
                 $selectedPiece = $shuffledPieces[$selectedPieceIndex];
                 $soloGame->current_piece_id = $selectedPiece;
+                $soloGame->correct_answers = $this->getCorrectAnswers($selectedPiece);
+//                $soloGame->pieces_list_id = $shuffledPieces;
                 $soloGame->save();
             }
-
         } catch (\Exception $exception) {
-            // Log the error and handle the failure gracefully
             Log::error('Failed to create SoloGame or shuffle pieces: ' . $exception->getMessage());
             return redirect()->back()->withErrors(['error' => 'Failed to start the solo game.']);
         }
@@ -57,6 +70,26 @@ class QuizSoloController extends Controller
             'level' => $data['level'],
             'courseId' => $data['courseId'],
         ]);
+    }
+
+    public function getCorrectAnswers(int $pieceId): array
+    {
+        $correctAnswers = [];
+        $piece = Piece::find($pieceId);
+        if ($piece) {
+            $correctAnswers = [
+                'period' => $piece->period,
+                'genre' => $piece->genre,
+                'composer' => $piece->composer,
+                'title' => $piece->title,
+                'element' => $piece->element,
+                'no_mvt' => $piece->no_mvt,
+                'mvt' => $piece->mvt,
+                'form' => $piece->form,
+            ];
+        }
+
+        return $correctAnswers;
     }
 
     public function updateLastActionTime(Request $request): JsonResponse
