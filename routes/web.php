@@ -122,16 +122,21 @@ Route::get('/optionsmenu', function (Illuminate\Http\Request $request) {
     ]);
 })->name('optionsmenu')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class]);
 
-Route::get('/quizsolo', function (Illuminate\Http\Request $request) {
-    return Inertia::render('QuizSolo', [
-        'pieces' => $request->input('pieces'),
-        'difficulty' => $request->input('difficulty'),
-        'level' => $request->input('level'),
-        'courseId' => $request->input('courseId'),
-    ]);
-})->name('quizsolo')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
+//Route::get('/quizsolo', function (Illuminate\Http\Request $request) {
+//    return Inertia::render('QuizSolo', [
+//        'pieces' => $request->input('pieces'),
+//        'difficulty' => $request->input('difficulty'),
+//        'level' => $request->input('level'),
+//        'courseId' => $request->input('courseId'),
+//    ]);
+//})->name('quizsolo')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
 
-Route::post('/quizsolo/store', [QuizSoloController::class, 'store'])->name('quizsolo.store')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
+Route::get('/quizsolo', [QuizSoloController::class, 'show'])
+    ->name('quizsolo')
+    ->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
+
+
+//Route::post('/quizsolo/store', [QuizSoloController::class, 'store'])->name('quizsolo.store')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
 
 Route::get('/quizfma', function (Illuminate\Http\Request $request) {
     return Inertia::render('QuizFMA', [

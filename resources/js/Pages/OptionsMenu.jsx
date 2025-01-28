@@ -72,28 +72,6 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
             });
     }, [difficulty]);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        try {
-            await axios.post(route('quizsolo.store'), {
-                pieces_list_id: checkedPieces,
-                difficulty: parseInt(difficulty),
-                level: level,
-                courseId: courseId
-            });
-
-            window.location.href = route('quizsolo', {
-                pieces: checkedPieces,
-                difficulty: difficulty,
-                level: level,
-                courseId: courseId
-            });
-        } catch (error) {
-            console.error("There was an error starting the quiz!", error);
-        }
-    };
-
     return (
         <div className="main-app">
             <div className="background-container"></div>
@@ -189,18 +167,12 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                             Commencer le quiz
                         </Link>
                     ) : (
-                        // <Link
-                        //     href={route('quizsolo', {pieces: checkedPieces, difficulty: difficulty, level: level, courseId: courseId})}
-                        //     className="text-white font-bold py-2 px-4 rounded-lg bg-rose-600 hover:bg-rose-800 mt-4"
-                        // >
-                        //     Commencer le quiz
-                        // </Link>
-                        <button
-                            onClick={handleSubmit}
+                        <Link
+                            href={route('quizsolo', {pieces_list_id: checkedPieces, difficulty: difficulty, level_id: level, courseId: courseId})}
                             className="text-white font-bold py-2 px-4 rounded-lg bg-rose-600 hover:bg-rose-800 mt-4"
                         >
                             Commencer le quiz
-                        </button>
+                        </Link>
                     )
                 ) : (
                     <button

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Piece;
+use App\Models\Score;
 use App\Models\SoloGame;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +20,72 @@ class QuizSoloController extends Controller
         return Inertia::render('QuizSolo');
     }
 
+    public function show(Request $request): Response
+    {
+        $soloGame = null;
+        $piecesData = [];
+        $current_piece_mp3 = '';
+        $parameters_to_display = [];
+        $data = $request->validate([
+            'pieces_list_id' => 'required|array|min:1',
+            'pieces_list_id.*' => 'integer',
+            'difficulty' => 'required|integer',
+            'level_id' => 'required|integer',
+            'courseId' => 'required|integer',
+        ]);
+
+        $data['user_id'] = auth()->id();
+        $score = Score::where('user_id', $data['user_id'])->first()->score ?? 0;
+
+        $this->ensureSingleSoloGame($data['user_id']);
+
+        try {
+            // Store the game data in the database
+            $soloGame = SoloGame::create($data);
+
+//             Ensure pieces_list_id is a valid array before processing
+            $shuffledPieces = $this->fisher_yates_shuffle($data['pieces_list_id'] ?? []);
+            if (!empty($shuffledPieces)) {
+                $selectedPieceIndex = $this->rng(count($shuffledPieces));
+                $current_piece_id = $shuffledPieces[$selectedPieceIndex];
+                $current_piece_mp3 = Piece::find($current_piece_id)->file_name;
+                $soloGame->current_piece_id = $current_piece_id;
+                $soloGame->correct_answers = $this->getCorrectAnswers($current_piece_id);
+//                $soloGame->pieces_list_id = $shuffledPieces;
+                $soloGame->save();
+            }
+        } catch (\Exception $exception) {
+            Log::error('Failed to create SoloGame or shuffle pieces: ' . $exception->getMessage());
+        }
+
+        if ($data['difficulty'] === '1') {
+            // The pieces data for the easy difficulty
+            $piecesData = $this->getEasyPiecesData($data['pieces_list_id']);
+            // The parameters to display are the parameters of the current piece that aren't null
+            $parameters_to_display = array_keys(array_filter($soloGame->correct_answers, function ($value) {
+                return $value !== null;
+            }));
+        } else if ($data['difficulty'] === '2') {
+            // The pieces data for the medium difficulty
+            $piecesData = $this->getMediumPiecesData($data['level_id']);
+            // The parameters to display are all the parameters of the current piece
+            $parameters_to_display = ['period', 'genre', 'composer', 'title', 'element', 'no_mvt', 'mvt', 'form'];
+        }
+
+        // Process or modify data as needed
+        $processedData = [
+            'difficulty' => $data['difficulty'],
+            'level' => $data['level_id'],
+            'courseId' => $data['courseId'],
+            'selectListData' => $piecesData,
+            'current_piece_mp3' => $current_piece_mp3,
+            'score' => $score,
+            'parameters_to_display' => $parameters_to_display,
+        ];
+
+        // Pass the processed data to the component
+        return Inertia::render('QuizSolo', $processedData);
+    }
 
     public function ensureSingleSoloGame(int $userId): void
     {
@@ -31,45 +98,45 @@ class QuizSoloController extends Controller
         }
     }
 
-    public function store(Request $request): RedirectResponse
+    // Returns the data for the SelectLists for easy difficulty
+    public function getEasyPiecesData(array $pieces_id): array
     {
-        $data = $request->validate([
-            'pieces_list_id' => 'required|array|min:1',
-            'pieces_list_id.*' => 'integer',
-            'difficulty' => 'required|integer',
-            'level' => 'required|integer',
-            'courseId' => 'required|integer',
-        ]);
-
-        $data['user_id'] = auth()->id();
-
-        $this->ensureSingleSoloGame($data['user_id']);
-
-        try {
-            // Store the game data in the database
-            $soloGame = SoloGame::create($data);
-
-            // Ensure pieces_list_id is a valid array before processing
-            $shuffledPieces = $this->fisher_yates_shuffle($data['pieces_list_id'] ?? []);
-            if (!empty($shuffledPieces)) {
-                $selectedPieceIndex = $this->rng(count($shuffledPieces));
-                $selectedPiece = $shuffledPieces[$selectedPieceIndex];
-                $soloGame->current_piece_id = $selectedPiece;
-                $soloGame->correct_answers = $this->getCorrectAnswers($selectedPiece);
-//                $soloGame->pieces_list_id = $shuffledPieces;
-                $soloGame->save();
-            }
-        } catch (\Exception $exception) {
-            Log::error('Failed to create SoloGame or shuffle pieces: ' . $exception->getMessage());
-            return redirect()->back()->withErrors(['error' => 'Failed to start the solo game.']);
+        $pieces = Piece::whereIn('id', $pieces_id)->get();
+        $piecesData = [];
+        foreach ($pieces as $piece) {
+            $piecesData[] = [
+                'period' => $piece->period,
+                'genre' => $piece->genre,
+                'composer' => $piece->composer,
+                'title' => $piece->title,
+                'element' => $piece->element,
+                'no_mvt' => $piece->no_mvt,
+                'mvt' => $piece->mvt,
+                'form' => $piece->form,
+            ];
         }
 
-        return redirect()->route('quizsolo', [
-            'pieces' => $soloGame->pieces_list_id,
-            'difficulty' => $soloGame->difficulty,
-            'level' => $data['level'],
-            'courseId' => $data['courseId'],
-        ]);
+        return $piecesData;
+    }
+
+    public function getMediumPiecesData(int $levelId): array
+    {
+        $pieces = Piece::where('level_id', $levelId)->get();
+        $piecesData = [];
+        foreach ($pieces as $piece) {
+            $piecesData[] = [
+                'period' => $piece->period,
+                'genre' => $piece->genre,
+                'composer' => $piece->composer,
+                'title' => $piece->title,
+                'element' => $piece->element,
+                'no_mvt' => $piece->no_mvt,
+                'mvt' => $piece->mvt,
+                'form' => $piece->form,
+            ];
+        }
+
+        return $piecesData;
     }
 
     public function getCorrectAnswers(int $pieceId): array
@@ -104,23 +171,6 @@ class QuizSoloController extends Controller
 
         return response()->json(['message' => 'Unauthorized'], 401);
     }
-
-//    public function rng(int $range = 0): int
-//    {
-//        $seed_1 = time();
-//        // Verify that it's a prime number. if so, execute a 3 bit shift to the right
-//        $sqrt_time = intval(sqrt($seed_1));
-//        for ($i = 3; $i <= $sqrt_time; $i += 2) {
-//            if ($seed_1 % $i == 0) {
-//                $seed_1 >>= 3;
-//                break;
-//            }
-//        }
-//        $seed_2 = hrtime()[1] / 100;
-//        $seed_2 *= (2**31-1);  // 7eme nombre Mersenne premier
-//        $seed_2 += $seed_1;
-//        return $seed_2 % ($range != 0 ? $range : $seed_1);
-//    }
 
     public function rng(int $range = 0): int
     {

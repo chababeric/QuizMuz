@@ -11,6 +11,7 @@ class SoloGame extends Model
 
     protected $fillable = [
         'user_id',
+        'level_id',
         'difficulty',
         'pieces_list_id',
         'current_piece_id',
