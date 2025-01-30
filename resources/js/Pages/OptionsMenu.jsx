@@ -2,6 +2,7 @@ import Checkbox from '@/Components/Checkbox';
 import { Link, Head } from '@inertiajs/react';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { v4 as uuidv4 } from "uuid";
 
 export default function OptionsMenu({ auth, level, courseId, courseName }) {
     const [pieces, setPieces] = useState([]);
@@ -71,6 +72,26 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                 console.error("There was an error setting the difficulty!", error);
             });
     }, [difficulty]);
+
+    const startQuiz = () => {
+        const existingGameKey = localStorage.getItem("game_key");
+
+        if (!existingGameKey) {
+            const gameKey = uuidv4();
+            localStorage.setItem("game_key", gameKey);
+            console.log("Game key created:", gameKey);
+        } else {
+            console.log("Game key already exists:", existingGameKey);
+        }
+
+        return route("quizsolo", {
+            pieces_list_id: checkedPieces,
+            difficulty,
+            level_id: level,
+            courseId,
+            game_key: existingGameKey
+        });
+    };
 
     return (
         <div className="main-app">
@@ -168,7 +189,7 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                         </Link>
                     ) : (
                         <Link
-                            href={route('quizsolo', {pieces_list_id: checkedPieces, difficulty: difficulty, level_id: level, courseId: courseId})}
+                            href={startQuiz()}
                             className="text-white font-bold py-2 px-4 rounded-lg bg-rose-600 hover:bg-rose-800 mt-4"
                         >
                             Commencer le quiz

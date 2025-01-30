@@ -5,8 +5,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import ControlMusic from "@/Components/ControlMusic.jsx";
 import axios from "axios";
 
-export default function QuizSolo({ auth, difficulty, level, courseId, current_piece_mp3, selectListData, score, parameters_to_display }) {
+export default function QuizSolo({ auth, difficulty, level, courseId, current_piece_mp3, selectListData, current_score, parameters_to_display, game_key }) {
     const [pieceMp3, setPieceMp3] = useState(current_piece_mp3);
+    const [score, setScore] = useState(current_score);
     const [parametersToDisplay, setParametersToDisplay] = useState([]);
     const [lastCheckTime, setLastCheckTime] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -36,12 +37,20 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
         { name: "Forme", col: "form" }
     ];
 
+    console.log('parameters_to_display:', parameters_to_display);
+    console.log('elements:', selectListData);
+
     useEffect(() => {
         // Filter out parameters that are null or empty for the current difficulty
         const filteredParameters = elements.filter(element => parameters_to_display.includes(element.col));
         setParametersToDisplay(filteredParameters);
     }, [parameters_to_display]);
 
+    // useEffect(() => {
+    //     if (game_key) {
+    //         localStorage.setItem("game_key", game_key); // Save the key to localStorage
+    //     }
+    // }, [game_key]);
 
     const playMusic = () => {
         setIsPlaying(true);
@@ -91,10 +100,32 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
         }
     };
 
+    const checkAnswers = async () => {
+        try {
+            const payload = {
+                selectedAnswers,
+                playPieceOnce,
+            };
+            const response = await axios.post(route('checkAnswers'), payload, {
+                headers: {
+                    'Content-Type': 'application/json', // Explicitly set the Content-Type header
+                },
+            });
+            setScore(response.data.score);
+            setPieceMp3(response.data.current_piece_mp3);
+            console.log('Response:', response.data);
+            // return response.data;
+        } catch (error) {
+            console.error('Error checking answers:', error.response?.data || error.message);
+        }
+    };
+
+
     const grade = (action) => {
         stopMusic();
         switch (action) {
             case 'Vérifier':
+                checkAnswers().then(response => {});
                 updateLastActionTime().then(r => {});
                 setGrading(true);
                 setActionText('Continuer');

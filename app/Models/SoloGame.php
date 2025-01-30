@@ -16,6 +16,7 @@ class SoloGame extends Model
         'pieces_list_id',
         'current_piece_id',
         'correct_answers',
+        'game_key',
     ];
 
     protected $casts = [

@@ -6,7 +6,6 @@ use App\Models\Piece;
 use App\Models\Score;
 use App\Models\SoloGame;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -22,81 +21,118 @@ class QuizSoloController extends Controller
 
     public function show(Request $request): Response
     {
-        $soloGame = null;
         $piecesData = [];
-        $current_piece_mp3 = '';
         $parameters_to_display = [];
+
+        // Validate the request data
         $data = $request->validate([
             'pieces_list_id' => 'required|array|min:1',
             'pieces_list_id.*' => 'integer',
             'difficulty' => 'required|integer',
             'level_id' => 'required|integer',
             'courseId' => 'required|integer',
+            'game_key' => 'required|string',
         ]);
 
-        $data['user_id'] = auth()->id();
-        $score = Score::where('user_id', $data['user_id'])->first()->score ?? 0;
+        $userId = Auth::id();
+        $data['user_id'] = $userId;
+        $gameKey = $data['game_key'];
 
-        $this->ensureSingleSoloGame($data['user_id']);
-
-        try {
-            // Store the game data in the database
-            $soloGame = SoloGame::create($data);
-
-//             Ensure pieces_list_id is a valid array before processing
-            $shuffledPieces = $this->fisher_yates_shuffle($data['pieces_list_id'] ?? []);
-            if (!empty($shuffledPieces)) {
-                $selectedPieceIndex = $this->rng(count($shuffledPieces));
-                $current_piece_id = $shuffledPieces[$selectedPieceIndex];
-                $current_piece_mp3 = Piece::find($current_piece_id)->file_name;
-                $soloGame->current_piece_id = $current_piece_id;
-                $soloGame->correct_answers = $this->getCorrectAnswers($current_piece_id);
-//                $soloGame->pieces_list_id = $shuffledPieces;
-                $soloGame->save();
-            }
-        } catch (\Exception $exception) {
-            Log::error('Failed to create SoloGame or shuffle pieces: ' . $exception->getMessage());
+        // Check if a game exists with the provided key
+        $soloGame = null;
+        if ($gameKey) {
+            $soloGame = SoloGame::where('user_id', $userId)
+                ->where('game_key', $gameKey)
+                ->first();
         }
 
+        if (!$soloGame) {
+            $this->ensureSingleSoloGame($userId);
+
+            $soloGame = SoloGame::create(array_merge($data, [
+                'game_key' => $data['game_key']
+            ]));
+
+            // Generate a random piece for the new game
+            $randomPiece = $this->generateRandomPiece($data['pieces_list_id']);
+            if ($randomPiece) {
+                $soloGame->current_piece_id = $randomPiece['current_piece_id'];
+                $soloGame->correct_answers = $randomPiece['correct_answers'];
+                $soloGame->save();
+            }
+        }
+
+        // Generate pieces data and parameters to display based on difficulty
         if ($data['difficulty'] === '1') {
-            // The pieces data for the easy difficulty
             $piecesData = $this->getEasyPiecesData($data['pieces_list_id']);
-            // The parameters to display are the parameters of the current piece that aren't null
-            $parameters_to_display = array_keys(array_filter($soloGame->correct_answers, function ($value) {
-                return $value !== null;
-            }));
-        } else if ($data['difficulty'] === '2') {
-            // The pieces data for the medium difficulty
+            $parameters_to_display = array_keys(array_filter($soloGame->correct_answers ?? [], fn($value) => $value !== null));
+        } elseif ($data['difficulty'] === '2') {
             $piecesData = $this->getMediumPiecesData($data['level_id']);
-            // The parameters to display are all the parameters of the current piece
             $parameters_to_display = ['period', 'genre', 'composer', 'title', 'element', 'no_mvt', 'mvt', 'form'];
         }
 
-        // Process or modify data as needed
-        $processedData = [
+        // Return the game state to the frontend
+        return Inertia::render('QuizSolo', [
             'difficulty' => $data['difficulty'],
             'level' => $data['level_id'],
             'courseId' => $data['courseId'],
             'selectListData' => $piecesData,
-            'current_piece_mp3' => $current_piece_mp3,
-            'score' => $score,
+            'current_piece_mp3' => $soloGame->current_piece_id ? (Piece::find($soloGame->current_piece_id)->file_name ?? '') : '',
+            'current_score' => Score::where('user_id', $userId)->first()->score ?? 0,
             'parameters_to_display' => $parameters_to_display,
-        ];
+            'game_key' => $soloGame->game_key, // Important: Send the game_key back!
+        ]);
+    }
 
-        // Pass the processed data to the component
-        return Inertia::render('QuizSolo', $processedData);
+
+    public function generateRandomPiece(array $piecesList): ?array
+    {
+        $shuffledPieces = $this->fisher_yates_shuffle($piecesList);
+
+        if (!empty($shuffledPieces)) {
+            $selectedPieceIndex = $this->rng(count($shuffledPieces));
+            $currentPieceId = $shuffledPieces[$selectedPieceIndex];
+            $piece = Piece::find($currentPieceId);
+
+            if ($piece) {
+                return [
+                    'current_piece_id' => $currentPieceId,
+                    'current_piece_mp3' => $piece->file_name,
+                    'correct_answers' => $this->getCorrectAnswers($currentPieceId),
+                    'shuffled_pieces' => $shuffledPieces,
+                ];
+            }
+        }
+
+        return null;
     }
 
     public function ensureSingleSoloGame(int $userId): void
     {
         // Fetch all solo games for the user
         $existingGames = SoloGame::where('user_id', $userId)->get();
-
         // If more than one game exists, delete them all
         if ($existingGames->count() > 0) {
             SoloGame::where('user_id', $userId)->delete();
         }
     }
+
+//    public function ensureSingleSoloGame(int $userId, ?string $gameKey = null): ?SoloGame
+//    {
+//        $query = SoloGame::where('user_id', $userId);
+//
+//        // Check if a game key was passed and fetch an existing game.
+//        if ($gameKey) {
+//            $soloGame = $query->where('game_key', $gameKey)->first();
+//            if ($soloGame) {
+//                return $soloGame;
+//            }
+//        }
+//        // If no game key matches, delete older games and create a new one.
+//        $query->delete();
+//        return null;
+//    }
+
 
     // Returns the data for the SelectLists for easy difficulty
     public function getEasyPiecesData(array $pieces_id): array
@@ -189,5 +225,89 @@ class QuizSoloController extends Controller
         }
 
         return $array;
+    }
+
+    public function comparator(mixed $first_argument, mixed $second_argument, bool $strict = false): bool
+    {
+        // Handle strict comparison (e.g., value and type)
+        if ($strict) {
+            return $first_argument === $second_argument;
+        }
+
+        // Loose comparison handling
+        return $first_argument == $second_argument;
+    }
+
+    public function grade(Request $request): array
+    {
+        $validated = $request->validate([
+            'selectedAnswers' => 'required|array',
+            'playPieceOnce' => 'required|boolean',
+        ]);
+
+        $selectedAnswers = $validated['selectedAnswers'];
+        $playPieceOnce = $validated['playPieceOnce'];
+        $userId = auth()->id();
+
+        $soloGame = SoloGame::where('user_id', $userId)->first();
+        if (!$soloGame) {
+            return [
+                'error' => 'No active solo game found for the user.',
+                'correctAnswersCount' => 0,
+                'totalAnswersCount' => count($selectedAnswers),
+                'score' => 0,
+            ];
+        }
+
+        $correctAnswers = $soloGame->correct_answers ?? [];
+        $difficulty = $soloGame->difficulty;
+        $currentPieceId = $soloGame->current_piece_id;
+
+        $pointsPerCorrectAnswer = match ($difficulty) {
+            1 => 2,
+            2 => 3,
+            3 => 5,
+            default => 0,
+        };
+
+        $correctAnswersCount = 0;
+
+        foreach ($selectedAnswers as $key => $value) {
+            if (isset($correctAnswers[$key]) && $this->comparator($value, $correctAnswers[$key])) {
+                $correctAnswersCount++;
+            }
+        }
+
+        $totalPoints = $correctAnswersCount * $pointsPerCorrectAnswer;
+
+        if ($playPieceOnce) {
+            $piecesList = $soloGame->pieces_list_id ?? [];
+            if ($currentPieceId && ($key = array_search($currentPieceId, $piecesList)) !== false) {
+                unset($piecesList[$key]);
+                $piecesList = array_values($piecesList);
+            }
+
+            $randomPiece = $this->generateRandomPiece($piecesList);
+            if ($randomPiece) {
+                $soloGame->current_piece_id = $randomPiece['current_piece_id'];
+                $soloGame->correct_answers = $randomPiece['correct_answers'];
+                $soloGame->pieces_list_id = $randomPiece['shuffled_pieces'];
+                $soloGame->save();
+            }
+        }
+
+        $scoreModel = Score::firstOrNew(['user_id' => $userId]);
+        $scoreModel->score = ($scoreModel->score ?? 0) + $totalPoints;
+        $scoreModel->save();
+
+        Log::info('User ' . $userId . ' scored ' . $totalPoints . ' points in solo game.');
+        Log::info('Total correct answers: ' . $correctAnswersCount);
+
+        return [
+            'correctAnswersCount' => $correctAnswersCount,
+            'totalAnswersCount' => count(array_filter($correctAnswers, fn($value) => $value !== null)),
+            'score' => $scoreModel->score,
+            'current_piece_mp3' => $randomPiece['current_piece_mp3'] ?? '',
+        ];
     }
 }

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('level_id')->constrained()->onDelete('cascade');
+            $table->string('game_key')->unique();
             $table->integer('difficulty');
             $table->json('pieces_list_id')->nullable();
             $table->foreignId('current_piece_id')->nullable()->constrained('pieces')->onDelete('set null');
