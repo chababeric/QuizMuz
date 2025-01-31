@@ -30,6 +30,10 @@ export default function MainMenu({ auth }) {
         }
     }, [selectedLevel]);
 
+    useEffect(() => {
+        localStorage.removeItem("game_key");
+    }, []);
+
     return (
         <div className="main-app pb-5">
             <div className="background-container"></div>
