@@ -14,10 +14,10 @@ class LevelSeeder extends Seeder
     public function run(): void
     {
         $levels = [
-            ['name' => '201'],
-            ['name' => '202'],
-            ['name' => '203'],
-            ['name' => '204'],
+            ['name' => '201', 'institution_id' => 1],
+            ['name' => '202', 'institution_id' => 1],
+            ['name' => '203', 'institution_id' => 1],
+            ['name' => '204', 'institution_id' => 1],
         ];
 
         DB::table('levels')->insert($levels);

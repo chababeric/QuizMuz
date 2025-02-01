@@ -62,16 +62,9 @@ class QuizSoloController extends Controller
             }
         }
 
-        // Generate pieces data and parameters to display based on difficulty
-        if ($data['difficulty'] === '1') {
-            $piecesData = $this->getEasyPiecesData($data['pieces_list_id']);
-            $parameters_to_display = array_keys(array_filter($soloGame->correct_answers ?? [], fn($value) => $value !== null));
-        } elseif ($data['difficulty'] === '2') {
-            $piecesData = $this->getMediumPiecesData($data['level_id']);
-            $parameters_to_display = ['period', 'genre', 'composer', 'title', 'element', 'no_mvt', 'mvt', 'form'];
-        }
+        $piecesData = $this->getPiecesData($data['difficulty'], $data['level_id'], $data['pieces_list_id']);
+        $parameters_to_display = $this->getParametersToDisplay($data['difficulty'], $soloGame);
 
-        // Return the game state to the frontend
         return Inertia::render('QuizSolo', [
             'difficulty' => $data['difficulty'],
             'level' => $data['level_id'],
@@ -80,8 +73,28 @@ class QuizSoloController extends Controller
             'current_piece_mp3' => $soloGame->current_piece_id ? (Piece::find($soloGame->current_piece_id)->file_name ?? '') : '',
             'current_score' => Score::where('user_id', $userId)->first()->score ?? 0,
             'parameters_to_display' => $parameters_to_display,
-            'game_key' => $soloGame->game_key, // Important: Send the game_key back!
+            'game_key' => $soloGame->game_key,
         ]);
+    }
+
+    public function getParametersToDisplay(string $difficulty, SoloGame $soloGame = null): array
+    {
+        if ($difficulty === '1') {
+            return array_keys(array_filter($soloGame->correct_answers ?? [], fn($value) => $value !== null));
+        } elseif ($difficulty === '2') {
+            return ['period', 'genre', 'composer', 'title', 'element', 'no_mvt', 'mvt', 'form'];
+        }
+        return [];
+    }
+
+    public function getPiecesData(string $difficulty, int $levelId, array $piecesList = []): array
+    {
+        if ($difficulty === '1') {
+            return $this->getEasyPiecesData($piecesList);
+        } elseif ($difficulty === '2') {
+            return $this->getMediumPiecesData($levelId);
+        }
+        return [];
     }
 
 
@@ -117,24 +130,6 @@ class QuizSoloController extends Controller
         }
     }
 
-//    public function ensureSingleSoloGame(int $userId, ?string $gameKey = null): ?SoloGame
-//    {
-//        $query = SoloGame::where('user_id', $userId);
-//
-//        // Check if a game key was passed and fetch an existing game.
-//        if ($gameKey) {
-//            $soloGame = $query->where('game_key', $gameKey)->first();
-//            if ($soloGame) {
-//                return $soloGame;
-//            }
-//        }
-//        // If no game key matches, delete older games and create a new one.
-//        $query->delete();
-//        return null;
-//    }
-
-
-    // Returns the data for the SelectLists for easy difficulty
     public function getEasyPiecesData(array $pieces_id): array
     {
         $pieces = Piece::whereIn('id', $pieces_id)->get();
@@ -240,6 +235,8 @@ class QuizSoloController extends Controller
 
     public function grade(Request $request): array
     {
+        $parameters_to_display = [];
+
         $validated = $request->validate([
             'selectedAnswers' => 'required|array',
             'playPieceOnce' => 'required|boolean',
@@ -295,19 +292,18 @@ class QuizSoloController extends Controller
                 $soloGame->save();
             }
         }
+        $parameters_to_display = $this->getParametersToDisplay($difficulty, $soloGame);
 
         $scoreModel = Score::firstOrNew(['user_id' => $userId]);
         $scoreModel->score = ($scoreModel->score ?? 0) + $totalPoints;
         $scoreModel->save();
-
-        Log::info('User ' . $userId . ' scored ' . $totalPoints . ' points in solo game.');
-        Log::info('Total correct answers: ' . $correctAnswersCount);
 
         return [
             'correctAnswersCount' => $correctAnswersCount,
             'totalAnswersCount' => count(array_filter($correctAnswers, fn($value) => $value !== null)),
             'score' => $scoreModel->score,
             'current_piece_mp3' => $randomPiece['current_piece_mp3'] ?? '',
+            'parameters_to_display' => $parameters_to_display,
         ];
     }
 }

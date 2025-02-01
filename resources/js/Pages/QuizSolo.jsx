@@ -113,6 +113,7 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
             });
             setScore(response.data.score);
             setPieceMp3(response.data.current_piece_mp3);
+            setParametersToDisplay(response.data.parameters_to_display);
             console.log('Response:', response.data);
             // return response.data;
         } catch (error) {
@@ -173,8 +174,9 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
                 </div>
             ) : (
                 grading ? (
-                    <Grader
-                    />
+                    // <Grader
+                    // />
+                    <p>HELLOO</p>
                 ) : (
                     <div className="flex flex-col items-center w-full">
                         {parametersToDisplay.map((element, index) => (
