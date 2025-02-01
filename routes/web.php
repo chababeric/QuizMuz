@@ -173,6 +173,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/user-score', [ScoreController::class, 'getUserScore'])->name('userScore');
     Route::get('/all-courses', [CourseController::class, 'getAllCourses'])->name('allCourses');
     Route::post('/check-answers', [QuizSoloController::class, 'grade'])->name('checkAnswers');
+    Route::post('/get-next-piece', [QuizSoloController::class, 'getNextPiece'])->name('getNextPiece');
 
     Route::middleware([AdminMiddleware::class])->group(function () {
         Route::patch('/admin/update-username', [AdminController::class, 'updateUsername'])->name('admin.update-username');

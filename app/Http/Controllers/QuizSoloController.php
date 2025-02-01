@@ -21,9 +21,6 @@ class QuizSoloController extends Controller
 
     public function show(Request $request): Response
     {
-        $piecesData = [];
-        $parameters_to_display = [];
-
         // Validate the request data
         $data = $request->validate([
             'pieces_list_id' => 'required|array|min:1',
@@ -73,7 +70,6 @@ class QuizSoloController extends Controller
             'current_piece_mp3' => $soloGame->current_piece_id ? (Piece::find($soloGame->current_piece_id)->file_name ?? '') : '',
             'current_score' => Score::where('user_id', $userId)->first()->score ?? 0,
             'parameters_to_display' => $parameters_to_display,
-            'game_key' => $soloGame->game_key,
         ]);
     }
 
@@ -235,15 +231,11 @@ class QuizSoloController extends Controller
 
     public function grade(Request $request): array
     {
-        $parameters_to_display = [];
-
         $validated = $request->validate([
             'selectedAnswers' => 'required|array',
-            'playPieceOnce' => 'required|boolean',
         ]);
 
         $selectedAnswers = $validated['selectedAnswers'];
-        $playPieceOnce = $validated['playPieceOnce'];
         $userId = auth()->id();
 
         $soloGame = SoloGame::where('user_id', $userId)->first();
@@ -258,7 +250,6 @@ class QuizSoloController extends Controller
 
         $correctAnswers = $soloGame->correct_answers ?? [];
         $difficulty = $soloGame->difficulty;
-        $currentPieceId = $soloGame->current_piece_id;
 
         $pointsPerCorrectAnswer = match ($difficulty) {
             1 => 2,
@@ -277,6 +268,37 @@ class QuizSoloController extends Controller
 
         $totalPoints = $correctAnswersCount * $pointsPerCorrectAnswer;
 
+        $scoreModel = Score::firstOrNew(['user_id' => $userId]);
+        $scoreModel->score = ($scoreModel->score ?? 0) + $totalPoints;
+        $scoreModel->save();
+
+        return [
+            'correctAnswersCount' => $correctAnswersCount,
+            'totalAnswersCount' => count(array_filter($correctAnswers, fn($value) => $value !== null)),
+            'score' => $scoreModel->score,
+        ];
+    }
+
+    public function getNextPiece(Request $request): array
+    {
+        $validated = $request->validate([
+            'playPieceOnce' => 'required|boolean',
+        ]);
+
+        $playPieceOnce = $validated['playPieceOnce'];
+        $userId = auth()->id();
+
+        $soloGame = SoloGame::where('user_id', $userId)->first();
+        if (!$soloGame) {
+            return [
+                'error' => 'No active solo game found for the user.',
+            ];
+        }
+
+        $currentPieceId = $soloGame->current_piece_id;
+        $difficulty = $soloGame->difficulty;
+
+        // Remove the piece for the list if it has been played and playPieceOnce is true
         if ($playPieceOnce) {
             $piecesList = $soloGame->pieces_list_id ?? [];
             if ($currentPieceId && ($key = array_search($currentPieceId, $piecesList)) !== false) {
@@ -292,16 +314,17 @@ class QuizSoloController extends Controller
                 $soloGame->save();
             }
         }
+        else {
+            $randomPiece = $this->generateRandomPiece($soloGame->pieces_list_id ?? []);
+            if ($randomPiece) {
+                $soloGame->current_piece_id = $randomPiece['current_piece_id'];
+                $soloGame->correct_answers = $randomPiece['correct_answers'];
+                $soloGame->save();
+            }
+        }
         $parameters_to_display = $this->getParametersToDisplay($difficulty, $soloGame);
 
-        $scoreModel = Score::firstOrNew(['user_id' => $userId]);
-        $scoreModel->score = ($scoreModel->score ?? 0) + $totalPoints;
-        $scoreModel->save();
-
         return [
-            'correctAnswersCount' => $correctAnswersCount,
-            'totalAnswersCount' => count(array_filter($correctAnswers, fn($value) => $value !== null)),
-            'score' => $scoreModel->score,
             'current_piece_mp3' => $randomPiece['current_piece_mp3'] ?? '',
             'parameters_to_display' => $parameters_to_display,
         ];

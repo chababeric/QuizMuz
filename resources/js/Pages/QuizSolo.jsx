@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import ControlMusic from "@/Components/ControlMusic.jsx";
 import axios from "axios";
 
-export default function QuizSolo({ auth, difficulty, level, courseId, current_piece_mp3, selectListData, current_score, parameters_to_display, game_key }) {
+export default function QuizSolo({ auth, difficulty, level, courseId, current_piece_mp3, selectListData, current_score, parameters_to_display }) {
     const [pieceMp3, setPieceMp3] = useState(current_piece_mp3);
     const [score, setScore] = useState(current_score);
     const [parametersToDisplay, setParametersToDisplay] = useState([]);
@@ -45,12 +45,6 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
         const filteredParameters = elements.filter(element => parameters_to_display.includes(element.col));
         setParametersToDisplay(filteredParameters);
     }, [parameters_to_display]);
-
-    // useEffect(() => {
-    //     if (game_key) {
-    //         localStorage.setItem("game_key", game_key); // Save the key to localStorage
-    //     }
-    // }, [game_key]);
 
     const playMusic = () => {
         setIsPlaying(true);
@@ -102,22 +96,39 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
 
     const checkAnswers = async () => {
         try {
-            const payload = {
-                selectedAnswers,
-                playPieceOnce,
-            };
+            const payload = { selectedAnswers };
             const response = await axios.post(route('checkAnswers'), payload, {
                 headers: {
                     'Content-Type': 'application/json', // Explicitly set the Content-Type header
                 },
             });
             setScore(response.data.score);
-            setPieceMp3(response.data.current_piece_mp3);
-            setParametersToDisplay(response.data.parameters_to_display);
+
             console.log('Response:', response.data);
-            // return response.data;
         } catch (error) {
             console.error('Error checking answers:', error.response?.data || error.message);
+        }
+    };
+
+    const getNextPiece = async () => {
+        try {
+            const payload = { playPieceOnce };
+            const response = await axios.post(route('getNextPiece'), payload, {
+                headers: {
+                    'Content-Type': 'application/json', // Explicitly set the Content-Type header
+                },
+            });
+
+            setPieceMp3(response.data.current_piece_mp3);
+            if (response.data.parameters_to_display) {
+                const filteredParameters = elements.filter(element =>
+                    response.data.parameters_to_display.includes(element.col),
+                );
+                setParametersToDisplay(filteredParameters);
+            }
+            console.log('Response:', response.data);
+        } catch (error) {
+            console.error('Error getting next piece:', error.response?.data || error.message);
         }
     };
 
@@ -126,7 +137,7 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
         stopMusic();
         switch (action) {
             case 'Vérifier':
-                checkAnswers().then(response => {});
+                checkAnswers().then(r => {});
                 updateLastActionTime().then(r => {});
                 setGrading(true);
                 setActionText('Continuer');
@@ -145,6 +156,7 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
                     mvt: '',
                     form: ''
                 });
+                getNextPiece().then(r => {});
                 break;
         }
     };
