@@ -14,6 +14,7 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
     const [startRandomPosition, setStartRandomPosition] = useState(false);
     const [playPieceOnce, setPlayPieceOnce] = useState(false);
     const [grading, setGrading] = useState(false);
+    const [results, setResults] = useState([]);
     const [actionText, setActionText] = useState('Vérifier');
     const audioRef = useRef(null);
     const [selectedAnswers, setSelectedAnswers] = useState({
@@ -36,9 +37,6 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
         { name: "Nom mouvement ou partie", col: "mvt" },
         { name: "Forme", col: "form" }
     ];
-
-    console.log('parameters_to_display:', parameters_to_display);
-    console.log('elements:', selectListData);
 
     useEffect(() => {
         // Filter out parameters that are null or empty for the current difficulty
@@ -103,8 +101,7 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
                 },
             });
             setScore(response.data.score);
-
-            console.log('Response:', response.data);
+            setResults(response.data.results);
         } catch (error) {
             console.error('Error checking answers:', error.response?.data || error.message);
         }
@@ -126,12 +123,10 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
                 );
                 setParametersToDisplay(filteredParameters);
             }
-            console.log('Response:', response.data);
         } catch (error) {
             console.error('Error getting next piece:', error.response?.data || error.message);
         }
     };
-
 
     const grade = (action) => {
         stopMusic();
@@ -186,9 +181,7 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
                 </div>
             ) : (
                 grading ? (
-                    // <Grader
-                    // />
-                    <p>HELLOO</p>
+                    <Grader results={results} elements={elements}/>
                 ) : (
                     <div className="flex flex-col items-center w-full">
                         {parametersToDisplay.map((element, index) => (

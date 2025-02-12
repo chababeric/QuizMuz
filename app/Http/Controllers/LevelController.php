@@ -27,18 +27,19 @@ class LevelController extends Controller
             $solo_game->delete();
         }
 
-        if ($courseId == 6) {
-            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
-        }
-        elseif ($courseId == 2) {
-            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
-        }
-        else if ($courseId == 3) {
-            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
-        }
-        else {
-            return Inertia::render('Welcome');
-        }
+//        if ($courseId == 6) {
+//            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
+//        }
+//        elseif ($courseId == 2) {
+//            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
+//        }
+//        else if ($courseId == 3) {
+//            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
+//        }
+//        else {
+//            return Inertia::render('Welcome');
+//        }
+        return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
     }
 
     public function getAllLevels(Request $request): JsonResponse

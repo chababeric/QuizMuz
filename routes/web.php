@@ -155,7 +155,6 @@ Route::get('highscores', function (Illuminate\Http\Request $request) {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/update-last-action-time', [QuizSoloController::class, 'updateLastActionTime'])->name('updateLastActionTime');
-    Route::post('/update-score', [ScoreController::class, 'store']);
     Route::get('/scores', [ScoreController::class, 'getAllScores'])->name('allScores');
     Route::get('/all-scores', [ScoreController::class, 'index']);
     Route::get('/api/pieces/level/{level_id}', [PieceController::class, 'getPiecesByLevel']);

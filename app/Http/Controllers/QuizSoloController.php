@@ -77,7 +77,7 @@ class QuizSoloController extends Controller
     {
         if ($difficulty === '1') {
             return array_keys(array_filter($soloGame->correct_answers ?? [], fn($value) => $value !== null));
-        } elseif ($difficulty === '2') {
+        } elseif ($difficulty === '2' || $difficulty === '3') {
             return ['period', 'genre', 'composer', 'title', 'element', 'no_mvt', 'mvt', 'form'];
         }
         return [];
@@ -218,16 +218,26 @@ class QuizSoloController extends Controller
         return $array;
     }
 
-    public function comparator(mixed $first_argument, mixed $second_argument, bool $strict = false): bool
+    public function comparator(mixed $first_argument, mixed $second_argument): bool
     {
-        // Handle strict comparison (e.g., value and type)
-        if ($strict) {
-            return $first_argument === $second_argument;
+        if (!is_string($first_argument) || !is_string($second_argument)) {
+            return false;
         }
 
-        // Loose comparison handling
-        return $first_argument == $second_argument;
+        $normalize = function ($text) {
+            $text = transliterator_transliterate('Any-Latin; Latin-ASCII', $text);
+            return strtolower($text);
+        };
+
+        $first_argument = $normalize($first_argument);
+        $second_argument = $normalize($second_argument);
+
+        similar_text($first_argument, $second_argument, $percent);
+
+        return $percent >= 70; // Return true if the similarity is 70% or more
     }
+
+
 
     public function grade(Request $request): array
     {
@@ -258,12 +268,27 @@ class QuizSoloController extends Controller
             default => 0,
         };
 
+        $response = [];
         $correctAnswersCount = 0;
 
-        foreach ($selectedAnswers as $key => $value) {
-            if (isset($correctAnswers[$key]) && $this->comparator($value, $correctAnswers[$key])) {
+        foreach ($correctAnswers as $key => $correctAnswer) {
+            if ($correctAnswer === null) {
+                continue;
+            }
+
+            $userAnswer = $selectedAnswers[$key] ?? null;
+            $isCorrect = $this->comparator($userAnswer, $correctAnswer);
+
+            if ($isCorrect) {
                 $correctAnswersCount++;
             }
+
+            $response[] = [
+                'parameter' => $key,
+                'correct_answer' => $correctAnswer,
+                'user_answer' => $userAnswer,
+                'is_correct' => $isCorrect,
+            ];
         }
 
         $totalPoints = $correctAnswersCount * $pointsPerCorrectAnswer;
@@ -273,8 +298,9 @@ class QuizSoloController extends Controller
         $scoreModel->save();
 
         return [
+            'results' => $response,
             'correctAnswersCount' => $correctAnswersCount,
-            'totalAnswersCount' => count(array_filter($correctAnswers, fn($value) => $value !== null)),
+            'totalAnswersCount' => count($selectedAnswers),
             'score' => $scoreModel->score,
         ];
     }

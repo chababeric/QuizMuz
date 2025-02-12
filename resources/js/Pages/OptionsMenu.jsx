@@ -79,9 +79,6 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
         if (!existingGameKey) {
             const gameKey = uuidv4();
             localStorage.setItem("game_key", gameKey);
-            console.log("Game key created:", gameKey);
-        } else {
-            console.log("Game key already exists:", existingGameKey);
         }
 
         return route("quizsolo", {
