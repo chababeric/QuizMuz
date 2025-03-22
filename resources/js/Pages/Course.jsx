@@ -12,34 +12,34 @@ export default function Course({ auth, courses }) {
                 Choisissez un cours
             </h3>
             <div className="flex flex-wrap justify-center gap-4 mb-6 w-full flex-col items-center">
-                {/*{courses.map((course) => (*/}
-                {/*    <Link*/}
-                {/*        key={course.id}*/}
-                {/*        href={route('mainmenu', {courseId: course.id})}*/}
-                {/*        className="game-mode"*/}
-                {/*    >*/}
-                {/*        {course.name}*/}
-                {/*    </Link>*/}
-                {/*))}*/}
+                {courses.map((course) => (
+                    <Link
+                        key={course.id}
+                        href={route('mainmenu', {courseId: course.id})}
+                        className="game-mode"
+                    >
+                        {course.name}
+                    </Link>
+                ))}
 
-                {courses.map((course) => {
-                    // If the course name is "FMA", don't display it
-                    if (course.name === "Formation Musicale et Auditive") {
-                        return null;
-                    }
+                {/*{courses.map((course) => {*/}
+                {/*    // If the course name is "FMA", don't display it*/}
+                {/*    if (course.name === "Formation Musicale et Auditive") {*/}
+                {/*        return null;*/}
+                {/*    }*/}
 
-                    // Return the Link component with conditional logic for "Histoire de la musique"
-                    return (
-                        <Link
-                            key={course.id}
-                            href={course.name === "Histoire de la musique" ? undefined : route('mainmenu', { courseId: course.id })}
-                            className={`game-mode ${course.name === "Histoire de la Musique" ? 'disabled-link' : ''}`}
-                            style={{ pointerEvents: course.name === "Histoire de la Musique" ? 'none' : 'auto' }}
-                        >
-                            {course.name} {course.name === "Histoire de la Musique" && <span className="text-red-600">(Bientôt disponible)</span>}
-                        </Link>
-                    );
-                })}
+                {/*    // Return the Link component with conditional logic for "Histoire de la musique"*/}
+                {/*    return (*/}
+                {/*        <Link*/}
+                {/*            key={course.id}*/}
+                {/*            href={course.name === "Histoire de la musique" ? undefined : route('mainmenu', { courseId: course.id })}*/}
+                {/*            className={`game-mode ${course.name === "Histoire de la Musique" ? 'disabled-link' : ''}`}*/}
+                {/*            style={{ pointerEvents: course.name === "Histoire de la Musique" ? 'none' : 'auto' }}*/}
+                {/*        >*/}
+                {/*            {course.name} {course.name === "Histoire de la Musique" && <span className="text-red-600">(Bientôt disponible)</span>}*/}
+                {/*        </Link>*/}
+                {/*    );*/}
+                {/*})}*/}
             </div>
 
             <div className="mt-4 text-center">
