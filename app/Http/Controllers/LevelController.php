@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use App\Models\Institution;
 use App\Models\Level;
+use App\Models\SoloGame;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -19,18 +20,26 @@ class LevelController extends Controller
         $levels = Level::where('course_id', $courseId)->get();
         $courseName = Course::where('id', $courseId)->first()->name;
 
-        if ($courseId == 1) {
-            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
+        $user = auth()->user();
+        $solo_game = SoloGame::where('user_id', $user->id)->first();
+
+        if ($solo_game) {
+            $solo_game->delete();
         }
-        elseif ($courseId == 2) {
-            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
-        }
-        else if ($courseId == 3) {
-            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
-        }
-        else {
-            return Inertia::render('Welcome');
-        }
+
+//        if ($courseId == 6) {
+//            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
+//        }
+//        elseif ($courseId == 2) {
+//            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
+//        }
+//        else if ($courseId == 3) {
+//            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
+//        }
+//        else {
+//            return Inertia::render('Welcome');
+//        }
+        return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
     }
 
     public function getAllLevels(Request $request): JsonResponse

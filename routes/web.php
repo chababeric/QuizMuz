@@ -122,14 +122,21 @@ Route::get('/optionsmenu', function (Illuminate\Http\Request $request) {
     ]);
 })->name('optionsmenu')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class]);
 
-Route::get('/quizsolo', function (Illuminate\Http\Request $request) {
-    return Inertia::render('QuizSolo', [
-        'pieces' => $request->input('pieces'),
-        'difficulty' => $request->input('difficulty'),
-        'level' => $request->input('level'),
-        'courseId' => $request->input('courseId'),
-    ]);
-})->name('quizsolo')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
+//Route::get('/quizsolo', function (Illuminate\Http\Request $request) {
+//    return Inertia::render('QuizSolo', [
+//        'pieces' => $request->input('pieces'),
+//        'difficulty' => $request->input('difficulty'),
+//        'level' => $request->input('level'),
+//        'courseId' => $request->input('courseId'),
+//    ]);
+//})->name('quizsolo')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
+
+Route::get('/quizsolo', [QuizSoloController::class, 'show'])
+    ->name('quizsolo')
+    ->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
+
+
+//Route::post('/quizsolo/store', [QuizSoloController::class, 'store'])->name('quizsolo.store')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
 
 Route::get('/quizfma', function (Illuminate\Http\Request $request) {
     return Inertia::render('QuizFMA', [
@@ -148,7 +155,6 @@ Route::get('highscores', function (Illuminate\Http\Request $request) {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/update-last-action-time', [QuizSoloController::class, 'updateLastActionTime'])->name('updateLastActionTime');
-    Route::post('/update-score', [ScoreController::class, 'store']);
     Route::get('/scores', [ScoreController::class, 'getAllScores'])->name('allScores');
     Route::get('/all-scores', [ScoreController::class, 'index']);
     Route::get('/api/pieces/level/{level_id}', [PieceController::class, 'getPiecesByLevel']);
@@ -165,6 +171,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/updateLastLevel', [LevelController::class, 'updateLastLevel'])->name('updateLastLevel');
     Route::get('/user-score', [ScoreController::class, 'getUserScore'])->name('userScore');
     Route::get('/all-courses', [CourseController::class, 'getAllCourses'])->name('allCourses');
+    Route::post('/check-answers', [QuizSoloController::class, 'grade'])->name('checkAnswers');
+    Route::post('/get-next-piece', [QuizSoloController::class, 'getNextPiece'])->name('getNextPiece');
 
     Route::middleware([AdminMiddleware::class])->group(function () {
         Route::patch('/admin/update-username', [AdminController::class, 'updateUsername'])->name('admin.update-username');

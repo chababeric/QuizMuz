@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
 //            PiecesSeeder::class,
 //            InstitutionSeeder::class,
 //            AdminKeySeeder::class,
-            CourseSeeder::class
+//            CourseSeeder::class
         ]);
     }
 }

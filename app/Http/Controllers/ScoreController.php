@@ -30,7 +30,8 @@ class ScoreController extends Controller
         $scores = Score::with('user')
             ->orderBy('score', 'desc')
             ->take(10)
-            ->get();
+            ->get()
+            ->makeHidden(['user_id']);
 
         return response()->json($scores);
     }
@@ -41,24 +42,24 @@ class ScoreController extends Controller
         return response()->json($score);
     }
 
-    public function store(Request $request): JsonResponse
-    {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'score' => 'required|integer',
-        ]);
-
-        // Find the existing score record for the user or create a new one with score 0
-        $score = Score::firstOrNew(['user_id' => $request->user_id]);
-
-        // Add the new score to the existing score
-        $score->score += $request->score;
-
-        // Save the updated score
-        $score->save();
-
-        return response()->json($score, 200);
-    }
+//    public function store(Request $request): JsonResponse
+//    {
+//        $request->validate([
+//            'user_id' => 'required|exists:users,id',
+//            'score' => 'required|integer',
+//        ]);
+//
+//        // Find the existing score record for the user or create a new one with score 0
+//        $score = Score::firstOrNew(['user_id' => $request->user_id]);
+//
+//        // Add the new score to the existing score
+//        $score->score += $request->score;
+//
+//        // Save the updated score
+//        $score->save();
+//
+//        return response()->json($score, 200);
+//    }
 
     public function update(Request $request, $id): JsonResponse
     {
