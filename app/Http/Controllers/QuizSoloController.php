@@ -237,8 +237,6 @@ class QuizSoloController extends Controller
         return $percent >= 70; // Return true if the similarity is 70% or more
     }
 
-
-
     public function grade(Request $request): array
     {
         $validated = $request->validate([
@@ -276,8 +274,23 @@ class QuizSoloController extends Controller
                 continue;
             }
 
-            $userAnswer = $selectedAnswers[$key] ?? null;
+            $userAnswer = isset($selectedAnswers[$key]) ? (string) $selectedAnswers[$key] : '';
+            $isCorrect = false;
+
+            // Special handling for 'composer' key
             $isCorrect = $this->comparator($userAnswer, $correctAnswer);
+            if ($key === 'composer') {
+                // Check for exact match
+
+                // If not an exact match, check for family name match
+                if (!$isCorrect && str_contains($correctAnswer, ',')) {
+                    // Extract the family name (after the comma)
+                    $familyName = trim(explode(',', $correctAnswer)[0]);
+
+                    // Check if the user's answer matches the family name
+                    $isCorrect = $this->comparator($userAnswer, $familyName);
+                }
+            }
 
             if ($isCorrect) {
                 $correctAnswersCount++;
