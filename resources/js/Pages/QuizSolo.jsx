@@ -93,6 +93,8 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
     };
 
     const checkAnswers = async () => {
+        setResults([]);
+        setGrading(true);
         try {
             const payload = { selectedAnswers };
             const response = await axios.post(route('checkAnswers'), payload, {
@@ -108,6 +110,7 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
     };
 
     const getNextPiece = async () => {
+        setGrading(false);
         try {
             const payload = { playPieceOnce };
             const response = await axios.post(route('getNextPiece'), payload, {
