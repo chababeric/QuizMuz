@@ -26,19 +26,6 @@ class LevelController extends Controller
         if ($solo_game) {
             $solo_game->delete();
         }
-
-//        if ($courseId == 3) {
-//            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
-//        }
-//        elseif ($courseId == 2) {
-//            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
-//        }
-//        else if ($courseId == 3) {
-//            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
-//        }
-//        else {
-//            return Inertia::render('Welcome');
-//        }
         return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
     }
 
