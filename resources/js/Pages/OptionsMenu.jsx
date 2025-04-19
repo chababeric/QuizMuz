@@ -74,10 +74,10 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
     }, [difficulty]);
 
     const startQuiz = () => {
-        const existingGameKey = localStorage.getItem("game_key");
+        let gameKey = localStorage.getItem("game_key");
 
-        if (!existingGameKey) {
-            const gameKey = uuidv4();
+        if (!gameKey) {
+            gameKey = uuidv4();
             localStorage.setItem("game_key", gameKey);
         }
 
@@ -86,7 +86,7 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
             difficulty,
             level_id: level,
             courseId,
-            game_key: existingGameKey
+            game_key: gameKey
         });
     };
 

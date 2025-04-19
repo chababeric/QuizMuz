@@ -1,0 +1,1 @@
+import{j as n}from"./app-agrSVWpR.js";function a({value:t,extra:e="",className:r="",children:s,...m}){return n.jsx("label",{...m,className:"block font-medium text-sm text-gray-700 "+r,children:t?t+e:s})}export{a as I};
