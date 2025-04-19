@@ -7,6 +7,7 @@ use App\Http\Controllers\ChordController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\InstitutionController;
 use App\Http\Controllers\PieceController;
+use App\Http\Controllers\QuizFMAController;
 use App\Http\Controllers\QuizSoloController;
 use App\Http\Controllers\ScoreController;
 use App\Http\Controllers\SupportController;
@@ -126,14 +127,9 @@ Route::get('/quizsolo', [QuizSoloController::class, 'show'])
     ->name('quizsolo')
     ->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
 
-Route::get('/quizfma', function (Illuminate\Http\Request $request) {
-    return Inertia::render('QuizFMA', [
-        'chords' => $request->input('chords'),
-        'difficulty' => $request->input('difficulty'),
-        'level' => $request->input('level'),
-        'courseId' => $request->input('courseId'),
-    ]);
-})->name('quizfma')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
+Route::get('/quizfma', [QuizFMAController::class, 'show'])
+    ->name('quizfma')
+    ->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
 
 Route::get('highscores', function (Illuminate\Http\Request $request) {
     return Inertia::render('HighScores', [
@@ -159,8 +155,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/updateLastLevel', [LevelController::class, 'updateLastLevel'])->name('updateLastLevel');
     Route::get('/user-score', [ScoreController::class, 'getUserScore'])->name('userScore');
     Route::get('/all-courses', [CourseController::class, 'getAllCourses'])->name('allCourses');
+
+    // Route for history mode (solo mode)
     Route::post('/check-answers', [QuizSoloController::class, 'grade'])->name('checkAnswers');
     Route::post('/get-next-piece', [QuizSoloController::class, 'getNextPiece'])->name('getNextPiece');
+
+    // Routes for FMA mode
+    Route::post('/check-fma-answers', [QuizFMAController::class, 'grade'])->name('checkFMAAnswers');
+    Route::post('/get-next-chord', [QuizFMAController::class, 'getNextChord'])->name('getNextChord');
 
     Route::middleware([AdminMiddleware::class])->group(function () {
         Route::patch('/admin/update-username', [AdminController::class, 'updateUsername'])->name('admin.update-username');

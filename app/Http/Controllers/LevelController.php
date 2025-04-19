@@ -156,18 +156,30 @@ class LevelController extends Controller
         if (!$level) {
             return response()->json(['message' => 'Le niveau \'' . $request->name . '\' n\'a pas été trouvé.'], 404);
         } else {
-            $level->delete();
-
-            Log::info('**********START TRANSACTION**********');
-            Log::info('ACTION: Level deletion');
-            Log::info('INITIATOR ID: ' . $initiator->id);
-            Log::info('INITIATOR First Name: ' . $initiator->first_name);
-            Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-            Log::info('INITIATOR Username: ' . $initiator->username);
-            Log::info('Level Deleted: ' . $request->name . ' in institution ' . $institution_name);
-            Log::info('**********END TRANSACTION**********');
-
-            return response()->json(['message' => 'Le niveau \'' . $request->name . '\' a été supprimé avec succès.'], 200);
+            try {
+                // Use transaction to ensure database consistency
+                \Illuminate\Support\Facades\DB::beginTransaction();
+                
+                // Delete the level without cascading to user
+                $level->delete();
+                
+                \Illuminate\Support\Facades\DB::commit();
+    
+                Log::info('**********START TRANSACTION**********');
+                Log::info('ACTION: Level deletion');
+                Log::info('INITIATOR ID: ' . $initiator->id);
+                Log::info('INITIATOR First Name: ' . $initiator->first_name);
+                Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+                Log::info('INITIATOR Username: ' . $initiator->username);
+                Log::info('Level Deleted: ' . $request->name . ' in institution ' . $institution_name);
+                Log::info('**********END TRANSACTION**********');
+    
+                return response()->json(['message' => 'Le niveau \'' . $request->name . '\' a été supprimé avec succès.'], 200);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\DB::rollBack();
+                Log::error('Error deleting level: ' . $e->getMessage());
+                return response()->json(['message' => 'Une erreur est survenue lors de la suppression du niveau.'], 500);
+            }
         }
     }
 

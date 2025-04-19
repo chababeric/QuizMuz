@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('solo_game');
+        Schema::dropIfExists('solo_games');
     }
 };

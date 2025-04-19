@@ -2,14 +2,17 @@ import React, { useState, useEffect } from "react";
 import Checkbox from '@/Components/Checkbox';
 import settingsIcon from '../../icons/settings.svg';
 
-export default function ControlMusic({ playMusic, stopMusic, setRandomPosition, setPlayPieceOnce, isPlaying }) {
+export default function ControlMusic({ playMusic, stopMusic, setRandomPosition, setPlayPieceOnce, isPlaying, disableRandomPosition=false }) {
     const [startFromBeginning, setStartFromBeginning] = useState(true);
     const [playOnce, setPlayOnce] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
 
     useEffect(() => {
-        setRandomPosition(!startFromBeginning);
+        if (disableRandomPosition)
+            setStartFromBeginning(true);
+        else
+            setRandomPosition(!startFromBeginning);
     }, [startFromBeginning]);
 
     useEffect(() => {
@@ -52,12 +55,14 @@ export default function ControlMusic({ playMusic, stopMusic, setRandomPosition, 
                         <div className="flex flex-col justify-center items-center">
                             <h3 className="text-3xl mb-6">Paramètres</h3>
                         </div>
-                        <label className="flex items-center text-lg hover:cursor-pointer mb-2">
-                            Commencer du début
-                            <Checkbox checked={startFromBeginning} onChange={handleStartFromBeginningCheck} className="ml-2 hover:cursor-pointer"/>
-                        </label>
+                        {!disableRandomPosition && (
+                            <label className="flex items-center text-lg hover:cursor-pointer mb-2">
+                                Commencer du début
+                                <Checkbox checked={startFromBeginning} onChange={handleStartFromBeginningCheck} className="ml-2 hover:cursor-pointer"/>
+                            </label>
+                        )}
                         <label className="flex items-center text-lg hover:cursor-pointer">
-                            Jouer chaque pièce une seule fois
+                            {disableRandomPosition ? "Jouer chaque accord/formule une seule fois" : "Jouer chaque pièce une seule fois"}
                             <Checkbox checked={playOnce} onChange={handlePlayOnceCheck} className="ml-2 hover:cursor-pointer"/>
                         </label>
 

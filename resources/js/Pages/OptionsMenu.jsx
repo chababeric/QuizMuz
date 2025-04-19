@@ -81,13 +81,24 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
             localStorage.setItem("game_key", gameKey);
         }
 
-        return route("quizsolo", {
-            pieces_list_id: checkedPieces,
-            difficulty,
-            level_id: level,
-            courseId,
-            game_key: gameKey
-        });
+        if (courseName === "Formation Musicale et Auditive") {
+            return route("quizfma", {
+                chords_list_id: checkedPieces,
+                difficulty,
+                level_id: level,
+                courseId,
+                game_key: gameKey
+            });
+        }
+        else {
+            return route("quizsolo", {
+                pieces_list_id: checkedPieces,
+                difficulty,
+                level_id: level,
+                courseId,
+                game_key: gameKey
+            });
+        }
     };
 
     return (
