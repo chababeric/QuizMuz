@@ -74,10 +74,10 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
     }, [difficulty]);
 
     const startQuiz = () => {
-        const existingGameKey = localStorage.getItem("game_key");
+        let gameKey = localStorage.getItem("game_key");
 
-        if (!existingGameKey) {
-            const gameKey = uuidv4();
+        if (!gameKey) {
+            gameKey = uuidv4();
             localStorage.setItem("game_key", gameKey);
         }
 
@@ -86,7 +86,7 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
             difficulty,
             level_id: level,
             courseId,
-            game_key: existingGameKey
+            game_key: gameKey
         });
     };
 
@@ -177,21 +177,12 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                 </Link>
 
                 {canPlay ? (
-                    courseName === "Formation Musicale et Auditive" ? (
-                        <Link
-                            href={route('quizfma', {chords: checkedPieces, difficulty: difficulty, level: level, courseId: courseId})}
-                            className="text-white font-bold py-2 px-4 rounded-lg bg-rose-600 hover:bg-rose-800 mt-4"
-                        >
-                            Commencer le quiz
-                        </Link>
-                    ) : (
-                        <Link
-                            href={startQuiz()}
-                            className="text-white font-bold py-2 px-4 rounded-lg bg-rose-600 hover:bg-rose-800 mt-4"
-                        >
-                            Commencer le quiz
-                        </Link>
-                    )
+                    <Link
+                        href={startQuiz()}
+                        className="text-white font-bold py-2 px-4 rounded-lg bg-rose-600 hover:bg-rose-800 mt-4"
+                    >
+                        Commencer le quiz
+                    </Link>
                 ) : (
                     <button
                         className="text-white font-bold py-2 px-4 rounded-lg bg-gray-400 mt-4"
