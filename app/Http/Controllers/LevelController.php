@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\FmaGame;
 use App\Models\Institution;
 use App\Models\Level;
 use App\Models\SoloGame;
@@ -22,9 +23,11 @@ class LevelController extends Controller
 
         $user = auth()->user();
         $solo_game = SoloGame::where('user_id', $user->id)->first();
+        $fma_game = FmaGame::where('user_id', $user->id)->first();
 
-        if ($solo_game) {
-            $solo_game->delete();
+        if ($solo_game || $fma_game) {
+            $game = $solo_game ?? $fma_game;
+            $game->delete();
         }
         return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
     }
@@ -159,12 +162,12 @@ class LevelController extends Controller
             try {
                 // Use transaction to ensure database consistency
                 \Illuminate\Support\Facades\DB::beginTransaction();
-                
+
                 // Delete the level without cascading to user
                 $level->delete();
-                
+
                 \Illuminate\Support\Facades\DB::commit();
-    
+
                 Log::info('**********START TRANSACTION**********');
                 Log::info('ACTION: Level deletion');
                 Log::info('INITIATOR ID: ' . $initiator->id);
@@ -173,7 +176,7 @@ class LevelController extends Controller
                 Log::info('INITIATOR Username: ' . $initiator->username);
                 Log::info('Level Deleted: ' . $request->name . ' in institution ' . $institution_name);
                 Log::info('**********END TRANSACTION**********');
-    
+
                 return response()->json(['message' => 'Le niveau \'' . $request->name . '\' a été supprimé avec succès.'], 200);
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\DB::rollBack();

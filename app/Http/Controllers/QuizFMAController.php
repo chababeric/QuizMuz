@@ -74,6 +74,16 @@ class QuizFMAController extends BaseQuizController
     {
         if ($difficulty === '1') {
             return Chord::whereIn('id', $chordsList)->pluck('chord_name')->toArray();
+        } elseif ($difficulty === '3') {
+            $chord = Chord::find(FmaGame::where('user_id', Auth::id())->first()->current_chord_id ?? 0);
+            if ($chord) {
+                $chordParts = explode(' - ', $chord->chord_name);
+                return [
+                    'chordCount' => count($chordParts),
+                    'formula' => $chord->chord_name
+                ];
+            }
+            return ['chordCount' => 0, 'formula' => ''];
         }
         return [];
     }
@@ -115,7 +125,7 @@ class QuizFMAController extends BaseQuizController
     public function grade(Request $request): array
     {
         $validated = $request->validate([
-            'selectedAnswer' => 'required|string',
+            'selectedAnswer' => 'string|nullable',
         ]);
         $this->updateLastActionTime();
         $selectedAnswer = $validated['selectedAnswer'];
@@ -134,12 +144,12 @@ class QuizFMAController extends BaseQuizController
             3 => 5,
             default => 0,
         };
-        $isCorrect = $this->comparator($selectedAnswer, $correctAnswer);
-
+        $isCorrect = $this->comparator($selectedAnswer, $correctAnswer, true);
         $score = $this->updateScore($userId, $pointsPerCorrectAnswer);
 
         return [
             'status' => $isCorrect ? 'correct' : 'incorrect',
+            'correctAnswer' => $correctAnswer,
             'score' => $score,
         ];
     }
@@ -180,7 +190,6 @@ class QuizFMAController extends BaseQuizController
                 $fmaGame->current_chord_id = $randomChord['current_chord_id'];
                 $fmaGame->correct_answer = $randomChord['correct_answer'];
                 $fmaGame->save();
-
             }
         }
         else {
@@ -191,8 +200,23 @@ class QuizFMAController extends BaseQuizController
                 $fmaGame->save();
             }
         }
+
+        // Get the updated chord data for hard difficulty
+        $chordsData = [];
+        if ($fmaGame && $fmaGame->difficulty == 3) {
+            $chord = Chord::find($fmaGame->current_chord_id);
+            if ($chord) {
+                $chordParts = explode(' - ', $chord->chord_name);
+                $chordsData = [
+                    'chordCount' => count($chordParts),
+                    'formula' => $chord->chord_name
+                ];
+            }
+        }
+
         return [
             'current_chord_mp3' => $randomChord['current_chord_mp3'] ?? '',
+            'chordsData' => $chordsData
         ];
     }
 }

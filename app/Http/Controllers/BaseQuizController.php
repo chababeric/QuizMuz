@@ -44,7 +44,7 @@ abstract class BaseQuizController extends Controller
     /**
      * Compare two strings for similarity.
      */
-    protected function comparator(mixed $first_argument, mixed $second_argument): bool
+    protected function comparator(mixed $first_argument, mixed $second_argument, bool $exactMatch = false): bool
     {
         if (!is_string($first_argument) || !is_string($second_argument)) {
             return false;
@@ -58,10 +58,14 @@ abstract class BaseQuizController extends Controller
         $first_argument = $normalize($first_argument);
         $second_argument = $normalize($second_argument);
 
-        similar_text($first_argument, $second_argument, $percent);
+        if ($exactMatch) {
+            return $first_argument === $second_argument;
+        }
 
+        similar_text($first_argument, $second_argument, $percent);
         return $percent >= 70; // Return true if the similarity is 70% or more
     }
+
 
     /**
      * Update the user's score.

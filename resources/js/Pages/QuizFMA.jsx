@@ -2,19 +2,27 @@ import { Link, Head } from '@inertiajs/react';
 import React, { useEffect, useRef, useState } from 'react';
 import ControlMusic from "@/Components/ControlMusic.jsx";
 import axios from 'axios';
-import Grader from "@/Components/Grader.jsx";
 
 export default function QuizFMA({ auth, difficulty, level_id, courseId, selectListData, current_chord_mp3, current_score }) {
     const [chordMp3, setChordMp3] = useState(current_chord_mp3);
     const [score, setScore] = useState(current_score);
-    const [lastCheckTime, setLastCheckTime] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const [grading, setGrading] = useState(false);
     const [playChordOnce, setPlayChordOnce] = useState(false);
-    const [result, setResult] = useState([]);
+    const [result, setResult] = useState({ status: '', correctAnswer: '' });
     const [actionText, setActionText] = useState('Vérifier');
     const audioRef = useRef(null);
     const [selectedAnswer, setSelectedAnswer] = useState('');
+    const [chordCount, setChordCount] = useState(difficulty === '3' ? (selectListData?.chordCount || 0) : 0);
+    const [chordInputs, setChordInputs] = useState(Array(chordCount).fill(''));
+
+    useEffect(() => {
+        // Initialize chord inputs when component loads
+        if (difficulty === '3' && selectListData?.chordCount) {
+            setChordCount(selectListData.chordCount);
+            setChordInputs(Array(selectListData.chordCount).fill(''));
+        }
+    }, []);
 
     const playMusic = () => {
         setIsPlaying(true);
@@ -40,6 +48,13 @@ export default function QuizFMA({ auth, difficulty, level_id, courseId, selectLi
         }
     };
 
+    const handleChordInputChange = (index, value) => {
+        const newInputs = [...chordInputs];
+        newInputs[index] = value;
+        setChordInputs(newInputs);
+        setSelectedAnswer(newInputs.join(' - '));
+    };
+
     const checkAnswer = async () => {
         setResult([]);
         setGrading(true);
@@ -47,12 +62,14 @@ export default function QuizFMA({ auth, difficulty, level_id, courseId, selectLi
             const payload = { selectedAnswer };
             const response = await axios.post(route('checkFMAAnswers'), payload, {
                 headers: {
-                    'Content-Type': 'application/json', // Explicitly set the Content-Type header
+                    'Content-Type': 'application/json',
                 },
             });
-            setResult(response.data.status);
+            setResult({
+                status: response.data.status,
+                correctAnswer: response.data.correctAnswer
+            });
             setScore(response.data.score);
-            console.log(response.data);
         } catch (error) {
             console.error("Error checking answer:", error);
         }
@@ -64,11 +81,18 @@ export default function QuizFMA({ auth, difficulty, level_id, courseId, selectLi
             const payload = { playChordOnce };
             const response = await axios.post(route('getNextChord'), payload, {
                 headers: {
-                    'Content-Type': 'application/json', // Explicitly set the Content-Type header
+                    'Content-Type': 'application/json',
                 },
             });
 
             setChordMp3(response.data.current_chord_mp3);
+
+            // Update chord count for hard difficulty
+            if (difficulty === '3' && response.data.chordsData) {
+                const newChordCount = response.data.chordsData.chordCount || 0;
+                setChordCount(newChordCount);
+                setChordInputs(Array(newChordCount).fill(''));
+            }
         } catch (error) {
             console.error("Error fetching next chord:", error);
         }
@@ -78,17 +102,52 @@ export default function QuizFMA({ auth, difficulty, level_id, courseId, selectLi
         stopMusic();
         switch (action) {
             case 'Vérifier':
-                checkAnswer().then(r => {});
+                checkAnswer();
                 setGrading(true);
                 setActionText('Continuer');
                 break;
             case 'Continuer':
                 setGrading(false);
                 setActionText('Vérifier');
-                setLastCheckTime(new Date().getTime());
                 setSelectedAnswer('');
-                getNextChord().then(r => {});
+                // Clear the inputs by resetting them to empty strings
+                if (difficulty === '3') {
+                    setChordInputs(Array(chordCount).fill(''));
+                }
+                getNextChord();
                 break;
+        }
+    };
+
+    const renderAnswerInput = () => {
+        if (difficulty === '3') {
+            return (
+                <div className="w-full px-4 mt-6">
+                    <div className="grid grid-cols-2 gap-4 sm:flex sm:flex-wrap sm:justify-center">
+                        {Array(chordCount).fill().map((_, index) => (
+                            <input
+                                key={index}
+                                type="text"
+                                value={chordInputs[index] || ''}
+                                onChange={(e) => handleChordInputChange(index, e.target.value)}
+                                className="border border-white p-2.5 text-center bg-black/80 text-white text-lg w-24 h-12 mx-auto rounded-lg"
+                                placeholder={`#${index+1}`}
+                            />
+                        ))}
+                    </div>
+                </div>
+            );
+        } else {
+            return (
+                <div className="flex flex-col items-center w-full mt-6">
+                    <select id={"Réponse"} name={"Réponse"} value={selectedAnswer} onChange={(e) => setSelectedAnswer(e.target.value)} className="user-input hover:cursor-pointer">
+                        <option className="bg-black/80 text-white" value="">{'Sélectionnez une réponse'}</option>
+                        {selectListData.map((item, index) => (
+                            <option className="bg-black/80 text-white" key={index} value={item}>{item}</option>
+                        ))}
+                    </select>
+                </div>
+            );
         }
     };
 
@@ -117,8 +176,8 @@ export default function QuizFMA({ auth, difficulty, level_id, courseId, selectLi
                 </div>
             ) : (
                 grading ? (
-                    <div className="flex justify-center mt-6">
-                        <table className="border-collapse">
+                    <div className="flex justify-center mt-6 w-11/12">
+                        <table className="border-collapse w-full bg-black/80">
                             <thead>
                             <tr>
                                 <th className="border border-white text-white px-4 py-2">Votre réponse</th>
@@ -127,29 +186,24 @@ export default function QuizFMA({ auth, difficulty, level_id, courseId, selectLi
                             </thead>
                             <tbody>
                             <tr>
-                                <td className={`border border-white px-4 py-2 ${result === 'correct' ? 'bg-green-500/50' : 'bg-red-500/50'}`}>
+                                <td className={`border border-white px-4 py-2 ${result.status === 'correct' ? 'bg-green-500/70' : 'bg-red-500/70'} text-center`}>
                                     <span className="text-white">{selectedAnswer}</span>
                                 </td>
-                                <td className="border border-white px-4 py-2">
-                                    <span className="text-white">{result === 'correct' ? selectedAnswer : result}</span>
+                                <td className={`border border-white px-4 py-2 text-center bg-green-500/70`}>
+                                    <span className="text-white">
+                                        {result.status === 'correct' ? selectedAnswer : result.correctAnswer}
+                                    </span>
                                 </td>
                             </tr>
                             </tbody>
                         </table>
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center w-full mt-6">
-                        <select id={"Réponse"} name={"Réponse"} value={selectedAnswer} onChange={(e) => setSelectedAnswer(e.target.value)} className="user-input hover:cursor-pointer">
-                            <option className="bg-black/80 text-white" value="">{'Sélectionnez une réponse'}</option>
-                            {selectListData.map((item, index) => (
-                                <option className="bg-black/80 text-white" key={index} value={item}>{item}</option>
-                            ))}
-                        </select>
-                    </div>
+                    renderAnswerInput()
                 )
             )}
 
-            <div className="flex justify-center mt-5">
+            <div className="flex justify-center mt-8">
                 <Link
                     href={route('mainmenu', { courseId: courseId })}
                     className="flex items-center text-white font-bold py-2 px-4 rounded-lg bg-gray-700 hover:bg-gray-900 mr-4 border border-white"

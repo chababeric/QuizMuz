@@ -119,7 +119,7 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                             <span className="ml-2 text-lg text-black">{checkText}</span>
                         </label>
                         <ul>
-                            {pieces.map(piece => (
+                            {pieces.map((piece, index) => (
                                 <li key={piece.id}>
                                     <label className="flex items-center w-full mb-3">
                                         <Checkbox
@@ -127,14 +127,19 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                                             onChange={() => handleCheckItem(piece.id)}
                                         />
                                         <span className="ml-2 text-lg text-black text-left">
-                                            {courseName === "Formation Musicale et Auditive" ? piece.chord_name :
+                                            {courseName === "Formation Musicale et Auditive" ? (
+                                                <span>
+                                                    <strong className="mr-2">{index + 1}.</strong>
+                                                    {piece.chord_name}
+                                                </span>
+                                            ) : (
                                                 <>
                                                     {piece.composer} - {piece.title}
                                                     {piece.element && ` - ${piece.element}`}
-                                                    {piece.no_mvt && ` - Mvt.${piece.no_mvt}`}
+                                                    {piece.no_mvt && ` - ${piece.no_mvt}`}
                                                     {piece.mvt && ` - ${piece.mvt}`}
                                                 </>
-                                            }
+                                            )}
                                         </span>
                                     </label>
                                 </li>
