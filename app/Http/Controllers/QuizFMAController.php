@@ -145,7 +145,12 @@ class QuizFMAController extends BaseQuizController
             default => 0,
         };
         $isCorrect = $this->comparator($selectedAnswer, $correctAnswer, true);
-        $score = $this->updateScore($userId, $pointsPerCorrectAnswer);
+
+        // Only update score if the answer is correct
+        $score = $isCorrect
+            ? $this->updateScore($userId, $pointsPerCorrectAnswer)
+            : Score::where('user_id', $userId)->first()->score ?? 0;
+
 
         return [
             'status' => $isCorrect ? 'correct' : 'incorrect',
