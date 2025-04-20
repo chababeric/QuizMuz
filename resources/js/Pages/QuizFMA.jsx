@@ -176,27 +176,28 @@ export default function QuizFMA({ auth, difficulty, level_id, courseId, selectLi
                 </div>
             ) : (
                 grading ? (
-                    <div className="flex justify-center mt-6 w-11/12">
-                        <table className="border-collapse w-full bg-black/80">
-                            <thead>
-                            <tr>
-                                <th className="border border-white text-white px-4 py-2">Votre réponse</th>
-                                <th className="border border-white text-white px-4 py-2">Bonne réponse</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr>
-                                <td className={`border border-white px-4 py-2 ${result.status === 'correct' ? 'bg-green-500/70' : 'bg-red-500/70'} text-center`}>
-                                    <span className="text-white">{selectedAnswer}</span>
-                                </td>
-                                <td className={`border border-white px-4 py-2 text-center bg-green-500/70`}>
-                                    <span className="text-white">
-                                        {result.status === 'correct' ? selectedAnswer : result.correctAnswer}
-                                    </span>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
+                    <div className="flex flex-col items-center w-full mt-4">
+                        <h2 className="text-3xl font-bold text-white mb-4">Correction</h2>
+                        <div className="w-11/12 bg-white/80 rounded-lg overflow-hidden">
+                            <table className="table-auto w-full">
+                                <thead>
+                                <tr>
+                                    <th className="px-4 py-2 text-center text-xl w-1/3">Formule</th>
+                                    <th className="px-4 py-2 text-center text-xl w-1/3">Réponse</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr
+                                    className={`text-center border-b border-gray-200 text-lg ${
+                                        result.status === 'correct' ? 'bg-green-500' : 'bg-red-500'
+                                    }`}
+                                >
+                                    <td className="px-4 py-2">{selectedAnswer}</td>
+                                    <td className="px-4 py-2">{result.status === 'correct' ? selectedAnswer : result.correctAnswer}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 ) : (
                     renderAnswerInput()
