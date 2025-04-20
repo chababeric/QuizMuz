@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\FmaGame;
 use App\Models\Institution;
 use App\Models\Level;
 use App\Models\SoloGame;
@@ -22,23 +23,12 @@ class LevelController extends Controller
 
         $user = auth()->user();
         $solo_game = SoloGame::where('user_id', $user->id)->first();
+        $fma_game = FmaGame::where('user_id', $user->id)->first();
 
-        if ($solo_game) {
-            $solo_game->delete();
+        if ($solo_game || $fma_game) {
+            $game = $solo_game ?? $fma_game;
+            $game->delete();
         }
-
-//        if ($courseId == 3) {
-//            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
-//        }
-//        elseif ($courseId == 2) {
-//            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
-//        }
-//        else if ($courseId == 3) {
-//            return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
-//        }
-//        else {
-//            return Inertia::render('Welcome');
-//        }
         return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
     }
 
@@ -169,18 +159,30 @@ class LevelController extends Controller
         if (!$level) {
             return response()->json(['message' => 'Le niveau \'' . $request->name . '\' n\'a pas été trouvé.'], 404);
         } else {
-            $level->delete();
+            try {
+                // Use transaction to ensure database consistency
+                \Illuminate\Support\Facades\DB::beginTransaction();
 
-            Log::info('**********START TRANSACTION**********');
-            Log::info('ACTION: Level deletion');
-            Log::info('INITIATOR ID: ' . $initiator->id);
-            Log::info('INITIATOR First Name: ' . $initiator->first_name);
-            Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-            Log::info('INITIATOR Username: ' . $initiator->username);
-            Log::info('Level Deleted: ' . $request->name . ' in institution ' . $institution_name);
-            Log::info('**********END TRANSACTION**********');
+                // Delete the level without cascading to user
+                $level->delete();
 
-            return response()->json(['message' => 'Le niveau \'' . $request->name . '\' a été supprimé avec succès.'], 200);
+                \Illuminate\Support\Facades\DB::commit();
+
+                Log::info('**********START TRANSACTION**********');
+                Log::info('ACTION: Level deletion');
+                Log::info('INITIATOR ID: ' . $initiator->id);
+                Log::info('INITIATOR First Name: ' . $initiator->first_name);
+                Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+                Log::info('INITIATOR Username: ' . $initiator->username);
+                Log::info('Level Deleted: ' . $request->name . ' in institution ' . $institution_name);
+                Log::info('**********END TRANSACTION**********');
+
+                return response()->json(['message' => 'Le niveau \'' . $request->name . '\' a été supprimé avec succès.'], 200);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\DB::rollBack();
+                Log::error('Error deleting level: ' . $e->getMessage());
+                return response()->json(['message' => 'Une erreur est survenue lors de la suppression du niveau.'], 500);
+            }
         }
     }
 

@@ -208,14 +208,15 @@ export default function Practice({ auth, level, courseId, courseName }) {
                 <>
                     <div className="flex-1 overflow-y-auto w-11/12 mx-auto hide-scrollbar bg-black/50">
                         {pieces.length > 0 ? (
-                            pieces.map(piece => (
+                            pieces.map((piece, index) => (
                                 courseName === "Formation Musicale et Auditive" ? (
                                     <div
                                         key={piece.id}
                                         className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
                                         onClick={() => handlePieceClick(piece)}
                                     >
-                                        <h2 className="text-xl font-semibold text-white">
+                                        <h2 className="text-xl font-semibold text-white flex items-center">
+                                            <span className="inline-block w-8 font-bold mr-2">{index + 1}.</span>
                                             {piece.chord_name}
                                         </h2>
                                     </div>
@@ -244,11 +245,24 @@ export default function Practice({ auth, level, courseId, courseName }) {
                         {currentPiece && (
                             <div className="text-white mb-1">
                                 <h2 className="text-xl font-semibold">
-                                    {currentPiece.title}
-                                    {currentPiece.no_mvt && `, Mvt. ${currentPiece.no_mvt}`}
-                                    {currentPiece.mvt && `, ${currentPiece.mvt}`}
+                                    {courseName === "Formation Musicale et Auditive" ? (
+                                        <>
+                                            <span className="font-bold mr-2">
+                                                {pieces.findIndex(p => p.id === currentPiece.id) + 1}.
+                                            </span>
+                                            {currentPiece.chord_name}
+                                        </>
+                                    ) : (
+                                        <>
+                                            {currentPiece.title}
+                                            {currentPiece.no_mvt && `, Mvt. ${currentPiece.no_mvt}`}
+                                            {currentPiece.mvt && `, ${currentPiece.mvt}`}
+                                        </>
+                                    )}
                                 </h2>
-                                <p className="text-lg">{currentPiece.composer}</p>
+                                {courseName !== "Formation Musicale et Auditive" && (
+                                    <p className="text-lg">{currentPiece.composer}</p>
+                                )}
                             </div>
                         )}
 

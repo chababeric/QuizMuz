@@ -8,11 +8,10 @@ use App\Models\SoloGame;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class QuizSoloController extends Controller
+class QuizSoloController extends BaseQuizController
 {
     public function index(): Response
     {
@@ -44,7 +43,7 @@ class QuizSoloController extends Controller
         }
 
         if (!$soloGame) {
-            $this->ensureSingleSoloGame($userId);
+            $this->ensureSingleGame($userId, 'solo');
 
             $soloGame = SoloGame::create(array_merge($data, [
                 'game_key' => $data['game_key']
@@ -116,16 +115,6 @@ class QuizSoloController extends Controller
         return null;
     }
 
-    public function ensureSingleSoloGame(int $userId): void
-    {
-        // Fetch all solo games for the user
-        $existingGames = SoloGame::where('user_id', $userId)->get();
-        // If more than one game exists, delete them all
-        if ($existingGames->count() > 0) {
-            SoloGame::where('user_id', $userId)->delete();
-        }
-    }
-
     public function getEasyPiecesData(array $pieces_id): array
     {
         $pieces = Piece::whereIn('id', $pieces_id)->get();
@@ -186,63 +175,15 @@ class QuizSoloController extends Controller
         return $correctAnswers;
     }
 
-    public function updateLastActionTime(Request $request): JsonResponse
-    {
-        if (Auth::check()) {
-            $user = Auth::user();
-            $user->last_action_time = now();
-            $user->save();
-
-            return response()->json(['message' => 'Last action time updated successfully']);
-        }
-
-        return response()->json(['message' => 'Unauthorized'], 401);
-    }
-
-    public function rng(int $range = 0): int
-    {
-        return $range > 0 ? random_int(0, $range - 1) : 0;
-    }
-
-    public function fisher_yates_shuffle(array $array): array
-    {
-        $size = sizeof($array) - 1;
-
-        for ($i = $size; $i >= 0; $i--) {
-            $j = $this->rng($size);
-            $temp = $array[$i];
-            $array[$i] = $array[$j];
-            $array[$j] = $temp;
-        }
-
-        return $array;
-    }
-
-    public function comparator(mixed $first_argument, mixed $second_argument): bool
-    {
-        if (!is_string($first_argument) || !is_string($second_argument)) {
-            return false;
-        }
-
-        $normalize = function ($text) {
-            $text = transliterator_transliterate('Any-Latin; Latin-ASCII', $text);
-            return strtolower($text);
-        };
-
-        $first_argument = $normalize($first_argument);
-        $second_argument = $normalize($second_argument);
-
-        similar_text($first_argument, $second_argument, $percent);
-
-        return $percent >= 70; // Return true if the similarity is 70% or more
-    }
-
+    /**
+     * @inheritdoc
+     */
     public function grade(Request $request): array
     {
         $validated = $request->validate([
             'selectedAnswers' => 'required|array',
         ]);
-
+        $this->updateLastActionTime();
         $selectedAnswers = $validated['selectedAnswers'];
         $userId = auth()->id();
 
@@ -305,19 +246,29 @@ class QuizSoloController extends Controller
         }
 
         $totalPoints = $correctAnswersCount * $pointsPerCorrectAnswer;
-
-        $scoreModel = Score::firstOrNew(['user_id' => $userId]);
-        $scoreModel->score = ($scoreModel->score ?? 0) + $totalPoints;
-        $scoreModel->save();
+        $score = $this->updateScore($userId, $totalPoints);
 
         return [
             'results' => $response,
             'correctAnswersCount' => $correctAnswersCount,
             'totalAnswersCount' => count($selectedAnswers),
-            'score' => $scoreModel->score,
+            'score' => $score,
         ];
     }
 
+    /**
+     * Get the next piece to test the user on.
+     *
+     * @inheritdoc
+     */
+    public function getNext(Request $request): array
+    {
+        return $this->getNextPiece($request);
+    }
+
+    /**
+     * Get the next piece for the solo game.
+     */
     public function getNextPiece(Request $request): array
     {
         $validated = $request->validate([
@@ -367,5 +318,18 @@ class QuizSoloController extends Controller
             'current_piece_mp3' => $randomPiece['current_piece_mp3'] ?? '',
             'parameters_to_display' => $parameters_to_display,
         ];
+    }
+
+    public function updateLastActionTime(): JsonResponse
+    {
+        if (Auth::check()) {
+            $user = Auth::user();
+            $user->last_action_time = now();
+            $user->save();
+
+            return response()->json(['message' => 'Last action time updated successfully']);
+        }
+
+        return response()->json(['message' => 'Unauthorized'], 401);
     }
 }

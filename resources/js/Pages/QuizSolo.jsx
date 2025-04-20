@@ -84,14 +84,6 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
         }));
     };
 
-    const updateLastActionTime = async () => {
-        try {
-            await axios.post('/update-last-action-time');
-        } catch (error) {
-            console.error('Error updating last action time:', error);
-        }
-    };
-
     const checkAnswers = async () => {
         setResults([]);
         setGrading(true);
@@ -136,7 +128,6 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
         switch (action) {
             case 'Vérifier':
                 checkAnswers().then(r => {});
-                updateLastActionTime().then(r => {});
                 setGrading(true);
                 setActionText('Continuer');
                 break;

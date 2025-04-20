@@ -81,13 +81,24 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
             localStorage.setItem("game_key", gameKey);
         }
 
-        return route("quizsolo", {
-            pieces_list_id: checkedPieces,
-            difficulty,
-            level_id: level,
-            courseId,
-            game_key: gameKey
-        });
+        if (courseName === "Formation Musicale et Auditive") {
+            return route("quizfma", {
+                chords_list_id: checkedPieces,
+                difficulty,
+                level_id: level,
+                courseId,
+                game_key: gameKey
+            });
+        }
+        else {
+            return route("quizsolo", {
+                pieces_list_id: checkedPieces,
+                difficulty,
+                level_id: level,
+                courseId,
+                game_key: gameKey
+            });
+        }
     };
 
     return (
@@ -108,7 +119,7 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                             <span className="ml-2 text-lg text-black">{checkText}</span>
                         </label>
                         <ul>
-                            {pieces.map(piece => (
+                            {pieces.map((piece, index) => (
                                 <li key={piece.id}>
                                     <label className="flex items-center w-full mb-3">
                                         <Checkbox
@@ -116,14 +127,19 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                                             onChange={() => handleCheckItem(piece.id)}
                                         />
                                         <span className="ml-2 text-lg text-black text-left">
-                                            {courseName === "Formation Musicale et Auditive" ? piece.chord_name :
+                                            {courseName === "Formation Musicale et Auditive" ? (
+                                                <span>
+                                                    <strong className="mr-2">{index + 1}.</strong>
+                                                    {piece.chord_name}
+                                                </span>
+                                            ) : (
                                                 <>
                                                     {piece.composer} - {piece.title}
                                                     {piece.element && ` - ${piece.element}`}
-                                                    {piece.no_mvt && ` - Mvt.${piece.no_mvt}`}
+                                                    {piece.no_mvt && ` - ${piece.no_mvt}`}
                                                     {piece.mvt && ` - ${piece.mvt}`}
                                                 </>
-                                            }
+                                            )}
                                         </span>
                                     </label>
                                 </li>
@@ -177,21 +193,12 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                 </Link>
 
                 {canPlay ? (
-                    courseName === "Formation Musicale et Auditive" ? (
-                        <Link
-                            href={route('quizfma', {chords: checkedPieces, difficulty: difficulty, level: level, courseId: courseId})}
-                            className="text-white font-bold py-2 px-4 rounded-lg bg-rose-600 hover:bg-rose-800 mt-4"
-                        >
-                            Commencer le quiz
-                        </Link>
-                    ) : (
-                        <Link
-                            href={startQuiz()}
-                            className="text-white font-bold py-2 px-4 rounded-lg bg-rose-600 hover:bg-rose-800 mt-4"
-                        >
-                            Commencer le quiz
-                        </Link>
-                    )
+                    <Link
+                        href={startQuiz()}
+                        className="text-white font-bold py-2 px-4 rounded-lg bg-rose-600 hover:bg-rose-800 mt-4"
+                    >
+                        Commencer le quiz
+                    </Link>
                 ) : (
                     <button
                         className="text-white font-bold py-2 px-4 rounded-lg bg-gray-400 mt-4"
