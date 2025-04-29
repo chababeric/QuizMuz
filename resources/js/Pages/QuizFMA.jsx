@@ -4,6 +4,7 @@ import ControlMusic from "@/Components/ControlMusic.jsx";
 import axios from 'axios';
 
 export default function QuizFMA({ auth, difficulty, level_id, courseId, selectListData, current_chord_mp3, current_score }) {
+    const [isClient, setIsClient] = useState(false);
     const [chordMp3, setChordMp3] = useState(current_chord_mp3);
     const [score, setScore] = useState(current_score);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -17,6 +18,10 @@ export default function QuizFMA({ auth, difficulty, level_id, courseId, selectLi
     const [chordInputs, setChordInputs] = useState(Array(chordCount).fill(''));
 
     useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    useEffect(() => {
         // Initialize chord inputs when component loads
         if (difficulty === '3' && selectListData?.chordCount) {
             setChordCount(selectListData.chordCount);
@@ -25,6 +30,8 @@ export default function QuizFMA({ auth, difficulty, level_id, courseId, selectLi
     }, []);
 
     const playMusic = () => {
+        if (!isClient) return;
+
         setIsPlaying(true);
         if (chordMp3) {
             if (audioRef.current) {

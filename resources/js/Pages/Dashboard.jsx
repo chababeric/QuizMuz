@@ -4,10 +4,15 @@ import {useEffect, useState} from "react";
 import moment from 'moment';
 
 export default function Dashboard({ auth }) {
+    const [isClient, setIsClient] = useState(false);
     const [totalStats, setTotalStats] = useState([]);
     const [users, setUsers] = useState([]);
     const [sortedUsers, setSortedUsers] = useState([]);
     const [nbConnectedUsers, setNbConnectedUsers] = useState(0);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     useEffect(() => {
         const fetchTotalStats = async () => {
@@ -44,6 +49,8 @@ export default function Dashboard({ auth }) {
     }, [users]);
 
     const getStatus = (lastActionTime) => {
+        if (!isClient) return '';
+
         const now = moment();
         const lastAction = moment(lastActionTime);
         const diff = now.diff(lastAction, 'minutes');
@@ -149,8 +156,8 @@ export default function Dashboard({ auth }) {
                                                             {item.last_action_time ? item.last_action_time.split(' ')[0] : ''}
                                                         </td>
                                                         <td className="whitespace-nowrap px-6 py-4"
-                                                            style={getStatusStyle(getStatus(item.last_action_time))}>
-                                                            {getStatus(item.last_action_time)}
+                                                            style={isClient ? getStatusStyle(getStatus(item.last_action_time)) : {}}>
+                                                            {isClient ? getStatus(item.last_action_time) : ''}
                                                         </td>
                                                     </tr>
                                                 ))}
