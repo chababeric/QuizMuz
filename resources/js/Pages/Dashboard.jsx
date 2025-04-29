@@ -145,7 +145,9 @@ export default function Dashboard({ auth }) {
                                                         <td className="whitespace-nowrap px-6 py-4">{item.institution_name}</td>
                                                         <td className="whitespace-nowrap px-6 py-4">{item.nb_practice}</td>
                                                         <td className="whitespace-nowrap px-6 py-4">{item.nb_game_solo}</td>
-                                                        <td className="whitespace-nowrap px-6 py-4">{item.last_action_time.split(' ')[0]}</td>
+                                                        <td className="whitespace-nowrap px-6 py-4">
+                                                            {item.last_action_time ? item.last_action_time.split(' ')[0] : ''}
+                                                        </td>
                                                         <td className="whitespace-nowrap px-6 py-4"
                                                             style={getStatusStyle(getStatus(item.last_action_time))}>
                                                             {getStatus(item.last_action_time)}
