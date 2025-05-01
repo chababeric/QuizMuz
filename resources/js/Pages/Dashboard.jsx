@@ -4,15 +4,11 @@ import {useEffect, useState} from "react";
 import moment from 'moment';
 
 export default function Dashboard({ auth }) {
-    const [isClient, setIsClient] = useState(false);
     const [totalStats, setTotalStats] = useState([]);
     const [users, setUsers] = useState([]);
     const [sortedUsers, setSortedUsers] = useState([]);
     const [nbConnectedUsers, setNbConnectedUsers] = useState(0);
-
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
+    const isClient = typeof window !== 'undefined';
 
     useEffect(() => {
         const fetchTotalStats = async () => {

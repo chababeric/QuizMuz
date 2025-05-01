@@ -6,7 +6,6 @@ import ControlMusic from "@/Components/ControlMusic.jsx";
 import axios from "axios";
 
 export default function QuizSolo({ auth, difficulty, level, courseId, current_piece_mp3, selectListData, current_score, parameters_to_display }) {
-    const [isClient, setIsClient] = useState(false);
     const [pieceMp3, setPieceMp3] = useState(current_piece_mp3);
     const [score, setScore] = useState(current_score);
     const [parametersToDisplay, setParametersToDisplay] = useState([]);
@@ -38,10 +37,8 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
         { name: "Nom mouvement ou partie", col: "mvt" },
         { name: "Forme", col: "form" }
     ];
+    const isClient = typeof window !== 'undefined';
 
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
 
     useEffect(() => {
         // Filter out parameters that are null or empty for the current difficulty
