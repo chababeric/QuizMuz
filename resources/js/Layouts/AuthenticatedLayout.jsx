@@ -37,6 +37,10 @@ export default function Authenticated({ user, header, children }) {
                                     Pièce
                                 </NavLink>
 
+                                <NavLink href={route('chords.edit')} active={route().current('chords.edit')} className="dark:text-white">
+                                    FMA
+                                </NavLink>
+
                                 <NavLink href={route('welcome')} className="dark:text-white">
                                     Retour
                                 </NavLink>
@@ -127,6 +131,7 @@ export default function Authenticated({ user, header, children }) {
                             <ResponsiveNavLink href={route('general.edit')} active={route().current('general.edit')} className="dark:bg-gray-900 dark:text-white">Général</ResponsiveNavLink>
                             <ResponsiveNavLink href={route('account.edit')} active={route().current('account.edit')} className="dark:bg-gray-900 dark:text-white">Compte</ResponsiveNavLink>
                             <ResponsiveNavLink href={route('piece.edit')} active={route().current('piece.edit')} className="dark:bg-gray-900 dark:text-white">Pièce</ResponsiveNavLink>
+                            <ResponsiveNavLink href={route('chords.edit')} active={route().current('chords.edit')} className="dark:bg-gray-900 dark:text-white">FMA</ResponsiveNavLink>
                             <ResponsiveNavLink href={route('welcome')} className="dark:bg-gray-900 dark:text-white">Retour</ResponsiveNavLink>
                             <ResponsiveNavLink method="post" href={route('logout')} as="button" className="dark:bg-gray-900 dark:text-white">
                                 Déconnexion

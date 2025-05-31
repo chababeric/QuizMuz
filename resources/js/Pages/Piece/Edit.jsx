@@ -14,6 +14,7 @@ export default function Edit({ auth, user }) {
     useEffect( () => {
         getAllPieces();
         getPiecesInReserve();
+        updateLastActionTime();
     }, []);
 
     const getAllPieces = () => {
@@ -21,7 +22,6 @@ export default function Edit({ auth, user }) {
             .then((response) => {
                 // Sort the piecesList by order
                 const sortedPieces = response.data.sort((a, b) => a.order - b.order);
-
                 setPieces(sortedPieces);
             })
             .catch((error) => {
@@ -33,7 +33,8 @@ export default function Edit({ auth, user }) {
                 institution_id: auth.user.institution_id,
             }
         }).then(response => {
-            setCourses(response.data);
+            const filteredCourses = response.data.filter(course => !course.name.includes('Formation Musicale et Auditive'));
+            setCourses(filteredCourses);
         }).catch(error => {
             console.log(error);
         });

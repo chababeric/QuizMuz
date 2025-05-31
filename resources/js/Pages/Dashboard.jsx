@@ -84,7 +84,7 @@ export default function Dashboard({ auth }) {
                             <h1 className="text-2xl font-semibold text-gray-900 mb-4 dark:text-white">Statistiques</h1>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="p-4 bg-gray-200 shadow rounded-lg flex items-center justify-center dark:bg-gray-700">
-                                    <p className="text-lg font-medium text-gray-700 dark:text-white">
+                                    <p className="text-lg font-medium text-gray-900 dark:text-white">
                                         Nombre total d'utilisateurs : <span
                                         className="font-semibold">{totalStats.totalUsers}</span>
                                     </p>

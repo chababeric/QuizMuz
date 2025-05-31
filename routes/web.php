@@ -82,6 +82,10 @@ Route::get('piece/edit', function () {
     return Inertia::render('Piece/Edit');
 })->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('piece.edit');
 
+Route::get('chords/edit', function () {
+    return Inertia::render('Chords/Edit');
+})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('chords.edit');
+
 Route::get('login', [LoginUserController::class, 'create'])->name('login');
 Route::post('login', [LoginUserController::class, 'store']);
 Route::post('logout', [LoginUserController::class, 'destroy'])->name('logout');
@@ -149,6 +153,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/api/levels', [LevelController::class, 'getAllLevels'])->name('allLevels');
     Route::get('/levels-from-course', [LevelController::class, 'getLevelsFromCourse'])->name('levelsFromCourse');
     Route::get('/api/all-pieces', [PieceController::class, 'getAllPieces'])->name('allPieces');
+    Route::get('/api/all-chords', [ChordController::class, 'getAllChords'])->name('allChords');
+    Route::get('/api/fma-levels', [LevelController::class, 'getFMALevels'])->name('fmaLevels');
     Route::get('/api/pieces-in-reserve', [PieceController::class, 'getPiecesInReserve'])->name('piecesInReserve');
     Route::post('/increment-total-pieces-played', [UserStats::class, 'incrementTotalPiecesPlayed']);
     Route::post('/set-difficulty', [UserStats::class, 'setDifficulty']);

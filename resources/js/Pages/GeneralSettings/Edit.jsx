@@ -26,7 +26,9 @@ export default function Edit({ auth, institution }) {
             }
         })
         .then(response => {
-            setLevels(response.data);
+            const levels = response.data;
+            const sorted = levels.sort((a, b) => a.name.localeCompare(b.name));
+            setLevels(sorted);
         })
         .catch(error => {
             console.error('Error fetching levels:', error);

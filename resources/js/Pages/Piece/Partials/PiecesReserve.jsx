@@ -15,6 +15,35 @@ export default function PiecesReserve({ className = '', updateLastActionTime, co
         getPiecesInReserve();
     }, [coursesList]);
 
+    const groupAndSortPiecesByLevel = (pieces) => {
+        // Group pieces by level
+        const groupedPieces = pieces.reduce((groups, piece) => {
+            const level = piece.level.name; // Using level.name as the key
+            if (!groups[level]) {
+                groups[level] = [];
+            }
+            groups[level].push(piece);
+            return groups;
+        }, {});
+
+        // Sort each group by order (if available) or any other criteria
+        Object.keys(groupedPieces).forEach(level => {
+            groupedPieces[level].sort((a, b) => {
+                // If order property exists, use it for sorting
+                if (a.order !== undefined && b.order !== undefined) {
+                    return a.order - b.order;
+                }
+                // Otherwise, sort by title as a fallback
+                return a.title.localeCompare(b.title);
+            });
+        });
+
+        return groupedPieces;
+    };
+
+    // Group pieces by level
+    const piecesByLevel = groupAndSortPiecesByLevel(piecesInReserve);
+
     const openAddModal = (piece) => {
         currentPiece.current = piece;
         setIsAddModalOpen(true);
@@ -117,19 +146,19 @@ export default function PiecesReserve({ className = '', updateLastActionTime, co
                 </div>
             </Modal>
 
-            <div className="w-full max-h-[600px] overflow-y-auto mt-4 ">
-                {Object.keys(groupedPieces).map((courseName, index) => (
-                    <div key={index} className="mb-6">
+            <div className="w-full max-h-[600px] overflow-y-auto mt-4 bg-gray-50 dark:bg-gray-900 rounded-md">
+                {Object.entries(piecesByLevel).map(([levelName, levelPieces]) => (
+                    <div key={levelName}>
                         <h3
-                            className="text-md font-semibold text-black dark:text-white bg-gray-100 dark:bg-gray-900 px-4 py-2 rounded-md"
+                            className="w-fit text-lg font-semibold text-gray-800 dark:text-gray-200 mt-2 mb-2 ml-1"
                         >
-                            {courseName}
+                            Niveau: {levelName}
                         </h3>
-                        <ul className="w-full divide-y bg-white dark:bg-gray-800">
-                            {groupedPieces[courseName].map((piece, index) => (
+                        <ul className="w-full divide-y divide-gray-300 dark:divide-neutral-700">
+                            {levelPieces.map((piece, index) => (
                                 <li
                                     key={piece.id}
-                                    className="flex flex-col sm:flex-row items-start sm:items-center px-4 py-3 space-y-2 sm:space-y-0 sm:space-x-4"
+                                    className="flex flex-col sm:flex-row items-start sm:items-center px-4 py-3 bg-white dark:bg-gray-800 space-y-2 sm:space-y-0 sm:space-x-4"
                                 >
                                     <span
                                         className="w-9 font-medium text-gray-700 dark:text-gray-200"
@@ -142,10 +171,10 @@ export default function PiecesReserve({ className = '', updateLastActionTime, co
                                         >
                                             {piece.level.name}
                                         </span>
-                                                            <span className="truncate text-gray-800 dark:text-gray-300">
+                                        <span className="truncate text-gray-800 dark:text-gray-300">
                                             {piece.title} &nbsp;&nbsp;
                                         </span>
-                                                            <span className="truncate text-gray-600 dark:text-gray-400">
+                                        <span className="truncate text-gray-600 dark:text-gray-400">
                                             {piece.composer} &nbsp;&nbsp;
                                         </span>
                                         {piece.no_mvt && (

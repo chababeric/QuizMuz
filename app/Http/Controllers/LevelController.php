@@ -196,4 +196,16 @@ class LevelController extends Controller
 
         return response()->json($levels);
     }
+
+    public function getFMALevels(): JsonResponse
+    {
+        $initiator = auth()->user();
+        $levels = Level::with(['course'])
+            ->whereHas('course', function($query) {
+                $query->where('name', 'Formation Musicale et Auditive');
+            })
+            ->where('institution_id', $initiator->institution_id)
+            ->get();
+        return response()->json($levels);
+    }
 }
