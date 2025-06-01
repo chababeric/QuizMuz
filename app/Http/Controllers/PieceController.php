@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Level;
 use App\Models\Piece;
 use App\Models\PieceReserve;
 use Illuminate\Http\JsonResponse;
@@ -20,8 +21,32 @@ class PieceController extends Controller
      */
     public function getPiecesByLevel(int $level_id): JsonResponse
     {
-        $pieces = Piece::with('level')->where('level_id', $level_id)->get();
-        return response()->json($pieces);
+//        $pieces = Piece::with('level')->where('level_id', $level_id)->get();
+//        return response()->json($pieces);
+        // Get the level to check if it belongs to LitMus course
+        $level = Level::with('course')->find($level_id);
+
+        if ($level && $level->course->name === 'LitMus') {
+            // For LitMus course, get pieces grouped by modules
+            $modules = \App\Models\Module::with(['pieces' => function ($query) {
+                $query->orderBy('order');
+            }])->where('level_id', $level_id)->orderBy('order')->get();
+
+            // Format the response to include modules and their pieces
+            $result = [];
+            foreach ($modules as $module) {
+                $result[] = [
+                    'module' => $module->only(['id', 'title', 'description']),
+                    'pieces' => $module->pieces->toArray()
+                ];
+            }
+
+            return response()->json($result);
+        } else {
+            // For other courses, return pieces directly without module grouping
+            $pieces = \App\Models\Piece::with('level')->where('level_id', $level_id)->get();
+            return response()->json($pieces);
+        }
     }
 
     /**

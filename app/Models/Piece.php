@@ -12,6 +12,7 @@ class Piece extends Model
 
     protected $fillable = [
         'level_id',
+        'module_id',
         'period',
         'genre',
         'composer',
@@ -28,5 +29,10 @@ class Piece extends Model
     public function level(): BelongsTo
     {
         return $this->belongsTo(Level::class);
+    }
+
+    public function module(): BelongsTo
+    {
+        return $this->belongsTo(Module::class);
     }
 }

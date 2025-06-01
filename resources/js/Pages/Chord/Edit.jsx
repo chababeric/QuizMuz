@@ -1,7 +1,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.jsx';
 import { useState, useEffect } from "react";
 import {Head} from "@inertiajs/react";
-import AddNewChord from "@/Pages/Chords/Partials/AddNewChord.jsx";
+import AddNewChord from "@/Pages/Chord/Partials/AddNewChord.jsx";
+import UpdateChord from "@/Pages/Chord/Partials/UpdateChord.jsx";
 
 export default function Edit({ auth, user }) {
     const [chords, setChords] = useState([]);
@@ -60,6 +61,15 @@ export default function Edit({ auth, user }) {
                             levelsList={sortedLevels}
                             updateLastActionTime={updateLastActionTime}
                             getAllChords={getAllChords}
+                        />
+                    </div>
+
+                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
+                        <UpdateChord
+                            chordsList={chords}
+                            setChordsList={setChords}
+                            updateLastActionTime={updateLastActionTime}
+                            levelsList={sortedLevels}
                         />
                     </div>
                 </div>

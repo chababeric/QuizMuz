@@ -10,6 +10,7 @@ import backIcon from "../../icons/back.svg";
 export default function Practice({ auth, level, courseId, courseName }) {
     const [pieces, setPieces] = useState([]);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [modules, setModules] = useState([]);
     const [currentPiece, setCurrentPiece] = useState(null);
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -30,6 +31,30 @@ export default function Practice({ auth, level, courseId, courseName }) {
                     })
                     .catch(error => {
                         console.error("There was an error fetching the chords!", error);
+                    });
+            }
+            else if (courseName === "Littérature Musicale") {
+                axios.get(`/api/pieces/level/${level}`)
+                    .then(response => {
+                        // Save modules data
+                        setModules(response.data);
+
+                        // Flatten pieces from all modules for playback functionality
+                        const allPieces = [];
+                        response.data.forEach(moduleData => {
+                            moduleData.pieces.forEach(piece => {
+                                allPieces.push(piece);
+                            });
+                        });
+
+                        setPieces(allPieces);
+                        if (allPieces.length > 0) {
+                            setCurrentPiece(allPieces[0]);
+                        }
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.error("There was an error fetching the pieces!", error);
                     });
             }
             else {
@@ -179,6 +204,38 @@ export default function Practice({ auth, level, courseId, courseName }) {
             });
     };
 
+    const renderModulesPieces = () => {
+        return modules.map((moduleData, moduleIndex) => (
+            <div key={moduleData.module.id} className="mb-4">
+                <h2 className="text-2xl font-bold text-white bg-rose-600/70 p-2 rounded-t-lg">
+                    Module {moduleIndex + 1}: {moduleData.module.title}
+                </h2>
+                {moduleData.module.description && (
+                    <p className="text-gray-300 p-2 bg-black/70 mb-2 italic">
+                        {moduleData.module.description}
+                    </p>
+                )}
+                <div>
+                    {moduleData.pieces.map((piece, pieceIndex) => (
+                        <div
+                            key={piece.id}
+                            className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
+                            onClick={() => handlePieceClick(piece)}
+                        >
+                            <h2 className="text-xl font-semibold text-white">
+                                <span className="inline-block w-8 font-bold mr-2">{pieceIndex + 1}.</span>
+                                {piece.title}
+                                {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
+                                {piece.mvt && `, ${piece.mvt}`}
+                            </h2>
+                            <p className="text-lg text-gray-300 ml-10">{piece.composer}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        ));
+    };
+
     return (
         <div className="main-app flex flex-col h-screen">
             <div className="background-container"></div>
@@ -207,36 +264,41 @@ export default function Practice({ auth, level, courseId, courseName }) {
             ) : (
                 <>
                     <div className="flex-1 overflow-y-auto w-11/12 mx-auto hide-scrollbar bg-black/50">
-                        {pieces.length > 0 ? (
-                            pieces.map((piece, index) => (
-                                courseName === "Formation Musicale et Auditive" ? (
-                                    <div
-                                        key={piece.id}
-                                        className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
-                                        onClick={() => handlePieceClick(piece)}
-                                    >
-                                        <h2 className="text-xl font-semibold text-white flex items-center">
-                                            <span className="inline-block w-8 font-bold mr-2">{index + 1}.</span>
-                                            {piece.chord_name}
-                                        </h2>
-                                    </div>
-                                ) : (
-                                    <div
-                                        key={piece.id}
-                                        className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
-                                        onClick={() => handlePieceClick(piece)}
-                                    >
-                                        <h2 className="text-xl font-semibold text-white">
-                                            {piece.title}
-                                            {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
-                                            {piece.mvt && `, ${piece.mvt}`}
-                                        </h2>
-                                        <p className="text-lg text-gray-300">{piece.composer}</p>
-                                    </div>
-                                )
-                            ))
+                        {/* Conditional rendering based on course name */}
+                        {courseName === "Littérature Musicale" ? (
+                            renderModulesPieces()
                         ) : (
-                            <p className="text-lg text-gray-400">Aucune pièce trouvée pour ce niveau.</p>
+                            pieces.length > 0 ? (
+                                pieces.map((piece, index) => (
+                                    courseName === "Formation Musicale et Auditive" ? (
+                                        <div
+                                            key={piece.id}
+                                            className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
+                                            onClick={() => handlePieceClick(piece)}
+                                        >
+                                            <h2 className="text-xl font-semibold text-white flex items-center">
+                                                <span className="inline-block w-8 font-bold mr-2">{index + 1}.</span>
+                                                {piece.chord_name}
+                                            </h2>
+                                        </div>
+                                    ) : (
+                                        <div
+                                            key={piece.id}
+                                            className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
+                                            onClick={() => handlePieceClick(piece)}
+                                        >
+                                            <h2 className="text-xl font-semibold text-white">
+                                                {piece.title}
+                                                {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
+                                                {piece.mvt && `, ${piece.mvt}`}
+                                            </h2>
+                                            <p className="text-lg text-gray-300">{piece.composer}</p>
+                                        </div>
+                                    )
+                                ))
+                            ) : (
+                                <p className="text-lg text-gray-400">Aucune pièce trouvée pour ce niveau.</p>
+                            )
                         )}
                     </div>
 

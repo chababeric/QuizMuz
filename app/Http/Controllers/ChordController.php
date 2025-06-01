@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Chord;
+use App\Models\Level;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ChordController extends Controller
 {
@@ -24,4 +28,91 @@ class ChordController extends Controller
         return response()->json($chords);
     }
 
+    public function store(Request $request): RedirectResponse
+    {
+        $initiator = auth()->user();
+
+        $request->validate([
+            'level' => 'required|exists:levels,id',
+            'chord_name' => 'required|string|max:255',
+            'audioFile' => 'required|file|mimes:mp3',
+        ],
+        [
+            'level.required' => 'Le niveau est requis.',
+            'chord_name.required' => 'La formule ou l\'accord est requis.',
+            'audioFile.required' => 'The audio file field is required.',
+        ]);
+
+        $audioFile = $request->file('audioFile');
+        $level = Level::find($request->level);
+
+        $lastChord = Chord::where('level_id', $request->level)
+            ->where('file_name', 'LIKE', 'FMA' . $level->name . '_%')
+            ->orderByRaw('CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(file_name, "_", -1), ".", 1) AS UNSIGNED) DESC')
+            ->first();
+
+        $lastNumber = $lastChord ? (int)explode('_', pathinfo($lastChord->file_name, PATHINFO_FILENAME))[1] : 0;
+        $fileName = 'FMA' . $level->name . '_' . ($lastNumber + 1) . '.mp3';
+        $filePath = $audioFile->storeAs('public/fma_chords', $fileName);
+        Storage::url($filePath);
+
+        $highestOrder = Chord::where('level_id', $request->level)
+            ->max('order') ?? 0;
+        $newOrder = $highestOrder + 1;
+
+        $chord = new Chord([
+            'level_id' => $request->level,
+            'chord_name' => $request->chord_name,
+            'file_name' => $fileName,
+            'order' => $newOrder,
+            'institution_id' => $initiator->institution_id,
+        ]);
+
+        $chord->save();
+
+        return redirect()->route('chord.edit');
+    }
+
+    public function updateOrder(Request $request): JsonResponse
+    {
+        $chords = $request->input('chords');
+//        $initiator = auth()->user();
+
+        foreach ($chords as $chordData) {
+            $chord = Chord::findOrFail($chordData['id']);
+            $chord->order = $chordData['order'];
+            $chord->save();
+        }
+        return response()->json(['message' => 'L\'ordre a été mis à jour avec succès.']);
+    }
+
+    public function update(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'id' => 'required|exists:chords,id',
+            'level' => 'required|exists:levels,id',
+            'chord_name' => 'required|string|max:255',
+        ],
+        [
+            'id.required' => 'L\'identifiant de l\'accord est requis.',
+            'level.required' => 'Le niveau est requis.',
+            'chord_name.required' => 'La formule ou l\'accord est requis.',
+        ]);
+
+        $chord = Chord::findOrFail($request->id);
+        $chord->update([
+            'level_id' => $request->level,
+            'chord_name' => $request->chord_name,
+        ]);
+
+        return redirect()->route('chord.edit')->with('success', 'Formule / Accord mis à jour avec succès.');
+    }
+
+public function destroy(int $id): RedirectResponse
+    {
+        $chord = Chord::findOrFail($id);
+        $chord->delete();
+
+        return redirect()->route('chord.edit')->with('success', 'Formule / Accord supprimé avec succès.');
+    }
 }

@@ -24,7 +24,7 @@ export default function AddNewChord({ className = '', levelsList, updateLastActi
             },
             onError: (errors) => {
                 if (errors.level) {
-                    reset('course', 'level', 'chord_name', 'file_name', 'audioFile');
+                    reset('level', 'chord_name', 'audioFile');
                 }
             },
         });
@@ -55,7 +55,7 @@ export default function AddNewChord({ className = '', levelsList, updateLastActi
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="chord_name" value="Nom de l'accord" className="dark:text-white"/>
+                    <InputLabel htmlFor="chord_name" value="Accord / Formule" className="dark:text-white"/>
                     <input
                         id="chord_name"
                         type="text"

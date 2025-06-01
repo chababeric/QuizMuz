@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\ChordController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\InstitutionController;
+use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\PieceController;
 use App\Http\Controllers\QuizFMAController;
 use App\Http\Controllers\QuizSoloController;
@@ -82,9 +83,9 @@ Route::get('piece/edit', function () {
     return Inertia::render('Piece/Edit');
 })->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('piece.edit');
 
-Route::get('chords/edit', function () {
-    return Inertia::render('Chords/Edit');
-})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('chords.edit');
+Route::get('chord/edit', function () {
+    return Inertia::render('Chord/Edit');
+})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('chord.edit');
 
 Route::get('login', [LoginUserController::class, 'create'])->name('login');
 Route::post('login', [LoginUserController::class, 'store']);
@@ -185,16 +186,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/admin/toggle-level-access', [LevelController::class, 'toggleLevelAccess'])->name('admin.toggle-level-access');
         Route::post('/admin/reset-scores', [ScoreController::class, 'resetScores'])->name('admin.reset-scores');
         Route::patch('/admin/update-piece', [PieceController::class, 'update'])->name('admin.update-piece');
+        Route::patch('/admin/update-chord', [ChordController::class, 'update'])->name('admin.update-chord');
         Route::post('/pieces/{id}/move-to-reserve', [PieceController::class, 'moveToReserve'])->name('pieces.moveToReserve');
+        Route::delete('/chords/{id}', [ChordController::class, 'destroy'])->name('admin.delete-chord');
         Route::post('/pieces/{id}/move-to-pieces', [PieceController::class, 'moveToPieces'])->name('pieces.moveToPieces');
         Route::post('/delete-piece/{id}', [PieceController::class, 'destroy'])->name('admin.delete-piece');
         Route::post('/new-piece', [PieceController::class, 'store'])->name('admin.new-piece');
+        Route::post('/new-chord', [ChordController::class, 'store'])->name('admin.new-chord');
         Route::post('/admin_key/validate', [AdminKeyController::class, 'validateKey'])->name('admin_key.validate');
         Route::post('/admin_key/update', [AdminKeyController::class, 'store'])->name('admin_key.update');
         Route::get('/admin/total-stats', [UserStatsController::class, 'getTotalStats'])->name('admin.total-stats');
         Route::post('/admin/update-order', [PieceController::class, 'updateOrder'])->name('admin.update-order');
+        Route::post('/admin/update-chord-order', [ChordController::class, 'updateOrder'])->name('admin.update-chord-order');
         Route::get('/pieces-info', [PieceController::class, 'getPiecesInfo'])->name('piecesInfo');
         Route::post('/admin/find-user', [AdminController::class, 'findUser'])->name('user.find');
+
+//        Pour les Modules
+//        Route::post('/admin/add-module', [ModuleController::class, 'store'])->name('admin.add-module');
+//        Route::patch('/admin/update-module', [ModuleController::class, 'update'])->name('admin.update-module');
+//        Route::post('/admin/delete-module', [ModuleController::class, 'destroy'])->name('admin.delete-module');
     });
 });
 
