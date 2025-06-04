@@ -23,6 +23,8 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const currentPiece = useRef(piecesList[0] || null);
+    const [modules, setModules] = useState([]);
+    const [isLitMusCourse, setIsLitMusCourse] = useState(false);
     const { data, setData, patch, reset, errors, processing, recentlySuccessful } = useForm({
         id: '',
         course: '',
@@ -36,6 +38,7 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
         mvt: '',
         form: '',
         file_name: '',
+        module_id: '',
     });
 
     const openDeleteModal = (piece) => {
@@ -58,7 +61,17 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
             mvt: piece.mvt || '',
             form: piece.form || '',
             file_name: piece.file_name || '',
+            module_id: piece.module_id || '',
         })
+        // Check if this is a LitMus course
+        const course = coursesList.find(c => c.id === piece.level.course.id);
+        setIsLitMusCourse(course?.name === 'Littérature Musicale');
+
+        // If it's a LitMus course, fetch modules for the level
+        if (course?.name === 'Littérature Musicale' && piece.level.id) {
+            fetchModules(piece.level.id);
+        }
+
         setIsEditModalOpen(true);
     };
 
@@ -89,10 +102,41 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
             }).catch(error => {
                 console.log(error);
             });
+
+            // Check if the selected course is LitMus when it changes
+            const course = coursesList.find(c => c.id === parseInt(data.course));
+            setIsLitMusCourse(course?.name === 'Littérature Musicale');
+
+            // Reset module_id if not a LitMus course
+            if (course?.name !== 'Littérature Musicale') {
+                setData('module_id', '');
+                setModules([]);
+            }
         } else {
             setLevelsModifyOptions([]);
         }
     }, [data.course]);
+
+    useEffect(() => {
+        if (isLitMusCourse && data.level) {
+            fetchModules(data.level);
+        } else {
+            setModules([]);
+            if (!isLitMusCourse) {
+                setData('module_id', '');
+            }
+        }
+    }, [data.level, isLitMusCourse]);
+
+    const fetchModules = (levelId) => {
+        axios.get(`/api/modules/level/${levelId}`)
+            .then(response => {
+                setModules(response.data);
+            })
+            .catch(error => {
+                console.error('Error fetching modules:', error);
+            });
+    };
 
     const handleOnDragEnd = (result) => {
         if (!result.destination) return;
@@ -201,7 +245,7 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
     const groupAndSortPieces = (pieces) => {
         // Group pieces by level
         const groupedPieces = pieces.reduce((groups, piece) => {
-            const level = piece.level.name; // You can use level.id instead if needed
+            const level = piece.level.name;
             if (!groups[level]) {
                 groups[level] = [];
             }
@@ -222,7 +266,7 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
         if (selectedFilterLevel) {
             return piece.level.id.toString() === selectedFilterLevel.toString();
         }
-        return true; // Otherwise, include all pieces
+        return true;
     });
 
     const groupedPieces = groupAndSortPieces(filteredPieces);
@@ -359,6 +403,26 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                                     ))}
                                 </select>
                             </div>
+
+                            {/* Add module selection for LitMus courses */}
+                            {isLitMusCourse && (
+                                <div>
+                                    <InputLabel htmlFor="module_id" value="Module (optionnel)" className="dark:text-white"/>
+                                    <select
+                                        id="module_id"
+                                        className="mt-1 block w-full rounded-md dark:text-white dark:bg-gray-800"
+                                        value={data.module_id || ''}
+                                        onChange={(e) => setData('module_id', e.target.value)}
+                                    >
+                                        <option value="">Aucun module</option>
+                                        {modules.map((module) => (
+                                            <option key={module.id} value={module.id}>
+                                                {module.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
 
                             <div>
                                 <InputLabel htmlFor="period" value="Période" className="dark:text-white"/>

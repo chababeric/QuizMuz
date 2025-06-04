@@ -162,6 +162,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/updateLastLevel', [LevelController::class, 'updateLastLevel'])->name('updateLastLevel');
     Route::get('/user-score', [ScoreController::class, 'getUserScore'])->name('userScore');
     Route::get('/all-courses', [CourseController::class, 'getAllCourses'])->name('allCourses');
+    Route::get('/pieces/level/{level_id}/no-module', [PieceController::class, 'getPiecesByLevelNoModule']);
 
     // Route for history mode (solo mode)
     Route::post('/check-answers', [QuizSoloController::class, 'grade'])->name('checkAnswers');
@@ -170,6 +171,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Routes for FMA mode
     Route::post('/check-fma-answers', [QuizFMAController::class, 'grade'])->name('checkFMAAnswers');
     Route::post('/get-next-chord', [QuizFMAController::class, 'getNextChord'])->name('getNextChord');
+
+    // Modules
+    Route::get('/api/modules', [ModuleController::class, 'getAllModules'])->name('allModules');
+    Route::get('/api/modules/level/{level_id}', [ModuleController::class, 'getModulesByLevel']);
 
     Route::middleware([AdminMiddleware::class])->group(function () {
         Route::patch('/admin/update-username', [AdminController::class, 'updateUsername'])->name('admin.update-username');
@@ -202,9 +207,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/admin/find-user', [AdminController::class, 'findUser'])->name('user.find');
 
 //        Pour les Modules
-//        Route::post('/admin/add-module', [ModuleController::class, 'store'])->name('admin.add-module');
-//        Route::patch('/admin/update-module', [ModuleController::class, 'update'])->name('admin.update-module');
-//        Route::post('/admin/delete-module', [ModuleController::class, 'destroy'])->name('admin.delete-module');
+        Route::post('/admin/add-module', [ModuleController::class, 'store'])->name('admin.add-module');
+        Route::patch('/admin/update-module', [ModuleController::class, 'update'])->name('admin.update-module');
+        Route::post('/admin/delete-module', [ModuleController::class, 'destroy'])->name('admin.delete-module');
+        Route::post('/admin/update-module-order', [ModuleController::class, 'updateOrder'])->name('admin.update-module-order');
     });
 });
 

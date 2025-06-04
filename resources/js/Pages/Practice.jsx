@@ -11,6 +11,7 @@ export default function Practice({ auth, level, courseId, courseName }) {
     const [pieces, setPieces] = useState([]);
     const [isPlaying, setIsPlaying] = useState(false);
     const [modules, setModules] = useState([]);
+    const [nonModulePieces, setNonModulePieces] = useState([]);
     const [currentPiece, setCurrentPiece] = useState(null);
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -27,34 +28,90 @@ export default function Practice({ auth, level, courseId, courseName }) {
                         setPieces(sortedPieces);
                         setCurrentPiece(sortedPieces[0]);
                         setLoading(false);
-                        // console.log(response.data);
                     })
                     .catch(error => {
                         console.error("There was an error fetching the chords!", error);
                     });
             }
             else if (courseName === "Littérature Musicale") {
+                // First get all pieces for the level, including those without modules
                 axios.get(`/api/pieces/level/${level}`)
                     .then(response => {
-                        // Save modules data
-                        setModules(response.data);
+                        const piecesData = response.data;
 
-                        // Flatten pieces from all modules for playback functionality
-                        const allPieces = [];
-                        response.data.forEach(moduleData => {
-                            moduleData.pieces.forEach(piece => {
-                                allPieces.push(piece);
-                            });
+                        // First, sort all pieces by order
+                        const sortedPieces = sortPiecesByOrder(piecesData);
+
+                        // Group pieces by module_id
+                        const groupedByModule = {};
+                        const nonModulePieces = [];
+
+                        // Identify pieces without modules
+                        sortedPieces.forEach(piece => {
+                            if (piece.module_id) {
+                                if (!groupedByModule[piece.module_id]) {
+                                    groupedByModule[piece.module_id] = {
+                                        module: {
+                                            id: piece.module_id,
+                                            title: '', // Will be updated when we find module data
+                                            order: 0,  // Will be updated when we find module data
+                                            description: ''
+                                        },
+                                        pieces: []
+                                    };
+                                }
+                                groupedByModule[piece.module_id].pieces.push(piece);
+                            } else {
+                                nonModulePieces.push(piece);
+                            }
                         });
 
-                        setPieces(allPieces);
-                        if (allPieces.length > 0) {
-                            setCurrentPiece(allPieces[0]);
-                        }
-                        setLoading(false);
+                        // Fetch modules data to get titles and order
+                        axios.get(`/api/modules/level/${level}`)
+                            .then(modulesResponse => {
+                                const modulesData = modulesResponse.data;
+
+                                // Update module information in grouped pieces
+                                modulesData.forEach(module => {
+                                    if (groupedByModule[module.id]) {
+                                        groupedByModule[module.id].module = {
+                                            id: module.id,
+                                            title: module.title,
+                                            order: module.order,
+                                            description: module.description
+                                        };
+                                    }
+                                });
+
+                                // Convert to array and sort by module order
+                                const modulesArray = Object.values(groupedByModule)
+                                    .sort((a, b) => a.module.order - b.module.order);
+
+                                setModules(modulesArray);
+                                setNonModulePieces(nonModulePieces);
+
+                                // Combine all pieces for playback
+                                const allPieces = [
+                                    ...modulesArray.flatMap(m => m.pieces),
+                                    ...nonModulePieces
+                                ];
+
+                                setPieces(allPieces);
+
+                                if (allPieces.length > 0) {
+                                    setCurrentPiece(allPieces[0]);
+                                }
+
+                                setLoading(false);
+                            })
+                            .catch(error => {
+                                console.error("Error fetching modules:", error);
+                                setLoading(false);
+                            });
                     })
                     .catch(error => {
                         console.error("There was an error fetching the pieces!", error);
+                        setLoading(false);
                     });
             }
             else {
@@ -205,35 +262,66 @@ export default function Practice({ auth, level, courseId, courseName }) {
     };
 
     const renderModulesPieces = () => {
-        return modules.map((moduleData, moduleIndex) => (
-            <div key={moduleData.module.id} className="mb-4">
-                <h2 className="text-2xl font-bold text-white bg-rose-600/70 p-2 rounded-t-lg">
-                    Module {moduleIndex + 1}: {moduleData.module.title}
-                </h2>
-                {moduleData.module.description && (
-                    <p className="text-gray-300 p-2 bg-black/70 mb-2 italic">
-                        {moduleData.module.description}
-                    </p>
-                )}
-                <div>
-                    {moduleData.pieces.map((piece, pieceIndex) => (
-                        <div
-                            key={piece.id}
-                            className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
-                            onClick={() => handlePieceClick(piece)}
-                        >
-                            <h2 className="text-xl font-semibold text-white">
-                                <span className="inline-block w-8 font-bold mr-2">{pieceIndex + 1}.</span>
-                                {piece.title}
-                                {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
-                                {piece.mvt && `, ${piece.mvt}`}
-                            </h2>
-                            <p className="text-lg text-gray-300 ml-10">{piece.composer}</p>
+        return (
+            <>
+                {modules.map((moduleData) => (
+                    <div key={moduleData.module.id} className="mb-4">
+                        <h2 className="text-2xl font-bold text-white bg-rose-900/50 p-2 rounded-t-lg">
+                            Module {moduleData.module.order}: {moduleData.module.title}
+                        </h2>
+
+                        {moduleData.module.description && (
+                            <p className="text-gray-300 p-2 bg-black/70 mb-2 italic">
+                                {moduleData.module.description}
+                            </p>
+                        )}
+                        <div>
+                            {moduleData.pieces && moduleData.pieces.map((piece, pieceIndex) => (
+                                <div
+                                    key={piece.id}
+                                    className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
+                                    onClick={() => handlePieceClick(piece)}
+                                >
+                                    <h2 className="text-xl font-semibold text-white">
+                                        <span className="inline-block w-8 font-bold mr-2">{pieceIndex + 1}.</span>
+                                        {piece.title}
+                                        {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
+                                        {piece.mvt && `, ${piece.mvt}`}
+                                    </h2>
+                                    <p className="text-lg text-gray-300 ml-10">{piece.composer}</p>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
-            </div>
-        ));
+                    </div>
+                ))}
+
+                {/* Render pieces without modules */}
+                {nonModulePieces.length > 0 && (
+                    <div className="mb-4">
+                        <h2 className="text-2xl font-bold text-white bg-rose-900/50 p-2 rounded-t-lg">
+                            Pièces sans module
+                        </h2>
+                        <div>
+                            {nonModulePieces.map((piece, index) => (
+                                <div
+                                    key={piece.id}
+                                    className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
+                                    onClick={() => handlePieceClick(piece)}
+                                >
+                                    <h2 className="text-xl font-semibold text-white">
+                                        <span className="inline-block w-8 font-bold mr-2">{index + 1}.</span>
+                                        {piece.title}
+                                        {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
+                                        {piece.mvt && `, ${piece.mvt}`}
+                                    </h2>
+                                    <p className="text-lg text-gray-300 ml-10">{piece.composer}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </>
+        );
     };
 
     return (
@@ -266,7 +354,11 @@ export default function Practice({ auth, level, courseId, courseName }) {
                     <div className="flex-1 overflow-y-auto w-11/12 mx-auto hide-scrollbar bg-black/50">
                         {/* Conditional rendering based on course name */}
                         {courseName === "Littérature Musicale" ? (
-                            renderModulesPieces()
+                            modules.length > 0 || nonModulePieces.length > 0 ? (
+                                renderModulesPieces()
+                            ) : (
+                                <p className="text-lg text-gray-400 p-4">Aucune pièce trouvée pour ce niveau.</p>
+                            )
                         ) : (
                             pieces.length > 0 ? (
                                 pieces.map((piece, index) => (
@@ -297,7 +389,7 @@ export default function Practice({ auth, level, courseId, courseName }) {
                                     )
                                 ))
                             ) : (
-                                <p className="text-lg text-gray-400">Aucune pièce trouvée pour ce niveau.</p>
+                                <p className="text-lg text-gray-400 p-4">Aucune pièce trouvée pour ce niveau.</p>
                             )
                         )}
                     </div>
@@ -338,7 +430,7 @@ export default function Practice({ auth, level, courseId, courseName }) {
                         />
 
                         <div className="flex justify-between w-full text-white text-sm mt-2">
-                        <span>{new Date(progress * 1000).toISOString().substr(14, 5)}</span>
+                            <span>{new Date(progress * 1000).toISOString().substr(14, 5)}</span>
                             <span>{new Date(duration * 1000).toISOString().substr(14, 5)}</span>
                         </div>
 

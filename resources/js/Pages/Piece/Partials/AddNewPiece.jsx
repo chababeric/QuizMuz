@@ -9,6 +9,8 @@ import FilterableSelect from "@/Components/FilterableSelect.jsx";
 export default function AddNewPiece({ className = '', piecesList, coursesList, updateLastActionTime, getAllPieces }) {
     // const user = usePage().props.auth.user;
     const [levelsList, setLevelsList] = useState([]);
+    const [modules, setModules] = useState([]);
+    const [isLitMusCourse, setIsLitMusCourse] = useState(false);
 
     const { data, setData, post, reset, errors, processing, recentlySuccessful } = useForm({
         course: '',
@@ -23,6 +25,7 @@ export default function AddNewPiece({ className = '', piecesList, coursesList, u
         form: '',
         fileName: '',
         audioFile: null,
+        module_id: '',
     });
 
     useEffect(() => {
@@ -36,10 +39,30 @@ export default function AddNewPiece({ className = '', piecesList, coursesList, u
             }).catch(error => {
                 console.log(error);
             });
+
+            // Check if the selected course is LitMus (Littérature Musicale)
+            const course = coursesList.find(c => c.id === parseInt(data.course));
+            setIsLitMusCourse(course?.name === 'Littérature Musicale');
         } else {
             setLevelsList([]);
         }
     }, [data.course]);
+
+    useEffect(() => {
+        if (data.level && isLitMusCourse) {
+            // Fetch modules for this level
+            axios.get(`/api/modules/level/${data.level}`)
+                .then(response => {
+                    setModules(response.data);
+                })
+                .catch(error => {
+                    console.error('Error fetching modules:', error);
+                });
+        } else {
+            setModules([]);
+            setData('module_id', '');
+        }
+    }, [data.level, isLitMusCourse]);
 
     const generateFileName = () => {
         const { composer, title, no_mvt, mvt } = data;
@@ -73,7 +96,7 @@ export default function AddNewPiece({ className = '', piecesList, coursesList, u
             },
             onError: (errors) => {
                 if (errors.level) {
-                    reset('course', 'level', 'period', 'genre', 'composer', 'title', 'element', 'no_mvt', 'mvt', 'form', 'fileName', 'audioFile');
+                    reset('course', 'level', 'period', 'genre', 'composer', 'title', 'element', 'no_mvt', 'mvt', 'form', 'fileName', 'audioFile', 'module_id');
                 }
             },
         });
@@ -119,6 +142,24 @@ export default function AddNewPiece({ className = '', piecesList, coursesList, u
                     </select>
                     <InputError className="mt-2" message={errors.level}/>
                 </div>
+
+                {isLitMusCourse && data.level && (
+                    <div>
+                        <InputLabel htmlFor="module_id" value="Module (optionnel)" className="dark:text-white"/>
+                        <select
+                            id="module_id"
+                            className="mt-1 block w-full rounded-md dark:bg-gray-700 dark:text-white"
+                            value={data.module_id}
+                            onChange={(e) => setData('module_id', e.target.value)}
+                        >
+                            <option value="">Aucun module</option>
+                            {modules.map((module) => (
+                                <option key={module.id} value={module.id}>{module.title}</option>
+                            ))}
+                        </select>
+                        <InputError className="mt-2" message={errors.module_id}/>
+                    </div>
+                )}
 
                 <div>
                     <InputLabel htmlFor="period" value="Période" className="dark:text-white"/>

@@ -24,6 +24,7 @@ class Piece extends Model
         'file_name',
         'order',
         'institution_id',
+        'module_id',
     ];
 
     public function level(): BelongsTo

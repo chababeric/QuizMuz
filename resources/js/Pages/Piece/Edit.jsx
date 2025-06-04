@@ -4,12 +4,16 @@ import AddNewPiece from "@/Pages/Piece/Partials/AddNewPiece.jsx";
 import UpdatePiece from "@/Pages/Piece/Partials/UpdatePiece.jsx";
 import { useEffect, useState } from "react";
 import PiecesReserve from "@/Pages/Piece/Partials/PiecesReserve.jsx";
+import AddModule from "@/Pages/Piece/Partials/AddModule.jsx";
+import UpdateModule from "@/Pages/Piece/Partials/UpdateModule.jsx";
+import ModuleList from "@/Pages/Piece/Partials/ModuleList.jsx";
 
 export default function Edit({ auth, user }) {
     const [pieces, setPieces] = useState([]);
     const [courses, setCourses] = useState([]);
     const [piecesInReserve, setPiecesInReserve] = useState([]);
     const [groupedPieces, setGroupedPieces] = useState({});
+    const [litMusCourse, setLitMusCourse] = useState(null);
 
     useEffect( () => {
         getAllPieces();
@@ -35,6 +39,9 @@ export default function Edit({ auth, user }) {
         }).then(response => {
             const filteredCourses = response.data.filter(course => !course.name.includes('Formation Musicale et Auditive'));
             setCourses(filteredCourses);
+
+            const litMus = filteredCourses.find(course => course.name === 'Littérature Musicale');
+            setLitMusCourse(litMus);
         }).catch(error => {
             console.log(error);
         });
@@ -93,6 +100,34 @@ export default function Edit({ auth, user }) {
                             getAllPieces={getAllPieces}
                         />
                     </div>
+
+                    {litMusCourse && (
+                        <>
+                            <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
+                                <AddModule
+                                    className="max-w-xl dark:bg-gray-800"
+                                    coursesList={[litMusCourse]}
+                                    updateLastActionTime={updateLastActionTime}
+                                />
+                            </div>
+
+                            <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
+                                <UpdateModule
+                                    className="max-w-xl dark:bg-gray-800"
+                                    coursesList={[litMusCourse]}
+                                    updateLastActionTime={updateLastActionTime}
+                                />
+                            </div>
+
+                            <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
+                                <ModuleList
+                                    className="dark:bg-gray-800"
+                                    coursesList={[litMusCourse]}
+                                    updateLastActionTime={updateLastActionTime}
+                                />
+                            </div>
+                        </>
+                    )}
 
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
                         <UpdatePiece

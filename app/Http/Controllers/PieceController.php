@@ -91,7 +91,8 @@ class PieceController extends Controller
                 'mvt' => 'nullable|string',
                 'form' => 'nullable|string',
                 'file_name' => ['required', 'string', 'regex:/.*\.mp3$/'],
-                'audioFile' => 'nullable'
+                'audioFile' => 'nullable',
+                'module_id' => 'nullable|integer|exists:modules,id',
             ],
             [
                 'course.required' => 'Le cours est requis.',
@@ -99,7 +100,8 @@ class PieceController extends Controller
                 'composer.required' => 'Le compositeur est requis.',
                 'title.required' => 'Le titre est requis.',
                 'file_name.required' => 'Le nom du fichier audio est requis.',
-                'file_name.regex' => 'Le nom du fichier doit se terminer par .mp3.'
+                'file_name.regex' => 'Le nom du fichier doit se terminer par .mp3.',
+                'module_id.exists' => 'Le module sélectionné n\'existe pas.'
             ]
         );
 
@@ -119,6 +121,7 @@ class PieceController extends Controller
             'mvt' => $validatedData['mvt'],
             'form' => $validatedData['form'],
             'file_name' => $validatedData['file_name'],
+            'module_id' => $validatedData['module_id'] ?? null,
         ]);
 
         // If a new audio file is uploaded, replace the old one
@@ -274,7 +277,8 @@ class PieceController extends Controller
                 'mvt' => 'nullable|string',
                 'form' => 'nullable|string',
                 'fileName' => ['required', 'string', 'regex:/.*\.mp3$/'],
-                'audioFile' => 'nullable'
+                'audioFile' => 'nullable',
+                'module_id' => 'nullable|integer|exists:modules,id',
             ],
             [
                 'course.required' => 'Le cours est requis.',
@@ -282,7 +286,8 @@ class PieceController extends Controller
                 'composer.required' => 'Le compositeur est requis.',
                 'title.required' => 'Le titre est requis.',
                 'fileName.required' => 'Le nom du fichier audio est requis.',
-                'fileName.regex' => 'Le nom du fichier doit se terminer par .mp3.'
+                'fileName.regex' => 'Le nom du fichier doit se terminer par .mp3.',
+                'module_id.exists' => 'Le module sélectionné n\'existe pas.'
             ]
         );
 
@@ -317,6 +322,7 @@ class PieceController extends Controller
             'file_name' => $validatedData['fileName'],
             'order' => $newOrder,
             'institution_id' => $initiator->institution_id,
+            'module_id' => $validatedData['module_id'] ?? null,
         ]);
 
         // Save the new piece to the database
@@ -368,6 +374,17 @@ class PieceController extends Controller
     public function getPiecesInfo(): JsonResponse
     {
         $pieces = Piece::with('level')->get();
+        return response()->json($pieces);
+    }
+
+    public function getPiecesByLevelNoModule(int $level_id): JsonResponse
+    {
+        $pieces = Piece::with('level')
+            ->where('level_id', $level_id)
+            ->whereNull('module_id')
+            ->orderBy('order')
+            ->get();
+
         return response()->json($pieces);
     }
 }
