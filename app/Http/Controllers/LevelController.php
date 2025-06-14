@@ -10,26 +10,34 @@ use App\Models\SoloGame;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class LevelController extends Controller
 {
-    public function index($courseId): Response
+    public function index(Request $request): Response
     {
-        $levels = Level::where('course_id', $courseId)->get();
-        $courseName = Course::where('id', $courseId)->first()->name;
+        $courseId = $request->route('courseId');
+        $course = Course::findOrFail($courseId);
+        $courseName = $course->name;
 
-        $user = auth()->user();
-        $solo_game = SoloGame::where('user_id', $user->id)->first();
-        $fma_game = FmaGame::where('user_id', $user->id)->first();
+        // Get user's institution ID
+        $user = Auth::user();
+        $institutionId = $user->institution->id;
 
-        if ($solo_game || $fma_game) {
-            $game = $solo_game ?? $fma_game;
-            $game->delete();
-        }
-        return Inertia::render('MainMenu', ['levels' => $levels, 'courseId' => $courseId, 'courseName' => $courseName]);
+        // Fetch levels and sort them alphabetically by name
+        $levels = Level::where('course_id', $courseId)
+            ->where('institution_id', $institutionId)
+            ->orderBy('name', 'asc')  // Sort alphabetically by name
+            ->get();
+
+        return Inertia::render('MainMenu', [
+            'levels' => $levels,
+            'courseId' => $courseId,
+            'courseName' => $courseName,
+        ]);
     }
 
     public function getAllLevels(Request $request): JsonResponse

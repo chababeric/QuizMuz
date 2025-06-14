@@ -7,134 +7,25 @@ import nextIcon from "../../icons/next.svg";
 import previousIcon from "../../icons/previous.svg";
 import backIcon from "../../icons/back.svg";
 
-export default function Practice({ auth, level, courseId, courseName }) {
-    const [pieces, setPieces] = useState([]);
+export default function Practice({ auth, level, courseId, courseName, lastUpdated, piecesList = [], modulesList = [], nonModulePiecesList = [], initialLoading = false }) {
+    const [pieces, setPieces] = useState(piecesList);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [modules, setModules] = useState([]);
-    const [nonModulePieces, setNonModulePieces] = useState([]);
-    const [currentPiece, setCurrentPiece] = useState(null);
+    const [modules, setModules] = useState(modulesList);
+    const [nonModulePieces, setNonModulePieces] = useState(nonModulePiecesList);
+    const [currentPiece, setCurrentPiece] = useState(piecesList.length > 0 ? piecesList[0] : null);
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(initialLoading);
     const audioRef = useRef(new Audio());
     const progressRef = useRef(null);
 
-    useEffect(() => {
-        if (level) {
-            if (courseName === "Formation Musicale et Auditive") {
-                axios.get(`/api/chords/level/${level}`)
-                    .then(response => {
-                        const sortedPieces = sortPiecesByOrder(response.data);
-                        setPieces(sortedPieces);
-                        setCurrentPiece(sortedPieces[0]);
-                        setLoading(false);
-                    })
-                    .catch(error => {
-                        console.error("There was an error fetching the chords!", error);
-                    });
-            }
-            else if (courseName === "Littérature Musicale") {
-                // First get all pieces for the level, including those without modules
-                axios.get(`/api/pieces/level/${level}`)
-                    .then(response => {
-                        const piecesData = response.data;
-
-                        // First, sort all pieces by order
-                        const sortedPieces = sortPiecesByOrder(piecesData);
-
-                        // Group pieces by module_id
-                        const groupedByModule = {};
-                        const nonModulePieces = [];
-
-                        // Identify pieces without modules
-                        sortedPieces.forEach(piece => {
-                            if (piece.module_id) {
-                                if (!groupedByModule[piece.module_id]) {
-                                    groupedByModule[piece.module_id] = {
-                                        module: {
-                                            id: piece.module_id,
-                                            title: '', // Will be updated when we find module data
-                                            order: 0,  // Will be updated when we find module data
-                                            description: ''
-                                        },
-                                        pieces: []
-                                    };
-                                }
-                                groupedByModule[piece.module_id].pieces.push(piece);
-                            } else {
-                                nonModulePieces.push(piece);
-                            }
-                        });
-
-                        // Fetch modules data to get titles and order
-                        axios.get(`/api/modules/level/${level}`)
-                            .then(modulesResponse => {
-                                const modulesData = modulesResponse.data;
-
-                                // Update module information in grouped pieces
-                                modulesData.forEach(module => {
-                                    if (groupedByModule[module.id]) {
-                                        groupedByModule[module.id].module = {
-                                            id: module.id,
-                                            title: module.title,
-                                            order: module.order,
-                                            description: module.description
-                                        };
-                                    }
-                                });
-
-                                // Convert to array and sort by module order
-                                const modulesArray = Object.values(groupedByModule)
-                                    .sort((a, b) => a.module.order - b.module.order);
-
-                                setModules(modulesArray);
-                                setNonModulePieces(nonModulePieces);
-
-                                // Combine all pieces for playback
-                                const allPieces = [
-                                    ...modulesArray.flatMap(m => m.pieces),
-                                    ...nonModulePieces
-                                ];
-
-                                setPieces(allPieces);
-
-                                if (allPieces.length > 0) {
-                                    setCurrentPiece(allPieces[0]);
-                                }
-
-                                setLoading(false);
-                            })
-                            .catch(error => {
-                                console.error("Error fetching modules:", error);
-                                setLoading(false);
-                            });
-                    })
-                    .catch(error => {
-                        console.error("There was an error fetching the pieces!", error);
-                        setLoading(false);
-                    });
-            }
-            else {
-                axios.get(`/api/pieces/level/${level}`)
-                    .then(response => {
-                        const sortedPieces = sortPiecesByOrder(response.data);
-                        setPieces(sortedPieces);
-                        setCurrentPiece(sortedPieces[0]);
-                        setLoading(false);
-                    })
-                    .catch(error => {
-                        console.error("There was an error fetching the pieces!", error);
-                    });
-            }
-        }
-
-        return () => {
-            // Cleanup function to stop and reset audio when component unmounts
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-            setIsPlaying(false);
-        };
-    }, [level]);
+    const formattedLastUpdate = lastUpdated
+        ? new Date(lastUpdated).toLocaleDateString('fr-FR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        })
+        : 'Non disponible';
 
     const sortPiecesByOrder = (pieces) => {
         return pieces.sort((a, b) => {
@@ -198,6 +89,15 @@ export default function Practice({ auth, level, courseId, courseName }) {
             audioRef.current.pause();
         }
     }, [isPlaying]);
+
+    // Clean up on component unmount
+    useEffect(() => {
+        return () => {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+            setIsPlaying(false);
+        };
+    }, []);
 
     const handlePlayPause = () => {
         setIsPlaying(prevIsPlaying => !prevIsPlaying);
@@ -344,6 +244,12 @@ export default function Practice({ auth, level, courseId, courseName }) {
                 </Link>
                 <h1 className="text-6xl font-bold text-white hover:cursor-default mb-4 mx-auto">Pratique</h1>
             </div>
+
+            {!loading && (
+                <div className="text-sm text-white text-center mb-2">
+                    Dernière mise à jour: {formattedLastUpdate}
+                </div>
+            )}
 
             {loading ? (
                 <div className="text-white text-center mt-4 text-4xl font-semibold">

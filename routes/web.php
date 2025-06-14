@@ -8,6 +8,7 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\InstitutionController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\PieceController;
+use App\Http\Controllers\PracticeController;
 use App\Http\Controllers\QuizFMAController;
 use App\Http\Controllers\QuizSoloController;
 use App\Http\Controllers\ScoreController;
@@ -112,13 +113,9 @@ Route::middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastAct
     Route::get('/support', [SupportController::class, 'index'])->name('support');
 });
 
-Route::get('/practice', function (Illuminate\Http\Request $request) {
-    return Inertia::render('Practice', [
-        'level' => $request->input('level'),
-        'courseId' => $request->input('courseId'),
-        'courseName' => $request->input('courseName'),
-    ]);
-})->name('practice')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
+Route::get('/practice', [PracticeController::class, 'index'])
+    ->name('practice')
+    ->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, UserStats::class]);
 
 Route::get('/optionsmenu', function (Illuminate\Http\Request $request) {
     return Inertia::render('OptionsMenu', [

@@ -228,7 +228,6 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                             <label className="flex items-center">
                                 <Checkbox
                                     checked={isModuleFullyChecked(moduleData)}
-                                    indeterminate={isModulePartiallyChecked(moduleData)}
                                     onChange={(e) => handleCheckModule(moduleData, e.target.checked)}
                                 />
                                 <span className="ml-2 text-xl font-bold text-white">
@@ -238,7 +237,7 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                         </div>
 
                         {moduleData.module.description && (
-                            <p className="text-gray-900 p-2 bg-white/30 mb-2 italic">
+                            <p className="text-gray-900 p-2 bg-white/30 mb-2 italic text-left">
                                 {moduleData.module.description}
                             </p>
                         )}
