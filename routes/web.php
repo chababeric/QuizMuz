@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminKeyController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\ChordController;
+use App\Http\Controllers\CourseAdminController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\InstitutionController;
 use App\Http\Controllers\ModuleController;
@@ -11,9 +12,11 @@ use App\Http\Controllers\PieceController;
 use App\Http\Controllers\PracticeController;
 use App\Http\Controllers\QuizFMAController;
 use App\Http\Controllers\QuizSoloController;
+use App\Http\Controllers\AccessController;
 use App\Http\Controllers\ScoreController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\UserStatsController;
+use App\Http\Middleware\AddUserPermissions;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\CheckSessionTimeout;
 use App\Http\Middleware\UpdateLastActionTime;
@@ -37,7 +40,7 @@ Route::get('/', function () {
         ]);
     }
     else {
-        $isAdmin = $user->administrator()->exists();
+        $isAdmin = $user->isAdmin();
         return Inertia::render('Welcome', [
             'canLogin' => Route::has('login'),
             'canRegister' => Route::has('register'),
@@ -51,7 +54,7 @@ Route::get('/', function () {
 
 Route::get('welcome', function () {
     $user = auth()->user();
-    $isAdmin = $user->administrator()->exists();
+    $isAdmin = $user->isAdmin();
 
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -65,7 +68,7 @@ Route::get('welcome', function () {
 
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('dashboard');
+})->middleware(['auth', 'verified', 'web', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class, AddUserPermissions::class])->name('dashboard');
 
 Route::get('general/edit', function () {
     $institution = auth()->user()->institution()->first()->name;
@@ -74,19 +77,27 @@ Route::get('general/edit', function () {
             'institution' => $institution,
         ]
     );
-})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('general.edit');
+})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class, AddUserPermissions::class])->name('general.edit');
 
 Route::get('account/edit', function () {
     return Inertia::render('Account/Edit');
-})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('account.edit');
+})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class, AddUserPermissions::class])->name('account.edit');
+
+Route::middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, AddUserPermissions::class])->group(function () {
+    Route::get('access/edit', [AccessController::class, 'index'])->name('access.edit');
+});
 
 Route::get('piece/edit', function () {
     return Inertia::render('Piece/Edit');
-})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('piece.edit');
+})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class, AddUserPermissions::class])->name('piece.edit');
+
+Route::get('history/edit', function () {
+    return Inertia::render('History/Edit');
+})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class, AddUserPermissions::class])->name('history.edit');
 
 Route::get('chord/edit', function () {
     return Inertia::render('Chord/Edit');
-})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->name('chord.edit');
+})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class, AddUserPermissions::class])->name('chord.edit');
 
 Route::get('login', [LoginUserController::class, 'create'])->name('login');
 Route::post('login', [LoginUserController::class, 'store']);
@@ -139,6 +150,11 @@ Route::get('highscores', function (Illuminate\Http\Request $request) {
     ]);
 })->name('highscores')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class]);
 
+Route::middleware(['auth', 'verified', 'role:SuperAdmin', CheckSessionTimeout::class, UpdateLastActionTime::class])->group(function () {
+
+});
+
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/update-last-action-time', [QuizSoloController::class, 'updateLastActionTime'])->name('updateLastActionTime');
     Route::get('/scores', [ScoreController::class, 'getAllScores'])->name('allScores');
@@ -160,6 +176,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/user-score', [ScoreController::class, 'getUserScore'])->name('userScore');
     Route::get('/all-courses', [CourseController::class, 'getAllCourses'])->name('allCourses');
     Route::get('/pieces/level/{level_id}/no-module', [PieceController::class, 'getPiecesByLevelNoModule']);
+
+    // Course admin routes
+    Route::get('/course-admins', [CourseAdminController::class, 'index'])->name('course-admins.index');
+    Route::get('/courses/{courseId}/admins', [CourseAdminController::class, 'getCourseAdmins'])->name('course-admins.get');
+    Route::post('/course-admins/add', [CourseAdminController::class, 'addCourseAdmin'])->name('course-admins.add');
+    Route::post('/course-admins/remove', [CourseAdminController::class, 'removeCourseAdmin'])->name('course-admins.remove');
 
     // Route for history mode (solo mode)
     Route::post('/check-answers', [QuizSoloController::class, 'grade'])->name('checkAnswers');
@@ -203,6 +225,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/pieces-info', [PieceController::class, 'getPiecesInfo'])->name('piecesInfo');
         Route::post('/admin/find-user', [AdminController::class, 'findUser'])->name('user.find');
 
+        // Role management routes
+        Route::get('/api/roles', [AccessController::class, 'getRoles'])->name('allRoles');
+        Route::post('/api/users/add-role', [AccessController::class, 'addRole'])->name('users.addRole');
+        Route::post('/api/users/remove-role', [AccessController::class, 'removeRole'])->name('users.removeRole');
+
 //        Pour les Modules
         Route::post('/admin/add-module', [ModuleController::class, 'store'])->name('admin.add-module');
         Route::patch('/admin/update-module', [ModuleController::class, 'update'])->name('admin.update-module');
@@ -212,3 +239,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+
+
+//Exemple:
+// Course-specific admin routes
+//Route::middleware(['auth', 'course.admin:fma'])->group(function () {
+//    Route::get('/admin/fma', [FmaController::class, 'adminDashboard']);
+//    // Other FMA admin routes
+//});
+//
+//Route::middleware(['auth', 'course.admin:litmus'])->group(function () {
+//    Route::get('/admin/litmus', [LitMusController::class, 'adminDashboard']);
+//    // Other LitMus admin routes
+//});
+//
+//Route::middleware(['auth', 'course.admin:history'])->group(function () {
+//    Route::get('/admin/history', [HistoryController::class, 'adminDashboard']);
+//    // Other History admin routes
+//});

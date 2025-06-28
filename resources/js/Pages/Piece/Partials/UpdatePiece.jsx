@@ -12,10 +12,9 @@ import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import DangerButton from "@/Components/DangerButton.jsx";
 import {Transition} from "@headlessui/react";
 
-export default function UpdatePiece({ className = '', piecesList, setPiecesList, coursesList, updateLastActionTime, getPiecesInReserve }) {
+export default function UpdatePiece({ className = '', piecesList, setPiecesList, updateLastActionTime, getPiecesInReserve, courseName }) {
     const [levelsList, setLevelsList] = useState([]);
     const [levelsModifyOptions, setLevelsModifyOptions] = useState([]);
-    const [selectedFilterCourse, setSelectedFilterCourse] = useState('');
     const [selectedFilterLevel, setSelectedFilterLevel] = useState('');
     const [filterDisplay, setFilterDisplay] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
@@ -63,12 +62,10 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
             file_name: piece.file_name || '',
             module_id: piece.module_id || '',
         })
-        // Check if this is a LitMus course
-        const course = coursesList.find(c => c.id === piece.level.course.id);
-        setIsLitMusCourse(course?.name === 'Littérature Musicale');
+        setIsLitMusCourse(courseName === 'Littérature Musicale');
 
         // If it's a LitMus course, fetch modules for the level
-        if (course?.name === 'Littérature Musicale' && piece.level.id) {
+        if (courseName === 'Littérature Musicale' && piece.level.id) {
             fetchModules(piece.level.id);
         }
 
@@ -76,39 +73,32 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
     };
 
     useEffect(() => {
-        if (selectedFilterCourse) {
-            axios.get(route('levelsFromCourse'), {
-                params: {
-                    course_id: selectedFilterCourse,
-                }
-            }).then(response => {
-                setLevelsList(response.data);
-            }).catch(error => {
-                console.log(error);
-            });
-        } else {
-            setLevelsList([]);
-        }
-    }, [selectedFilterCourse]);
+        axios.get(route('levelsFromCourse'), {
+            params: {
+                course_name: courseName,
+            }
+        }).then(response => {
+            setLevelsList(response.data);
+        }).catch(error => {
+            console.log(error);
+        });
+    }, []);
 
     useEffect(() => {
         if (data.course) {
             axios.get(route('levelsFromCourse'), {
                 params: {
-                    course_id: data.course,
+                    course_name: courseName,
                 }
             }).then(response => {
                 setLevelsModifyOptions(response.data);
             }).catch(error => {
                 console.log(error);
             });
-
-            // Check if the selected course is LitMus when it changes
-            const course = coursesList.find(c => c.id === parseInt(data.course));
-            setIsLitMusCourse(course?.name === 'Littérature Musicale');
+            setIsLitMusCourse(courseName === 'Littérature Musicale');
 
             // Reset module_id if not a LitMus course
-            if (course?.name !== 'Littérature Musicale') {
+            if (courseName !== 'Littérature Musicale') {
                 setData('module_id', '');
                 setModules([]);
             }
@@ -299,23 +289,6 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
             >
                 <div className="origin-top mt-6 space-y-6">
                     <div>
-                        <InputLabel htmlFor="course" value="Cours" className="dark:text-white" />
-                        <select
-                            id="course"
-                            className="mt-1 block w-full rounded-md dark:text-white dark:bg-gray-800"
-                            value={selectedFilterCourse}
-                            onChange={(e) => setSelectedFilterCourse(e.target.value)}
-                        >
-                            <option value="">Choisir un cours</option>
-                            {coursesList.map((course) => (
-                                <option key={course.id} value={course.id}>
-                                    {course.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div>
                         <InputLabel htmlFor="level" value="Niveau" className="dark:text-white" />
                         <select
                             id="level"
@@ -324,7 +297,7 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                             onChange={(e) => setSelectedFilterLevel(e.target.value)}
                         >
                             <option value="">
-                                Choisir un niveau {!selectedFilterCourse && "-- choisissez un cours pour voir les niveaux"}
+                                Choisir un niveau
                             </option>
                             {levelsList.map((level) => (
                                 <option key={level.id} value={level.id}>
@@ -364,29 +337,12 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                 </div>
             </Modal>
 
-            <Modal show={isEditModalOpen} close={() => setIsEditModalOpen(false)}>
-                <div className="p-4">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Modifier une pièce</h2>
+            <Modal show={isEditModalOpen} close={() => setIsEditModalOpen(false)} maxWidth="2xl">
+                <div className="p-6">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Modifier une pièce</h2>
 
-                    <form onSubmit={submitModifications} className={`processing ? 'opacity-50' : '' space-y-2`}>
+                    <form onSubmit={submitModifications} className={`processing ? 'opacity-50' : '' space-y-3`}>
                         <div className="max-h-96 overflow-y-auto hide-scrollbar">
-                            <div>
-                                <InputLabel htmlFor="course" value="Cours" className="dark:text-white"/>
-                                <select
-                                    id="course"
-                                    className="mt-1 block w-full rounded-md dark:text-white dark:bg-gray-800"
-                                    value={data.course}
-                                    onChange={(e) => setData('course', e.target.value)}
-                                >
-                                    <option value={currentPiece.current?.level?.course?.id || ''}>
-                                        {coursesList.find(course => course.id === parseInt(currentPiece.current?.level?.course?.id))?.name || 'Sélectionner un cours'}
-                                    </option>
-                                    {coursesList.filter(course => course.id !== parseInt(currentPiece.current?.level?.course?.id)).map((course) => (
-                                        <option key={course.id} value={course.id}>{course.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-
                             <div>
                                 <InputLabel htmlFor="level" value="Niveau" className="dark:text-white"/>
                                 <select

@@ -151,9 +151,18 @@ class PieceController extends Controller
         Log::info('INITIATOR Username: ' . $initiator->username);
         Log::info('**********END TRANSACTION**********');
 
-        return redirect()
-            ->route('piece.edit')
-            ->with('success', 'Pièce mise à jour avec succès.');
+        $level = Level::with('course')->find($validatedData['level']);
+
+        if ($level && $level->course->name === 'Histoire de la Musique') {
+            return redirect()
+                ->route('history.edit')
+                ->with('success', 'Pièce mise à jour avec succès.');
+        } else {
+            // Default to piece.edit (for Littérature musicale or any other course)
+            return redirect()
+                ->route('piece.edit')
+                ->with('success', 'Pièce mise à jour avec succès.');
+        }
     }
 
     public function destroy($id): JsonResponse
@@ -266,7 +275,7 @@ class PieceController extends Controller
         $initiator = auth()->user();
         $validatedData = $request->validate(
             [
-                'course' => 'required|string',
+                'courseName' => 'required|string',
                 'level' => 'required|string',
                 'period' => 'nullable|string',
                 'genre' => 'nullable|string',
@@ -281,7 +290,7 @@ class PieceController extends Controller
                 'module_id' => 'nullable|integer|exists:modules,id',
             ],
             [
-                'course.required' => 'Le cours est requis.',
+                'courseName.required' => 'Le cours est requis.',
                 'level.required' => 'Le niveau est requis.',
                 'composer.required' => 'Le compositeur est requis.',
                 'title.required' => 'Le titre est requis.',

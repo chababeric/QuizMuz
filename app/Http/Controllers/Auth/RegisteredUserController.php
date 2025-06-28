@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminControl;
 use App\Models\AdminKey;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
@@ -69,6 +71,11 @@ class RegisteredUserController extends Controller
 
         $user->last_action_time = now();
         $user->save();
+
+        $studentRole = AdminControl::where('system_name', 'student')->first();
+        if ($studentRole) {
+            $user->roles()->attach($studentRole->id);
+        }
 
         event(new Registered($user));
 

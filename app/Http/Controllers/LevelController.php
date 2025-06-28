@@ -197,10 +197,15 @@ class LevelController extends Controller
     public function getLevelsFromCourse(Request $request): JsonResponse
     {
         $request->validate([
-            'course_id' => 'required|integer',
+            'course_name' => 'required|string',
         ]);
 
-        $levels = Level::where('course_id', $request->course_id)->get();
+        $levels = Level::with(['course'])
+            ->whereHas('course', function($query) use ($request) {
+                $query->where('name', $request->course_name);
+            })
+            ->where('institution_id', auth()->user()->institution_id)
+            ->get();
 
         return response()->json($levels);
     }

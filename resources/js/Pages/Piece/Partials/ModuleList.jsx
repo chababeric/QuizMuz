@@ -3,10 +3,9 @@ import axios from 'axios';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { v4 as uuidv4 } from 'uuid';
 
-export default function ModuleList({ className = '', coursesList, updateLastActionTime }) {
+export default function ModuleList({ className = '', updateLastActionTime, courseName }) {
     const [levels, setLevels] = useState([]);
     const [modules, setModules] = useState([]);
-    const [selectedCourse, setSelectedCourse] = useState('');
     const [selectedLevel, setSelectedLevel] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
@@ -14,30 +13,22 @@ export default function ModuleList({ className = '', coursesList, updateLastActi
     const [confirmDelete, setConfirmDelete] = useState(null);
 
     useEffect(() => {
-        // Get levels for the selected course
-        if (selectedCourse) {
-            axios.get(route('levelsFromCourse'), {
-                params: {
-                    course_id: selectedCourse,
-                }
+        axios.get(route('levelsFromCourse'), {
+            params: {
+                course_name: courseName,
+            }
+        })
+            .then(response => {
+                setLevels(response.data);
+                setSelectedLevel('');
+                setModules([]);
             })
-                .then(response => {
-                    setLevels(response.data);
-                    setSelectedLevel('');
-                    setModules([]);
-                })
-                .catch(error => {
-                    console.error('Error fetching levels:', error);
-                });
-        } else {
-            setLevels([]);
-            setSelectedLevel('');
-            setModules([]);
-        }
-    }, [selectedCourse]);
+            .catch(error => {
+                console.error('Error fetching levels:', error);
+            });
+    }, []);
 
     useEffect(() => {
-        // Get modules for selected level
         if (selectedLevel) {
             fetchModules(selectedLevel);
         } else {
@@ -58,10 +49,6 @@ export default function ModuleList({ className = '', coursesList, updateLastActi
             .finally(() => {
                 setLoading(false);
             });
-    };
-
-    const handleCourseChange = (e) => {
-        setSelectedCourse(e.target.value);
     };
 
     const handleLevelChange = (e) => {
@@ -168,25 +155,6 @@ export default function ModuleList({ className = '', coursesList, updateLastActi
 
                 <div className="space-y-4">
                     <div>
-                        <label htmlFor="course" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Cours
-                        </label>
-                        <select
-                            id="course"
-                            className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                            onChange={handleCourseChange}
-                            value={selectedCourse}
-                        >
-                            <option value="">Sélectionnez un cours</option>
-                            {coursesList.map(course => (
-                                <option key={course.id} value={course.id}>
-                                    {course.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div>
                         <label htmlFor="level" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                             Niveau
                         </label>
@@ -195,7 +163,6 @@ export default function ModuleList({ className = '', coursesList, updateLastActi
                             className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
                             onChange={handleLevelChange}
                             value={selectedLevel}
-                            disabled={!selectedCourse}
                         >
                             <option value="">Sélectionnez un niveau</option>
                             {levels.map(level => (

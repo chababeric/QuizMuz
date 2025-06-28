@@ -22,10 +22,10 @@ class AdminController extends Controller
 
     public function getAllUsers(): JsonResponse
     {
-        $users = User::with('institution')->get();
+        $users = User::with(['institution', 'roles'])->get();
 
         foreach ($users as $user) {
-            $user->is_admin = $user->administrator()->exists();
+            $user->is_admin = $user->isAdmin();
             // Access the institution name directly
             $user->institution_name = $user->institution ? $user->institution->name : null;
         }
@@ -42,7 +42,7 @@ class AdminController extends Controller
         $users = User::where('institution_id', $request->institution_id)->get();
 
         foreach ($users as $user) {
-            $user->is_admin = $user->administrator()->exists();
+            $user->is_admin = $user->isAdmin();
             // Access the institution name directly
             $user->institution_name = $user->institution ? $user->institution->name : null;
         }
@@ -97,8 +97,6 @@ class AdminController extends Controller
         if (!$user) {
             return response()->json(['message' => $request->name . ' n\'a pas été trouvé.'], 404);
         }
-//        else if ($initiator->institution_id !== $user->institution_id) {
-//            return response()->json(['message' => 'Vous ne pouvez pas promouvoir des utilisateurs d\'autres institutions.'], 403);}
         else if ($initiator->id === $user->id) {
             return response()->json(['message' => 'Vous ne pouvez pas vous promouvoir vous-même.'], 403);
         } else {

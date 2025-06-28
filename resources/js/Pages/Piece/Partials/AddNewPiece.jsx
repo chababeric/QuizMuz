@@ -6,14 +6,12 @@ import PrimaryButton from '@/Components/PrimaryButton.jsx';
 import React, { useState, useEffect } from "react";
 import FilterableSelect from "@/Components/FilterableSelect.jsx";
 
-export default function AddNewPiece({ className = '', piecesList, coursesList, updateLastActionTime, getAllPieces }) {
-    // const user = usePage().props.auth.user;
+export default function AddNewPiece({ className = '', piecesList, updateLastActionTime, getAllPieces, courseName }) {
     const [levelsList, setLevelsList] = useState([]);
     const [modules, setModules] = useState([]);
     const [isLitMusCourse, setIsLitMusCourse] = useState(false);
 
     const { data, setData, post, reset, errors, processing, recentlySuccessful } = useForm({
-        course: '',
         level: '',
         period: '',
         genre: '',
@@ -26,27 +24,22 @@ export default function AddNewPiece({ className = '', piecesList, coursesList, u
         fileName: '',
         audioFile: null,
         module_id: '',
+        courseName: courseName,
     });
 
     useEffect(() => {
-        if (data.course) {
-            axios.get(route('levelsFromCourse'), {
-                params: {
-                    course_id: data.course,
-                }
-            }).then(response => {
-                setLevelsList(response.data);
-            }).catch(error => {
-                console.log(error);
-            });
+        axios.get(route('levelsFromCourse'), {
+            params: {
+                course_name: courseName,
+            }
+        }).then(response => {
+            setLevelsList(response.data);
+        }).catch(error => {
+            console.log(error);
+        });
 
-            // Check if the selected course is LitMus (Littérature Musicale)
-            const course = coursesList.find(c => c.id === parseInt(data.course));
-            setIsLitMusCourse(course?.name === 'Littérature Musicale');
-        } else {
-            setLevelsList([]);
-        }
-    }, [data.course]);
+        setIsLitMusCourse(courseName === 'Littérature Musicale');
+    }, []);
 
     useEffect(() => {
         if (data.level && isLitMusCourse) {
@@ -96,7 +89,7 @@ export default function AddNewPiece({ className = '', piecesList, coursesList, u
             },
             onError: (errors) => {
                 if (errors.level) {
-                    reset('course', 'level', 'period', 'genre', 'composer', 'title', 'element', 'no_mvt', 'mvt', 'form', 'fileName', 'audioFile', 'module_id');
+                    reset('level', 'period', 'genre', 'composer', 'title', 'element', 'no_mvt', 'mvt', 'form', 'fileName', 'audioFile', 'module_id');
                 }
             },
         });
@@ -109,23 +102,6 @@ export default function AddNewPiece({ className = '', piecesList, coursesList, u
             </header>
 
             <form onSubmit={submitNewPiece} className="mt-6 space-y-6">
-                <div>
-                    <InputLabel htmlFor="course" value="Cours" className="dark:text-white"/>
-                    <select
-                        id="course"
-                        className="mt-1 block w-full rounded-md dark:bg-gray-700 dark:text-white"
-                        value={data.course}
-                        onChange={(e) => setData('course', e.target.value)}
-                        required
-                    >
-                        <option value="">Choisir un cours</option>
-                        {coursesList.map((course) => (
-                            <option key={course.id} value={course.id}>{course.name}</option>
-                        ))}
-                    </select>
-                    <InputError className="mt-2" message={errors.course}/>
-                </div>
-
                 <div>
                     <InputLabel htmlFor="level" value="Niveau" className="dark:text-white"/>
                     <select

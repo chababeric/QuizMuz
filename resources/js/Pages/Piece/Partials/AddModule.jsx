@@ -6,9 +6,8 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { useForm } from '@inertiajs/react';
 
-export default function AddModule({ className = '', coursesList, updateLastActionTime }) {
+export default function AddModule({ className = '', updateLastActionTime, courseName }) {
     const [levels, setLevels] = useState([]);
-    const [selectedCourse, setSelectedCourse] = useState('');
     const [loading, setLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
 
@@ -19,28 +18,18 @@ export default function AddModule({ className = '', coursesList, updateLastActio
     });
 
     useEffect(() => {
-        // Get levels for the selected course
-        if (selectedCourse) {
-            axios.get(route('levelsFromCourse'), {
-                params: {
-                    course_id: selectedCourse,
-                }
+        axios.get(route('levelsFromCourse'), {
+            params: {
+                course_name: courseName,
+            }
+        })
+            .then(response => {
+                setLevels(response.data);
             })
-                .then(response => {
-                    setLevels(response.data);
-                })
-                .catch(error => {
-                    console.error('Error fetching levels:', error);
-                });
-        } else {
-            setLevels([]);
-        }
-    }, [selectedCourse]);
-
-    const handleCourseChange = (e) => {
-        setSelectedCourse(e.target.value);
-        setData('level_id', '');
-    };
+            .catch(error => {
+                console.error('Error fetching levels:', error);
+            });
+    }, []);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -55,7 +44,6 @@ export default function AddModule({ className = '', coursesList, updateLastActio
             .then(response => {
                 setSuccessMessage(response.data.message);
                 reset();
-                setSelectedCourse('');
             })
             .catch(error => {
                 console.error('Error creating module:', error);
@@ -82,31 +70,12 @@ export default function AddModule({ className = '', coursesList, updateLastActio
                 )}
 
                 <div>
-                    <InputLabel htmlFor="course" value="Cours" />
-                    <select
-                        id="course"
-                        className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                        onChange={handleCourseChange}
-                        value={selectedCourse}
-                        required
-                    >
-                        <option value="">Sélectionnez un cours</option>
-                        {coursesList.map(course => (
-                            <option key={course.id} value={course.id}>
-                                {course.name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div>
                     <InputLabel htmlFor="level_id" value="Niveau" />
                     <select
                         id="level_id"
                         className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
                         onChange={e => setData('level_id', e.target.value)}
                         value={data.level_id}
-                        disabled={!selectedCourse}
                         required
                     >
                         <option value="">Sélectionnez un niveau</option>
