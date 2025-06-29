@@ -19,6 +19,9 @@ use App\Http\Controllers\UserStatsController;
 use App\Http\Middleware\AddUserPermissions;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\CheckSessionTimeout;
+use App\Http\Middleware\HistoryAdminMiddleware;
+use App\Http\Middleware\LitmusOrHistoryAdminMiddleware;
+use App\Http\Middleware\LitmusAdminMiddleware;
 use App\Http\Middleware\UpdateLastActionTime;
 use App\Http\Middleware\UserStats;
 use Illuminate\Support\Facades\Route;
@@ -79,21 +82,9 @@ Route::get('general/edit', function () {
     );
 })->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class, AddUserPermissions::class])->name('general.edit');
 
-Route::get('account/edit', function () {
-    return Inertia::render('Account/Edit');
-})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class, AddUserPermissions::class])->name('account.edit');
-
 Route::middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class, AddUserPermissions::class])->group(function () {
     Route::get('access/edit', [AccessController::class, 'index'])->name('access.edit');
 });
-
-Route::get('piece/edit', function () {
-    return Inertia::render('Piece/Edit');
-})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class, AddUserPermissions::class])->name('piece.edit');
-
-Route::get('history/edit', function () {
-    return Inertia::render('History/Edit');
-})->middleware(['auth', 'verified', AdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class, AddUserPermissions::class])->name('history.edit');
 
 Route::get('chord/edit', function () {
     return Inertia::render('Chord/Edit');
@@ -150,12 +141,42 @@ Route::get('highscores', function (Illuminate\Http\Request $request) {
     ]);
 })->name('highscores')->middleware(['auth', 'verified', CheckSessionTimeout::class, UpdateLastActionTime::class]);
 
-Route::middleware(['auth', 'verified', 'role:SuperAdmin', CheckSessionTimeout::class, UpdateLastActionTime::class])->group(function () {
+Route::get('account/edit', function () {
+    return Inertia::render('Account/Edit');
+})->middleware(['auth', 'verified', 'role:SuperAdmin,Teacher,StudentAdmin', CheckSessionTimeout::class, UpdateLastActionTime::class, AddUserPermissions::class])->name('account.edit');
 
+Route::middleware(['auth', 'verified', 'role:SuperAdmin,Teacher,StudentAdmin', CheckSessionTimeout::class, UpdateLastActionTime::class])->group(function () {
+    Route::patch('/admin/update-username', [AdminController::class, 'updateUsername'])->name('admin.update-username');
+    Route::put('password', [PasswordController::class, 'update'])->name('password.update');
+    Route::post('/admin_key/validate', [AdminKeyController::class, 'validateKey'])->name('admin_key.validate');
+    Route::post('/admin_key/update', [AdminKeyController::class, 'store'])->name('admin_key.update');
+    Route::post('/admin/find-user', [AdminController::class, 'findUser'])->name('user.find');
+    Route::post('/admin/delete-user', [AdminController::class, 'deleteUser'])->name('admin.delete-user');
 });
 
+Route::get('piece/edit', function () {
+    return Inertia::render('Piece/Edit');
+})->middleware(['auth', 'verified', LitmusAdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class, AddUserPermissions::class])->name('piece.edit');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', LitmusAdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->group(function () {
+    Route::post('/admin/add-module', [ModuleController::class, 'store'])->name('admin.add-module');
+    Route::patch('/admin/update-module', [ModuleController::class, 'update'])->name('admin.update-module');
+    Route::post('/admin/delete-module', [ModuleController::class, 'destroy'])->name('admin.delete-module');
+    Route::post('/admin/update-module-order', [ModuleController::class, 'updateOrder'])->name('admin.update-module-order');
+});
+
+Route::middleware(['auth', 'verified', LitmusOrHistoryAdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class])->group(function () {
+    Route::post('/new-piece', [PieceController::class, 'store'])->name('admin.new-piece');
+    Route::post('/admin/update-order', [PieceController::class, 'updateOrder'])->name('admin.update-order');
+    Route::patch('/admin/update-piece', [PieceController::class, 'update'])->name('admin.update-piece');
+    Route::post('/delete-piece/{id}', [PieceController::class, 'destroy'])->name('admin.delete-piece');
+});
+
+Route::get('history/edit', function () {
+    return Inertia::render('History/Edit');
+})->middleware(['auth', 'verified', HistoryAdminMiddleware::class, CheckSessionTimeout::class, UpdateLastActionTime::class, AddUserPermissions::class])->name('history.edit');
+
+Route::middleware(['auth', 'verified', 'role:Student', CheckSessionTimeout::class, UpdateLastActionTime::class])->group(function () {
     Route::post('/update-last-action-time', [QuizSoloController::class, 'updateLastActionTime'])->name('updateLastActionTime');
     Route::get('/scores', [ScoreController::class, 'getAllScores'])->name('allScores');
     Route::get('/all-scores', [ScoreController::class, 'index']);
@@ -196,45 +217,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/api/modules/level/{level_id}', [ModuleController::class, 'getModulesByLevel']);
 
     Route::middleware([AdminMiddleware::class])->group(function () {
-        Route::patch('/admin/update-username', [AdminController::class, 'updateUsername'])->name('admin.update-username');
-        Route::put('password', [PasswordController::class, 'update'])->name('password.update');
         Route::post('/admin/make-admin', [AdminController::class, 'makeAdmin'])->name('admin.make-admin');
         Route::post('/admin/remove-admin', [AdminController::class, 'removeAdmin'])->name('admin.remove-admin');
         Route::post('/admin/delete-level', [LevelController::class, 'deleteLevel'])->name('admin.delete-level');
         Route::post('/admin/add-level', [LevelController::class, 'addLevel'])->name('admin.add-level');
-        Route::post('/admin/delete-user', [AdminController::class, 'deleteUser'])->name('admin.delete-user');
         Route::post('/admin/remove-institution', [InstitutionController::class, 'removeInstitution'])->name('admin.delete-institution');
         Route::post('/admin/add-institution', [InstitutionController::class, 'store'])->name('admin.add-institution');
         Route::post('/admin/add-course', [CourseController::class, 'store'])->name('admin.add-course');
         Route::post('/admin/delete-course', [CourseController::class, 'destroy'])->name('admin.delete-course');
         Route::post('/admin/toggle-level-access', [LevelController::class, 'toggleLevelAccess'])->name('admin.toggle-level-access');
         Route::post('/admin/reset-scores', [ScoreController::class, 'resetScores'])->name('admin.reset-scores');
-        Route::patch('/admin/update-piece', [PieceController::class, 'update'])->name('admin.update-piece');
         Route::patch('/admin/update-chord', [ChordController::class, 'update'])->name('admin.update-chord');
         Route::post('/pieces/{id}/move-to-reserve', [PieceController::class, 'moveToReserve'])->name('pieces.moveToReserve');
         Route::delete('/chords/{id}', [ChordController::class, 'destroy'])->name('admin.delete-chord');
         Route::post('/pieces/{id}/move-to-pieces', [PieceController::class, 'moveToPieces'])->name('pieces.moveToPieces');
-        Route::post('/delete-piece/{id}', [PieceController::class, 'destroy'])->name('admin.delete-piece');
-        Route::post('/new-piece', [PieceController::class, 'store'])->name('admin.new-piece');
         Route::post('/new-chord', [ChordController::class, 'store'])->name('admin.new-chord');
-        Route::post('/admin_key/validate', [AdminKeyController::class, 'validateKey'])->name('admin_key.validate');
-        Route::post('/admin_key/update', [AdminKeyController::class, 'store'])->name('admin_key.update');
         Route::get('/admin/total-stats', [UserStatsController::class, 'getTotalStats'])->name('admin.total-stats');
-        Route::post('/admin/update-order', [PieceController::class, 'updateOrder'])->name('admin.update-order');
         Route::post('/admin/update-chord-order', [ChordController::class, 'updateOrder'])->name('admin.update-chord-order');
         Route::get('/pieces-info', [PieceController::class, 'getPiecesInfo'])->name('piecesInfo');
-        Route::post('/admin/find-user', [AdminController::class, 'findUser'])->name('user.find');
 
         // Role management routes
         Route::get('/api/roles', [AccessController::class, 'getRoles'])->name('allRoles');
         Route::post('/api/users/add-role', [AccessController::class, 'addRole'])->name('users.addRole');
         Route::post('/api/users/remove-role', [AccessController::class, 'removeRole'])->name('users.removeRole');
-
-//        Pour les Modules
-        Route::post('/admin/add-module', [ModuleController::class, 'store'])->name('admin.add-module');
-        Route::patch('/admin/update-module', [ModuleController::class, 'update'])->name('admin.update-module');
-        Route::post('/admin/delete-module', [ModuleController::class, 'destroy'])->name('admin.delete-module');
-        Route::post('/admin/update-module-order', [ModuleController::class, 'updateOrder'])->name('admin.update-module-order');
     });
 });
 

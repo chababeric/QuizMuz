@@ -15,10 +15,10 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Check if user exists and has either SuperAdmin or Teacher privilege
         if (!$request->user() ||
             (!$request->user()->hasPrivilege('SuperAdmin') &&
-                !$request->user()->hasPrivilege('Teacher'))) {
+                !$request->user()->hasPrivilege('Teacher') &&
+                !$request->user()->hasPrivilege('StudentAdmin'))) {
             return redirect('/');
         }
 

@@ -31,7 +31,7 @@ export default function Edit({ auth }) {
                 setCoursesList(coursesResponse.data);
 
                 // Get reserve pieces
-                await getPiecesInReserve();
+                // await getPiecesInReserve();
 
                 setIsLoading(false);
             } catch (error) {
@@ -40,17 +40,17 @@ export default function Edit({ auth }) {
             }
         };
 
-        fetchData();
+        fetchData().then(r => {});
     }, [lastActionTime, user.institution_id]);
 
-    const getPiecesInReserve = async () => {
-        try {
-            const response = await axios.get(route('piecesInReserve'));
-            setPiecesInReserve(response.data);
-        } catch (error) {
-            console.error('Error fetching reserve pieces:', error);
-        }
-    };
+    // const getPiecesInReserve = async () => {
+    //     try {
+    //         const response = await axios.get(route('piecesInReserve'));
+    //         setPiecesInReserve(response.data);
+    //     } catch (error) {
+    //         console.error('Error fetching reserve pieces:', error);
+    //     }
+    // };
 
     const updateLastActionTime = () => {
         setLastActionTime(Date.now());

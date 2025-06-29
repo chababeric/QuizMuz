@@ -64,17 +64,17 @@ class AccessControlService
         return $permissions;
     }
 
-    private function hasCourseAccess(User $user, string $access_name): bool
+    public function hasCourseAccess(User $user, string $access_name): bool
     {
         // Check if user has fma_admin role for any course
-        $fmaAdminRole = AdminControl::where('system_name', $access_name)->first();
+        $adminRole = AdminControl::where('system_name', $access_name)->first();
 
-        if (!$fmaAdminRole) {
+        if (!$adminRole) {
             return false;
         }
 
         return $user->adminCourses()
-            ->wherePivotIn('admin_control_id', [$fmaAdminRole->id])
+            ->wherePivotIn('admin_control_id', [$adminRole->id])
             ->exists();
     }
 }

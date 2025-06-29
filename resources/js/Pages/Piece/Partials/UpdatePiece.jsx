@@ -85,27 +85,23 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
     }, []);
 
     useEffect(() => {
-        if (data.course) {
-            axios.get(route('levelsFromCourse'), {
-                params: {
-                    course_name: courseName,
-                }
-            }).then(response => {
-                setLevelsModifyOptions(response.data);
-            }).catch(error => {
-                console.log(error);
-            });
-            setIsLitMusCourse(courseName === 'Littérature Musicale');
-
-            // Reset module_id if not a LitMus course
-            if (courseName !== 'Littérature Musicale') {
-                setData('module_id', '');
-                setModules([]);
+        axios.get(route('levelsFromCourse'), {
+            params: {
+                course_name: courseName,
             }
-        } else {
-            setLevelsModifyOptions([]);
+        }).then(response => {
+            setLevelsModifyOptions(response.data);
+        }).catch(error => {
+            console.log(error);
+        });
+        setIsLitMusCourse(courseName === 'Littérature Musicale');
+
+        // Reset module_id if not a LitMus course
+        if (courseName !== 'Littérature Musicale') {
+            setData('module_id', '');
+            setModules([]);
         }
-    }, [data.course]);
+    }, []);
 
     useEffect(() => {
         if (isLitMusCourse && data.level) {
@@ -209,7 +205,8 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
 
     const handleDelete = (id) => {
         updateLastActionTime();
-        axios.post(`/pieces/${id}/move-to-reserve`)
+        // axios.post(`/pieces/${id}/move-to-reserve`)
+        axios.post(`/delete-piece/${id}`)
             .then(response => {
                 setIsDeleteModalOpen(false);
                 setSuccessMessage(response.data.message);

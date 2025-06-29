@@ -158,7 +158,6 @@ class PieceController extends Controller
                 ->route('history.edit')
                 ->with('success', 'Pièce mise à jour avec succès.');
         } else {
-            // Default to piece.edit (for Littérature musicale or any other course)
             return redirect()
                 ->route('piece.edit')
                 ->with('success', 'Pièce mise à jour avec succès.');
@@ -168,7 +167,8 @@ class PieceController extends Controller
     public function destroy($id): JsonResponse
     {
         $initiator = auth()->user();
-        $piece = PieceReserve::findOrFail($id);
+//        $piece = PieceReserve::findOrFail($id);
+        $piece = Piece::findOrFail($id);
         $piece->delete();
 
         Log::info('**********START TRANSACTION**********');
