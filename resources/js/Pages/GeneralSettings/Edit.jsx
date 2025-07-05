@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.jsx';
 import { Head } from '@inertiajs/react';
 import {useEffect, useState} from "react";
 import LevelManagement from "@/Pages/GeneralSettings/Partials/LevelManagement.jsx";
-import AdminManagement from "@/Pages/GeneralSettings/Partials/AdminManagement.jsx";
+// import AdminManagement from "@/Pages/GeneralSettings/Partials/AdminManagement.jsx";
 import InstitutionManagement from "@/Pages/GeneralSettings/Partials/InstitutionManagement.jsx";
 import ScoresReset from "@/Pages/GeneralSettings/Partials/ScoresReset.jsx";
 import CourseManagement from "@/Pages/GeneralSettings/Partials/CourseManagement.jsx";
@@ -11,9 +11,9 @@ export default function Edit({ auth, institution }) {
     const [institutions, setInstitutions] = useState([]);
     const [courses, setCourses] = useState([]);
     const [levels, setLevels] = useState([]);
-    const [users, setUsers] = useState([]);
+    // const [users, setUsers] = useState([]);
     const [scores, setScores] = useState([]);
-    const [sortedUsers, setSortedUsers] = useState([]);
+    // const [sortedUsers, setSortedUsers] = useState([]);
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [selectedInstitution, setSelectedInstitution] = useState(institution);
@@ -59,19 +59,19 @@ export default function Edit({ auth, institution }) {
             });
     };
 
-    const getUsers = () => {
-        axios.get(route('usersFromInstitution'), {
-            params: {
-                institution_id: selectedInstitutionId
-            }
-        })
-            .then(response => {
-                setUsers(response.data);
-            })
-            .catch(error => {
-                console.error('Error fetching users:', error);
-            });
-    };
+    // const getUsers = () => {
+    //     axios.get(route('usersFromInstitution'), {
+    //         params: {
+    //             institution_id: selectedInstitutionId
+    //         }
+    //     })
+    //         .then(response => {
+    //             setUsers(response.data);
+    //         })
+    //         .catch(error => {
+    //             console.error('Error fetching users:', error);
+    //         });
+    // };
 
     const getScores = () => {
         axios.get(route('allScores'), {
@@ -88,27 +88,18 @@ export default function Edit({ auth, institution }) {
     };
 
     useEffect(() => {
-        getUsers();
+        // getUsers();
         getLevels();
         getCourses();
         getInstitutions();
         getScores();
-        updateLastActionTime();
     }, [selectedInstitution]);
 
-    useEffect(() => {
-        // Sort users alphabetically by last name
-        const sorted = [...users].sort((a, b) => a.last_name.localeCompare(b.last_name));
-        setSortedUsers(sorted);
-    }, [users]);
-
-    const updateLastActionTime = () => {
-        axios.post(route('updateLastActionTime'))
-            .then(response => {})
-            .catch(error => {
-                console.error('Error updating last action time:', error);
-            });
-    };
+    // useEffect(() => {
+    //     // Sort users alphabetically by last name
+    //     const sorted = [...users].sort((a, b) => a.last_name.localeCompare(b.last_name));
+    //     setSortedUsers(sorted);
+    // }, [users]);
 
     return (
         <AuthenticatedLayout
@@ -156,7 +147,6 @@ export default function Edit({ auth, institution }) {
                         <InstitutionManagement
                             institutions={institutions}
                             getInstitutions={getInstitutions}
-                            updateLastActionTime={updateLastActionTime}
                             successMessage={successMessage}
                             setSuccessMessage={setSuccessMessage}
                             errorMessage={errorMessage}
@@ -170,7 +160,6 @@ export default function Edit({ auth, institution }) {
                             authInstitution={institution}
                             courses={courses}
                             getCourses={getCourses}
-                            updateLastActionTime={updateLastActionTime}
                             successMessage={successMessage}
                             errorMessage={errorMessage}
                             setSuccessMessage={setSuccessMessage}
@@ -185,7 +174,6 @@ export default function Edit({ auth, institution }) {
                             auth={auth}
                             levels={levels}
                             getLevels={getLevels}
-                            updateLastActionTime={updateLastActionTime}
                             successMessage={successMessage}
                             errorMessage={errorMessage}
                             setSuccessMessage={setSuccessMessage}
@@ -196,28 +184,26 @@ export default function Edit({ auth, institution }) {
                         />
                     </div>
 
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                        <h1 className="text-2xl font-semibold text-gray-900 mb-4 dark:text-white">Gestion des administrateurs - {selectedInstitution}</h1>
-                        <AdminManagement
-                            auth={auth}
-                            users={sortedUsers}
-                            getUsers={getUsers}
-                            updateLastActionTime={updateLastActionTime}
-                            successMessage={successMessage}
-                            setSuccessMessage={setSuccessMessage}
-                            errorMessage={errorMessage}
-                            setErrorMessage={setErrorMessage}
-                            selectedInstitution={selectedInstitution}
-                            selectedInstitutionId={selectedInstitutionId}
-                        />
-                    </div>
+                    {/*<div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">*/}
+                    {/*    <h1 className="text-2xl font-semibold text-gray-900 mb-4 dark:text-white">Gestion des administrateurs - {selectedInstitution}</h1>*/}
+                    {/*    <AdminManagement*/}
+                    {/*        auth={auth}*/}
+                    {/*        users={sortedUsers}*/}
+                    {/*        getUsers={getUsers}*/}
+                    {/*        successMessage={successMessage}*/}
+                    {/*        setSuccessMessage={setSuccessMessage}*/}
+                    {/*        errorMessage={errorMessage}*/}
+                    {/*        setErrorMessage={setErrorMessage}*/}
+                    {/*        selectedInstitution={selectedInstitution}*/}
+                    {/*        selectedInstitutionId={selectedInstitutionId}*/}
+                    {/*    />*/}
+                    {/*</div>*/}
 
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
                         <ScoresReset
                             auth={auth}
                             scores={scores}
                             getScores={getScores}
-                            updateLastActionTime={updateLastActionTime}
                             successMessage={successMessage}
                             setSuccessMessage={setSuccessMessage}
                             errorMessage={errorMessage}

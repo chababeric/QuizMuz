@@ -3,9 +3,9 @@ import { Transition } from '@headlessui/react';
 import InputError from '@/Components/InputError.jsx';
 import InputLabel from '@/Components/InputLabel.jsx';
 import PrimaryButton from '@/Components/PrimaryButton.jsx';
-import React, { useState, useEffect } from "react";
+import React from "react";
 
-export default function AddNewChord({ className = '', levelsList, updateLastActionTime, getAllChords }) {
+export default function AddNewChord({ className = '', levelsList, getAllChords }) {
     const { data, setData, post, reset, errors, processing, recentlySuccessful } = useForm({
         level: '',
         chord_name: '',
@@ -14,7 +14,6 @@ export default function AddNewChord({ className = '', levelsList, updateLastActi
 
     const submitNewChord = (e) => {
         e.preventDefault();
-        updateLastActionTime();
 
         post(route('admin.new-chord'), {
             preserveScroll: true,

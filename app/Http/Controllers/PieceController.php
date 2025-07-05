@@ -186,89 +186,89 @@ class PieceController extends Controller
         return response()->json(['message' => 'La pièce a été supprimée avec succès.']);
     }
 
-    public function moveToReserve($id): JsonResponse
-    {
-        // Find the piece
-        $piece = Piece::findOrFail($id);
-        $initiator = auth()->user();
+//    public function moveToReserve($id): JsonResponse
+//    {
+//        // Find the piece
+//        $piece = Piece::findOrFail($id);
+//        $initiator = auth()->user();
+//
+//        // Create a new piece reserve entry
+//        $piecesReserve = new PieceReserve([
+//            'level_id' => $piece->level_id,
+//            'period' => $piece->period,
+//            'genre' => $piece->genre,
+//            'composer' => $piece->composer,
+//            'title' => $piece->title,
+//            'element' => $piece->element,
+//            'no_mvt' => $piece->no_mvt,
+//            'mvt' => $piece->mvt,
+//            'form' => $piece->form,
+//            'file_name' => $piece->file_name,
+//            'order' => $piece->order,
+//            'institution_id' => $piece->institution_id,
+//        ]);
+//
+//        $piecesReserve->save();
+//
+//        // Delete the piece from the original table
+//        $piece->delete();
+//
+//        Log::info('**********START TRANSACTION**********');
+//        Log::info('ACTION: Piece moved to reserve');
+//        Log::info('PIECE ID: ' . $piece->id);
+//        Log::info('PIECE Title: ' . $piece->title);
+//        Log::info('PIECE Composer: ' . $piece->composer);
+//        Log::info('PIECE Level: ' . $piece->level_id);
+//        Log::info('INITIATOR ID: ' . $initiator->id);
+//        Log::info('INITIATOR First Name: ' . $initiator->first_name);
+//        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+//        Log::info('INITIATOR Username: ' . $initiator->username);
+//        Log::info('**********END TRANSACTION**********');
+//
+//        return response()->json(['message' => $piece->title . ' de ' . $piece->composer . ' a été déplacé en réserve.']);
+//    }
 
-        // Create a new piece reserve entry
-        $piecesReserve = new PieceReserve([
-            'level_id' => $piece->level_id,
-            'period' => $piece->period,
-            'genre' => $piece->genre,
-            'composer' => $piece->composer,
-            'title' => $piece->title,
-            'element' => $piece->element,
-            'no_mvt' => $piece->no_mvt,
-            'mvt' => $piece->mvt,
-            'form' => $piece->form,
-            'file_name' => $piece->file_name,
-            'order' => $piece->order,
-            'institution_id' => $piece->institution_id,
-        ]);
-
-        $piecesReserve->save();
-
-        // Delete the piece from the original table
-        $piece->delete();
-
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Piece moved to reserve');
-        Log::info('PIECE ID: ' . $piece->id);
-        Log::info('PIECE Title: ' . $piece->title);
-        Log::info('PIECE Composer: ' . $piece->composer);
-        Log::info('PIECE Level: ' . $piece->level_id);
-        Log::info('INITIATOR ID: ' . $initiator->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('**********END TRANSACTION**********');
-
-        return response()->json(['message' => $piece->title . ' de ' . $piece->composer . ' a été déplacé en réserve.']);
-    }
-
-    public function moveToPieces($id): JsonResponse
-    {
-        // Find the piece
-        $pieceReserve = PieceReserve::findOrFail($id);
-        $initiator = auth()->user();
-
-        // Create a new piece entry
-        $piece = new Piece([
-            'level_id' => $pieceReserve->level_id,
-            'period' => $pieceReserve->period,
-            'genre' => $pieceReserve->genre,
-            'composer' => $pieceReserve->composer,
-            'title' => $pieceReserve->title,
-            'element' => $pieceReserve->element,
-            'no_mvt' => $pieceReserve->no_mvt,
-            'mvt' => $pieceReserve->mvt,
-            'form' => $pieceReserve->form,
-            'file_name' => $pieceReserve->file_name,
-            'order' => $pieceReserve->order,
-            'institution_id' => $pieceReserve->institution_id,
-        ]);
-
-        $piece->save();
-
-        // Delete the piece from the original table
-        $pieceReserve->delete();
-
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Piece moved to pieces');
-        Log::info('PIECE ID: ' . $pieceReserve->id);
-        Log::info('PIECE Title: ' . $pieceReserve->title);
-        Log::info('PIECE Composer: ' . $pieceReserve->composer);
-        Log::info('PIECE Level: ' . $pieceReserve->level_id);
-        Log::info('INITIATOR ID: ' . $initiator->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('**********END TRANSACTION**********');
-
-        return response()->json(['message' => $pieceReserve->title . ' de ' . $pieceReserve->composer . ' est de retour dans la liste des pièces.']);
-    }
+//    public function moveToPieces($id): JsonResponse
+//    {
+//        // Find the piece
+//        $pieceReserve = PieceReserve::findOrFail($id);
+//        $initiator = auth()->user();
+//
+//        // Create a new piece entry
+//        $piece = new Piece([
+//            'level_id' => $pieceReserve->level_id,
+//            'period' => $pieceReserve->period,
+//            'genre' => $pieceReserve->genre,
+//            'composer' => $pieceReserve->composer,
+//            'title' => $pieceReserve->title,
+//            'element' => $pieceReserve->element,
+//            'no_mvt' => $pieceReserve->no_mvt,
+//            'mvt' => $pieceReserve->mvt,
+//            'form' => $pieceReserve->form,
+//            'file_name' => $pieceReserve->file_name,
+//            'order' => $pieceReserve->order,
+//            'institution_id' => $pieceReserve->institution_id,
+//        ]);
+//
+//        $piece->save();
+//
+//        // Delete the piece from the original table
+//        $pieceReserve->delete();
+//
+//        Log::info('**********START TRANSACTION**********');
+//        Log::info('ACTION: Piece moved to pieces');
+//        Log::info('PIECE ID: ' . $pieceReserve->id);
+//        Log::info('PIECE Title: ' . $pieceReserve->title);
+//        Log::info('PIECE Composer: ' . $pieceReserve->composer);
+//        Log::info('PIECE Level: ' . $pieceReserve->level_id);
+//        Log::info('INITIATOR ID: ' . $initiator->id);
+//        Log::info('INITIATOR First Name: ' . $initiator->first_name);
+//        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
+//        Log::info('INITIATOR Username: ' . $initiator->username);
+//        Log::info('**********END TRANSACTION**********');
+//
+//        return response()->json(['message' => $pieceReserve->title . ' de ' . $pieceReserve->composer . ' est de retour dans la liste des pièces.']);
+//    }
 
     public function store(Request $request): RedirectResponse
     {
@@ -380,11 +380,11 @@ class PieceController extends Controller
         return response()->json(['message' => 'L\'ordre des pièces a été mis à jour avec succès.']);
     }
 
-    public function getPiecesInfo(): JsonResponse
-    {
-        $pieces = Piece::with('level')->get();
-        return response()->json($pieces);
-    }
+//    public function getPiecesInfo(): JsonResponse
+//    {
+//        $pieces = Piece::with('level')->get();
+//        return response()->json($pieces);
+//    }
 
     public function getPiecesByLevelNoModule(int $level_id): JsonResponse
     {

@@ -183,7 +183,7 @@ class QuizSoloController extends BaseQuizController
         $validated = $request->validate([
             'selectedAnswers' => 'required|array',
         ]);
-        $this->updateLastActionTime();
+//        $this->updateLastActionTime();
         $selectedAnswers = $validated['selectedAnswers'];
         $userId = auth()->id();
 

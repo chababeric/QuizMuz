@@ -5,7 +5,7 @@ import deleteIcon from "../../../../icons/delete.svg";
 import addIcon from "../../../../icons/add.svg";
 import axios from "axios";
 
-export default function InstitutionManagement({ institutions, getInstitutions, updateLastActionTime, successMessage, setSuccessMessage, errorMessage, setErrorMessage }) {
+export default function InstitutionManagement({ institutions, getInstitutions, successMessage, setSuccessMessage, errorMessage, setErrorMessage }) {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [newInstitutionName, setNewInstitutionName] = useState('');
@@ -21,7 +21,6 @@ export default function InstitutionManagement({ institutions, getInstitutions, u
     const closeDeleteModal = () => setIsDeleteModalOpen(false);
 
     const addInstitution = async () => {
-        updateLastActionTime();
         closeAddModal();
 
         try {
@@ -42,7 +41,6 @@ export default function InstitutionManagement({ institutions, getInstitutions, u
     };
 
     const deleteInstitution = async (institution) => {
-        updateLastActionTime();
         closeDeleteModal();
 
         try {

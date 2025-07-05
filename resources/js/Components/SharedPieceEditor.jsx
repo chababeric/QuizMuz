@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import axios from 'axios';
 import AddModule from '@/Pages/Piece/Partials/AddModule';
@@ -11,9 +10,6 @@ export default function SharedPieceEditor({
   setPiecesList,
   coursesList = [],
   mode, // 'litmus' or 'history'
-  updateLastActionTime,
-  getPiecesInReserve,
-  piecesInReserve = [],
   user
 }) {
 
@@ -41,45 +37,45 @@ export default function SharedPieceEditor({
     }, [coursesList, mode]);
 
     // Filter pieces in reserve based on the mode
-    const filteredPiecesInReserve = useMemo(() => {
-        if (!piecesInReserve || !Array.isArray(piecesInReserve)) return [];
-
-        return piecesInReserve.filter(piece => {
-            const courseName = piece?.level?.course?.name;
-            return mode === 'litmus'
-                ? courseName === 'Littérature Musicale'
-                : courseName === 'Histoire de la Musique';
-        });
-    }, [piecesInReserve, mode]);
+    // const filteredPiecesInReserve = useMemo(() => {
+    //     if (!piecesInReserve || !Array.isArray(piecesInReserve)) return [];
+    //
+    //     return piecesInReserve.filter(piece => {
+    //         const courseName = piece?.level?.course?.name;
+    //         return mode === 'litmus'
+    //             ? courseName === 'Littérature Musicale'
+    //             : courseName === 'Histoire de la Musique';
+    //     });
+    // }, [piecesInReserve, mode]);
 
     // Group pieces by level for the PiecesReserve component
-    const groupedPieces = useMemo(() => {
-        if (!filteredPiecesInReserve || !Array.isArray(filteredPiecesInReserve)) return {};
-
-        // Group pieces by level
-        const grouped = filteredPiecesInReserve.reduce((groups, piece) => {
-            const level = piece?.level?.name;
-            if (!level) return groups;
-
-            if (!groups[level]) {
-                groups[level] = [];
-            }
-            groups[level].push(piece);
-            return groups;
-        }, {});
-
-        // Sort each group by order or title
-        Object.keys(grouped).forEach(level => {
-            grouped[level].sort((a, b) => {
-                if (a.order !== undefined && b.order !== undefined) {
-                    return a.order - b.order;
-                }
-                return a.title.localeCompare(b.title);
-            });
-        });
-
-        return grouped;
-    }, [filteredPiecesInReserve]);
+    // const groupedPieces = useMemo(() => {
+    //     if (!filteredPiecesInReserve || !Array.isArray(filteredPiecesInReserve)) return {};
+    //
+    //     // Group pieces by level
+    //     const grouped = filteredPiecesInReserve.reduce((groups, piece) => {
+    //         const level = piece?.level?.name;
+    //         if (!level) return groups;
+    //
+    //         if (!groups[level]) {
+    //             groups[level] = [];
+    //         }
+    //         groups[level].push(piece);
+    //         return groups;
+    //     }, {});
+    //
+    //     // Sort each group by order or title
+    //     Object.keys(grouped).forEach(level => {
+    //         grouped[level].sort((a, b) => {
+    //             if (a.order !== undefined && b.order !== undefined) {
+    //                 return a.order - b.order;
+    //             }
+    //             return a.title.localeCompare(b.title);
+    //         });
+    //     });
+    //
+    //     return grouped;
+    // }, [filteredPiecesInReserve]);
 
     // This function wraps setPiecesList to ensure we maintain the separation
     const handleSetPiecesList = (newPieces) => {
@@ -118,7 +114,6 @@ export default function SharedPieceEditor({
                 <AddNewPiece
                     className="max-w-xl"
                     piecesList={filteredPiecesList || []}
-                    updateLastActionTime={updateLastActionTime}
                     setPiecesList={handleSetPiecesList}
                     getAllPieces={getAllPieces}
                     user={user}
@@ -131,7 +126,6 @@ export default function SharedPieceEditor({
                     <AddModule
                         className="max-w-xl"
                         coursesList={filteredCoursesList || []}
-                        updateLastActionTime={updateLastActionTime}
                         user={user}
                         courseName={mode === 'litmus' ? 'Littérature Musicale' : 'Histoire de la Musique'}
                     />
@@ -142,7 +136,6 @@ export default function SharedPieceEditor({
                 <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
                     <ModuleList
                         className="max-w-xl"
-                        updateLastActionTime={updateLastActionTime}
                         user={user}
                         courseName={mode === 'litmus' ? 'Littérature Musicale' : 'Histoire de la Musique'}
                     />
@@ -155,8 +148,7 @@ export default function SharedPieceEditor({
                     piecesList={filteredPiecesList || []}
                     setPiecesList={handleSetPiecesList}
                     coursesList={filteredCoursesList || []}
-                    updateLastActionTime={updateLastActionTime}
-                    getPiecesInReserve={getPiecesInReserve}
+                    // getPiecesInReserve={getPiecesInReserve}
                     getAllPieces={getAllPieces}
                     user={user}
                     courseName={mode === 'litmus' ? 'Littérature Musicale' : 'Histoire de la Musique'}

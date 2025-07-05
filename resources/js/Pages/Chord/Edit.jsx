@@ -11,7 +11,6 @@ export default function Edit({ auth, user }) {
     useEffect(() => {
         getAllChords();
         getFMALevels();
-        updateLastActionTime();
     }, []);
 
     const getAllChords = () => {
@@ -38,14 +37,6 @@ export default function Edit({ auth, user }) {
             });
     }
 
-    const updateLastActionTime = () => {
-        axios.post(route('updateLastActionTime'))
-            .then(response => {})
-            .catch(error => {
-                console.error('Error updating last action time:', error);
-            });
-    };
-
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -59,7 +50,6 @@ export default function Edit({ auth, user }) {
                         <AddNewChord
                             className="max-w-xl dark:bg-gray-800"
                             levelsList={sortedLevels}
-                            updateLastActionTime={updateLastActionTime}
                             getAllChords={getAllChords}
                         />
                     </div>
@@ -68,7 +58,6 @@ export default function Edit({ auth, user }) {
                         <UpdateChord
                             chordsList={chords}
                             setChordsList={setChords}
-                            updateLastActionTime={updateLastActionTime}
                             levelsList={sortedLevels}
                         />
                     </div>

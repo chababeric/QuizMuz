@@ -6,7 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { useForm } from '@inertiajs/react';
 
-export default function AddModule({ className = '', updateLastActionTime, courseName }) {
+export default function AddModule({ className = '', courseName }) {
     const [levels, setLevels] = useState([]);
     const [loading, setLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
@@ -35,9 +35,6 @@ export default function AddModule({ className = '', updateLastActionTime, course
         e.preventDefault();
         setLoading(true);
         setSuccessMessage('');
-
-        // First, update the last action time
-        updateLastActionTime();
 
         // Submit the form data to create a new module
         axios.post(route('admin.add-module'), data)

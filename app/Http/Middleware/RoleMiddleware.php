@@ -13,23 +13,24 @@ class RoleMiddleware
      *
      * @param Closure(Request): (Response) $next
      */
-    public function handle(Request $request, Closure $next, ...$privileges): Response
+    public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        if (!$request->user()) {
+        $user = $request->user();
+        if (!$user) {
             return redirect('/login');
         }
 
         $hasRequiredPrivilege = false;
 
-        foreach ($privileges as $privilege) {
-            if ($request->user()->hasPrivilege($privilege)) {
+        foreach ($roles as $role) {
+            if ($request->user()->hasPrivilege($role)) {
                 $hasRequiredPrivilege = true;
                 break;
             }
         }
 
         if (!$hasRequiredPrivilege) {
-            return redirect('/')->with('error', 'Vous n\'avez pas les privilèges nécessaires pour accéder à cette page.');
+            return redirect()->back()->with('error', 'Vous n\'avez pas les privilèges nécessaires pour accéder à cette page.');
         }
 
         return $next($request);

@@ -12,7 +12,7 @@ import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import DangerButton from "@/Components/DangerButton.jsx";
 import {Transition} from "@headlessui/react";
 
-export default function UpdatePiece({ className = '', piecesList, setPiecesList, updateLastActionTime, getPiecesInReserve, courseName }) {
+export default function UpdatePiece({ className = '', piecesList, setPiecesList, courseName }) {
     const [levelsList, setLevelsList] = useState([]);
     const [levelsModifyOptions, setLevelsModifyOptions] = useState([]);
     const [selectedFilterLevel, setSelectedFilterLevel] = useState('');
@@ -177,7 +177,6 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
 
     const submitModifications = (e) => {
         e.preventDefault();
-        updateLastActionTime();
 
         patch(route('admin.update-piece'), {
             onSuccess: () => {
@@ -204,14 +203,13 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
     };
 
     const handleDelete = (id) => {
-        updateLastActionTime();
         // axios.post(`/pieces/${id}/move-to-reserve`)
         axios.post(`/delete-piece/${id}`)
             .then(response => {
                 setIsDeleteModalOpen(false);
                 setSuccessMessage(response.data.message);
                 setErrorMessage('');
-                getPiecesInReserve();
+                // getPiecesInReserve();
                 axios.get(route('allPieces'))
                     .then((response) => {
                         // Sort the piecesList by order

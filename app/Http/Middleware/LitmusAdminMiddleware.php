@@ -36,6 +36,6 @@ class LitmusAdminMiddleware
             }
         }
 
-        return redirect('/')->with('error', 'Vous n\'avez pas les droits nécessaires pour faire cette opération.');
+        return redirect()->back()->with('error', 'Vous n\'avez pas les droits nécessaires pour faire cette opération.');
     }
 }

@@ -154,7 +154,7 @@ export default function Practice({ auth, level, courseId, courseName, lastUpdate
     };
 
     const updateLastActionTime = () => {
-        axios.post('/update-last-action-time')
+        axios.post(route('updateLastActionTime'))
             .then(response => {})
             .catch(error => {
                 console.error('Error updating last action time:', error);

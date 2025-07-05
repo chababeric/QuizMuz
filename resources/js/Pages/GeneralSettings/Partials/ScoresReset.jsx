@@ -3,14 +3,13 @@ import Modal from "@/Components/Modal.jsx";
 import MessageDisplay from "@/Components/MessageDisplay.jsx";
 import axios from 'axios';
 
-export default function ScoresReset({auth, scores, getScores, updateLastActionTime, successMessage, setSuccessMessage, errorMessage, setErrorMessage, selectedInstitution, selectedInstitutionId }) {
+export default function ScoresReset({auth, scores, getScores, successMessage, setSuccessMessage, errorMessage, setErrorMessage, selectedInstitution, selectedInstitutionId }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
 
     const resetScores = async () => {
-        updateLastActionTime();
         closeModal();
 
         try {

@@ -33,7 +33,6 @@ export default function Dashboard({ auth }) {
 
         fetchTotalStats().then(r => {});
         fetchUsers().then(r => {});
-        updateLastActionTime();
     }, []);
 
     useEffect(() => {
@@ -60,14 +59,6 @@ export default function Dashboard({ auth }) {
     const updateNbConnectedUsers = () => {
         const onlineUsers = users.filter(user => getStatus(user.last_action_time) === 'En ligne').length;
         setNbConnectedUsers(onlineUsers);
-    };
-
-    const updateLastActionTime = () => {
-        axios.post(route('updateLastActionTime'))
-            .then(response => {})
-            .catch(error => {
-                console.error('Error updating last action time:', error);
-            });
     };
 
     return (

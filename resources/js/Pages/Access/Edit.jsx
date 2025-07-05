@@ -4,13 +4,6 @@ import HandleAccess from '@/Pages/Access/Partials/HandleAccess';
 import axios from 'axios';
 
 export default function Edit({ auth, user, roles, courses }) {
-    const updateLastActionTime = () => {
-        axios.post(route('updateLastActionTime'))
-            .then(response => {})
-            .catch(error => {
-                console.error('Error updating last action time:', error);
-            });
-    };
 
     return (
         <AuthenticatedLayout
@@ -24,7 +17,6 @@ export default function Edit({ auth, user, roles, courses }) {
                     <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
                         <HandleAccess
                             className="max-w-full dark:bg-gray-800"
-                            updateLastActionTime={updateLastActionTime}
                             roles={roles}
                             courses={courses}
                         />

@@ -8,28 +8,26 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class CourseAdminController extends Controller
 {
-    public function index(): Response
-    {
-        // Only allow SuperAdmin and Teacher to access this page
-        if (!auth()->user()->hasPrivilege('SuperAdmin') && !auth()->user()->hasPrivilege('Teacher')) {
-            abort(403, 'Unauthorized');
-        }
-
-        $courses = Course::all();
-        $adminRoles = AdminControl::whereIn('system_name', [
-            'fma_admin', 'litmus_admin', 'history_admin'
-        ])->get();
-
-        return Inertia::render('CourseAdmin/Index', [
-            'courses' => $courses,
-            'adminRoles' => $adminRoles,
-        ]);
-    }
+//    public function index(): Response
+//    {
+//        // Only allow SuperAdmin and Teacher to access this page
+//        if (!auth()->user()->hasPrivilege('SuperAdmin') && !auth()->user()->hasPrivilege('Teacher')) {
+//            abort(403, 'Unauthorized');
+//        }
+//
+//        $courses = Course::all();
+//        $adminRoles = AdminControl::whereIn('system_name', [
+//            'fma_admin', 'litmus_admin', 'history_admin'
+//        ])->get();
+//
+//        return Inertia::render('CourseAdmin/Index', [
+//            'courses' => $courses,
+//            'adminRoles' => $adminRoles,
+//        ]);
+//    }
 
     public function getCourseAdmins(Request $request, $courseId): JsonResponse
     {

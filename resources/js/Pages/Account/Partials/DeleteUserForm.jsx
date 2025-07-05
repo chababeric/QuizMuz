@@ -1,19 +1,19 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import DangerButton from '@/Components/DangerButton.jsx';
 import InputError from '@/Components/InputError.jsx';
 import InputLabel from '@/Components/InputLabel.jsx';
 import Modal from '@/Components/Modal.jsx';
 import SecondaryButton from '@/Components/SecondaryButton.jsx';
 import TextInput from '@/Components/TextInput.jsx';
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import {Transition} from "@headlessui/react";
 
-export default function DeleteUserForm({ className = '', updateLastActionTime }) {
+export default function DeleteUserForm({ className = '' }) {
+    const { flash, errors: pageErrors } = usePage().props;
     const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
     const [recentlyUpdated, setRecentlyUpdated] = useState(false);
-    const [customErrors, setCustomErrors] = useState({});
     const passwordInput = useRef();
 
     const {
@@ -28,9 +28,16 @@ export default function DeleteUserForm({ className = '', updateLastActionTime })
         usernameToDelete: '',
     });
 
+    // Check for flash data
+    useEffect(() => {
+        if (flash.userToDelete) {
+            setUserToDelete(flash.userToDelete);
+            setConfirmingUserDeletion(true);
+        }
+    }, [flash]);
+
     const deleteUser = (e) => {
         e.preventDefault();
-        updateLastActionTime();
 
         post(route('admin.delete-user'), {
             preserveScroll: true,
@@ -38,6 +45,14 @@ export default function DeleteUserForm({ className = '', updateLastActionTime })
                 closeModal();
                 setRecentlyUpdated(true);
                 setTimeout(() => setRecentlyUpdated(false), 3000);
+                reset('password', 'usernameToDelete');
+                setUserToDelete(null);
+                setConfirmingUserDeletion(false);
+                setData('usernameToDelete', '');
+                // Reset the password input field
+                if (passwordInput.current) {
+                    passwordInput.current.value = '';
+                }
             },
             onError: (errors) => {
                 if (errors.password) {
@@ -48,30 +63,11 @@ export default function DeleteUserForm({ className = '', updateLastActionTime })
         });
     };
 
-    const submit = async (e) => {
+    const submit = (e) => {
         e.preventDefault();
-        updateLastActionTime();
-
-        try {
-            const response = await axios.post(route('user.find'), {
-                usernameToDelete: data.usernameToDelete,
-            });
-
-            if (response.data.error) {
-                setData('usernameToDelete', '');
-                setCustomErrors({ usernameToDelete: response.data.error });
-            } else {
-                setUserToDelete(response.data.user);
-                setConfirmingUserDeletion(true);
-                setCustomErrors({});
-            }
-        } catch (error) {
-            if (error.response) {
-                setCustomErrors({ usernameToDelete: error.response.data.error });
-            } else {
-                console.error("An unexpected error occurred.");
-            }
-        }
+        post(route('user-find'), {
+            preserveScroll: true,
+        });
     };
 
     const closeModal = () => {
@@ -105,7 +101,7 @@ export default function DeleteUserForm({ className = '', updateLastActionTime })
                         required
                     />
 
-                    <InputError message={customErrors.usernameToDelete || errors.usernameToDelete} className="mt-2"/>
+                    <InputError message={pageErrors.usernameToDelete || errors.usernameToDelete} className="mt-2"/>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -122,7 +118,6 @@ export default function DeleteUserForm({ className = '', updateLastActionTime })
                     </Transition>
                 </div>
             </form>
-
 
             <Modal show={confirmingUserDeletion} onClose={closeModal}>
                 <form onSubmit={deleteUser} className="p-6">

@@ -25,7 +25,7 @@ export default function Welcome({ auth }) {
 
                                     {auth.isAdmin && (
                                         <Link
-                                            href={route('dashboard')}
+                                            href={route('admin')}
                                             className="login-links"
                                         >
                                             Admin

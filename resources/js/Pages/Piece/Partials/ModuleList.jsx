@@ -3,7 +3,7 @@ import axios from 'axios';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { v4 as uuidv4 } from 'uuid';
 
-export default function ModuleList({ className = '', updateLastActionTime, courseName }) {
+export default function ModuleList({ className = '', courseName }) {
     const [levels, setLevels] = useState([]);
     const [modules, setModules] = useState([]);
     const [selectedLevel, setSelectedLevel] = useState('');
@@ -63,7 +63,6 @@ export default function ModuleList({ className = '', updateLastActionTime, cours
         if (!confirmDelete) return;
 
         setLoading(true);
-        updateLastActionTime();
 
         axios.post(route('admin.delete-module'), { id: confirmDelete })
             .then(response => {
@@ -110,8 +109,6 @@ export default function ModuleList({ className = '', updateLastActionTime, cours
         // Update state optimistically
         setModules(updatedModules);
 
-        // Save to server
-        updateLastActionTime();
         axios.post(route('admin.update-module-order'), {
             modules: updatedModules.map(module => ({
                 id: module.id,

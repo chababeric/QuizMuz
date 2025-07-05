@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AdminControl;
-use App\Models\Level;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -84,96 +82,33 @@ class AdminController extends Controller
         return Redirect::route('account.edit');
     }
 
-    public function makeAdmin(Request $request): JsonResponse
+    public function findUser(Request $request): RedirectResponse
     {
-        $initiator = $request->user();
-        $request->validate([
-            'user_id' => 'required|integer',
-            'name' => 'required|string',
-        ]);
+        Log::info('findUser method called with request: ' . json_encode($request->all()));
 
-        $user = User::find($request->user_id);
-
-        if (!$user) {
-            return response()->json(['message' => $request->name . ' n\'a pas été trouvé.'], 404);
-        }
-        else if ($initiator->id === $user->id) {
-            return response()->json(['message' => 'Vous ne pouvez pas vous promouvoir vous-même.'], 403);
-        } else {
-            $adminControl = new AdminControl();
-            $adminControl->user_id = $request->user_id;
-            $adminControl->save();
-
-            Log::info('**********START TRANSACTION**********');
-            Log::info('ACTION: Admin promotion');
-            Log::info('INITIATOR ID: ' . $initiator->id);
-            Log::info('INITIATOR First Name: ' . $initiator->first_name);
-            Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-            Log::info('INITIATOR Username: ' . $initiator->username);
-            Log::info('User Promoted: ' . $request->name);
-            Log::info('**********END TRANSACTION**********');
-
-            return response()->json(['message' => $request->name . ' a été promu·e avec succès.'], 200);
-        }
-    }
-
-    public function removeAdmin(Request $request): JsonResponse
-    {
-        $initiator = $request->user();
-        $request->validate([
-            'user_id' => 'required|integer',
-            'name' => 'required|string',
-        ]);
-        $user = User::find($request->user_id);
-
-        if (!$user) {
-            return response()->json(['message' => $request->name . ' n\'a pas été trouvé.'], 404);
-        } else if ($initiator->institution_id !== $user->institution_id) {
-            return response()->json(['message' => 'Vous ne pouvez pas rétrograder des utilisateurs d\'autres institutions.'], 403);
-        } else if ($initiator->id === $user->id) {
-            return response()->json(['message' => 'Vous ne pouvez pas vous rétrograder vous-même.'], 403);
-        }
-        else {
-            $adminControl = AdminControl::where('user_id', $request->user_id)->first();
-            $adminControl->delete();
-
-            Log::info('**********START TRANSACTION**********');
-            Log::info('ACTION: Admin removal');
-            Log::info('INITIATOR ID: ' . $initiator->id);
-            Log::info('INITIATOR First Name: ' . $initiator->first_name);
-            Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-            Log::info('INITIATOR Username: ' . $initiator->username);
-            Log::info('User Removed: ' . $request->name);
-            Log::info('**********END TRANSACTION**********');
-
-            return response()->json(['message' => $request->name . ' a été rétrogradé.e avec succès.'], 200);
-        }
-    }
-
-    public function findUser(Request $request): JsonResponse
-    {
         $request->validate([
             'usernameToDelete' => 'required|string',
         ]);
 
-        $initiator = $request->user();
+        $initiator = auth()->user();
+        Log::info('User initiating request: ' . $initiator->username);
+
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            Log::info('Access denied: User does not have SuperAdmin privilege');
+            return redirect()->back()->withErrors(['usernameToDelete' => 'Vous n\'avez pas les privilèges nécessaires pour supprimer des utilisateurs.']);
+        }
+
         $userToDelete = User::where('username', $request->usernameToDelete)->first();
 
         if (!$userToDelete) {
-            return response()->json(['error' => 'L\'utilisateur n\'a pas été trouvé.'], 404);
+            Log::info('User not found: ' . $request->usernameToDelete);
+            return redirect()->back()->withErrors(['usernameToDelete' => 'L\'utilisateur n\'a pas été trouvé.']);
         }
 
-        // Make sure the user is not an admin
-        if ($userToDelete->administrator()->exists()) {
-            return response()->json(['error' => 'Vous ne pouvez pas supprimer le compte d\'un administrateur.'], 403);
-        }
-
-        // Make sure the user is in the same institution as the current user
-        if ($userToDelete->institution_id !== $initiator->institution_id) {
-            return response()->json(['error' => 'Vous ne pouvez pas supprimer le compte d\'un utilisateur d\'une autre institution.'], 403);
-        }
-
-        return response()->json(['user' => $userToDelete], 200);
+        Log::info('User found: ' . $userToDelete->username);
+        // Store the user in the session and redirect back
+        session()->flash('userToDelete', $userToDelete);
+        return redirect()->back();
     }
 
     public function deleteUser(Request $request): RedirectResponse
@@ -184,6 +119,10 @@ class AdminController extends Controller
         ]);
 
         $initiator = $request->user();
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return Redirect::back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour supprimer des utilisateurs.']);
+        }
+
         if (!password_verify($request->password, $initiator->password)) {
             return Redirect::back()->withErrors(['password' => 'Le mot de passe est incorrect.']);
         }

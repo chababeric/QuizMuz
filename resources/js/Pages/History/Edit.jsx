@@ -9,7 +9,6 @@ export default function Edit({ auth }) {
     const [piecesList, setPiecesList] = useState([]);
     const [coursesList, setCoursesList] = useState([]);
     const [piecesInReserve, setPiecesInReserve] = useState([]);
-    const [lastActionTime, setLastActionTime] = useState(Date.now());
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -40,8 +39,8 @@ export default function Edit({ auth }) {
             }
         };
 
-        fetchData();
-    }, [lastActionTime, user.institution_id]);
+        fetchData().then(r => {});
+    }, [user.institution_id]);
 
     const getPiecesInReserve = async () => {
         try {
@@ -50,10 +49,6 @@ export default function Edit({ auth }) {
         } catch (error) {
             console.error('Error fetching reserve pieces:', error);
         }
-    };
-
-    const updateLastActionTime = () => {
-        setLastActionTime(Date.now());
     };
 
     return (
@@ -78,7 +73,6 @@ export default function Edit({ auth }) {
                         setPiecesList={setPiecesList}
                         coursesList={coursesList}
                         mode="history"
-                        updateLastActionTime={updateLastActionTime}
                         getPiecesInReserve={getPiecesInReserve}
                         piecesInReserve={piecesInReserve}
                         user={user}

@@ -6,7 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton.jsx';
 import React, { useState, useEffect } from "react";
 import FilterableSelect from "@/Components/FilterableSelect.jsx";
 
-export default function AddNewPiece({ className = '', piecesList, updateLastActionTime, getAllPieces, courseName }) {
+export default function AddNewPiece({ className = '', piecesList, getAllPieces, courseName }) {
     const [levelsList, setLevelsList] = useState([]);
     const [modules, setModules] = useState([]);
     const [isLitMusCourse, setIsLitMusCourse] = useState(false);
@@ -79,7 +79,6 @@ export default function AddNewPiece({ className = '', piecesList, updateLastActi
 
     const submitNewPiece = (e) => {
         e.preventDefault();
-        updateLastActionTime();
 
         post(route('admin.new-piece'), {
             preserveScroll: true,

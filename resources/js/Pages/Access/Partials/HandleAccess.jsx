@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-export default function HandleAccess({ className = '', updateLastActionTime, roles, courses }) {
+export default function HandleAccess({ className = '', roles, courses }) {
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
@@ -99,7 +99,6 @@ export default function HandleAccess({ className = '', updateLastActionTime, rol
 
     // Update user role
     const updateUserRole = (userId, roleId, action) => {
-        updateLastActionTime();
         setUpdatingUser(userId);
         setMessage('');
         setError('');
@@ -153,7 +152,6 @@ export default function HandleAccess({ className = '', updateLastActionTime, rol
 
     // Add course admin
     const addCourseAdmin = (userId, roleId, courseId) => {
-        updateLastActionTime();
         setUpdatingUser(userId);
         setMessage('');
         setError('');
@@ -178,7 +176,6 @@ export default function HandleAccess({ className = '', updateLastActionTime, rol
 
     // Remove course admin
     const removeCourseAdmin = (userId, roleId, courseId) => {
-        updateLastActionTime();
         setUpdatingUser(userId);
         setMessage('');
         setError('');

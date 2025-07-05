@@ -2,7 +2,7 @@ import { useState } from "react";
 import MessageDisplay from "@/Components/MessageDisplay.jsx";
 import Modal from "@/Components/Modal.jsx";
 
-export default function AdminManagement({auth, users, getUsers, updateLastActionTime, successMessage, setSuccessMessage, errorMessage, setErrorMessage, selectedInstitution, selectedInstitutionId}) {
+export default function AdminManagement({auth, users, getUsers, successMessage, setSuccessMessage, errorMessage, setErrorMessage, selectedInstitution, selectedInstitutionId}) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalAction, setModalAction] = useState(null);
     const [selectedUser, setSelectedUser] = useState(null);
@@ -20,7 +20,6 @@ export default function AdminManagement({auth, users, getUsers, updateLastAction
     };
 
     const handleAdminAction = async () => {
-        updateLastActionTime();
         closeModal(); // Close the modal after confirmation
 
         const { id, first_name, last_name } = selectedUser;

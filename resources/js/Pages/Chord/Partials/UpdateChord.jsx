@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useRef, useState } from 'react';
 import MessageDisplay from "@/Components/MessageDisplay.jsx";
 import {DragDropContext, Draggable, Droppable} from '@hello-pangea/dnd';
 import InputLabel from "@/Components/InputLabel.jsx";
@@ -10,9 +10,9 @@ import TextInput from "@/Components/TextInput.jsx";
 import {useForm} from '@inertiajs/react';
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import DangerButton from "@/Components/DangerButton.jsx";
-import {Transition} from "@headlessui/react";
+import { Transition } from "@headlessui/react";
 
-export default function UpdateChord({ className = '', chordsList, setChordsList, updateLastActionTime, levelsList }) {
+export default function UpdateChord({ className = '', chordsList, setChordsList, levelsList }) {
     const [selectedFilterLevel, setSelectedFilterLevel] = useState('');
     const [filterDisplay, setFilterDisplay] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
@@ -94,7 +94,6 @@ export default function UpdateChord({ className = '', chordsList, setChordsList,
 
     const submitModifications = (e) => {
         e.preventDefault();
-        updateLastActionTime();
 
         patch(route('admin.update-chord'), {
             onSuccess: () => {
@@ -120,7 +119,6 @@ export default function UpdateChord({ className = '', chordsList, setChordsList,
     };
 
     const handleDelete = (id) => {
-        updateLastActionTime();
         axios.delete(`/chords/${id}`)
             .then(response => {
                 setIsDeleteModalOpen(false);
