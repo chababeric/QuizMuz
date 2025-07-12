@@ -7,27 +7,15 @@ use App\Models\Course;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class CourseAdminController extends Controller
 {
-//    public function index(): Response
-//    {
-//        // Only allow SuperAdmin and Teacher to access this page
-//        if (!auth()->user()->hasPrivilege('SuperAdmin') && !auth()->user()->hasPrivilege('Teacher')) {
-//            abort(403, 'Unauthorized');
-//        }
-//
-//        $courses = Course::all();
-//        $adminRoles = AdminControl::whereIn('system_name', [
-//            'fma_admin', 'litmus_admin', 'history_admin'
-//        ])->get();
-//
-//        return Inertia::render('CourseAdmin/Index', [
-//            'courses' => $courses,
-//            'adminRoles' => $adminRoles,
-//        ]);
-//    }
+    protected LogsController $logsController;
+
+    public function __construct(LogsController $logsController)
+    {
+        $this->logsController = $logsController;
+    }
 
     public function getCourseAdmins(Request $request, $courseId): JsonResponse
     {
@@ -50,7 +38,7 @@ class CourseAdminController extends Controller
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'course_id' => 'required|exists:courses,id',
-            'admin_control_id' => 'required|exists:admin_controls,id', // Changed from 'role_id' to 'admin_control_id'
+            'admin_control_id' => 'required|exists:admin_controls,id',
         ]);
 
         $user = User::find($request->user_id);
@@ -74,18 +62,11 @@ class CourseAdminController extends Controller
 
         // Log the action
         $initiator = $request->user();
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Course admin role addition');
-        Log::info('INITIATOR ID: ' . $initiator->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('User ID: ' . $user->id);
-        Log::info('User Name: ' . $user->first_name . ' ' . $user->last_name);
-        Log::info('Course ID: ' . $course->id);
-        Log::info('Course Name: ' . $course->name);
-        Log::info('Role Added: ' . $role->name);
-        Log::info('**********END TRANSACTION**********');
+        $this->logsController->createLog(
+            'Permission',
+            "Accès <strong>{$role->name}</strong> <span class=\"bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 font-semibold px-1 rounded\">accordé</span> à <strong>{$user->first_name} {$user->last_name}</strong>.",
+            $initiator->id
+        );
 
         return response()->json([
             'message' => "Le rôle {$role->name} a été ajouté à l'utilisateur {$user->first_name} {$user->last_name} pour le cours {$course->name}."
@@ -126,18 +107,11 @@ class CourseAdminController extends Controller
 
         // Log the action
         $initiator = $request->user();
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Course admin role removal');
-        Log::info('INITIATOR ID: ' . $initiator->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('User ID: ' . $user->id);
-        Log::info('User Name: ' . $user->first_name . ' ' . $user->last_name);
-        Log::info('Course ID: ' . $course->id);
-        Log::info('Course Name: ' . $course->name);
-        Log::info('Role Removed: ' . $role->name);
-        Log::info('**********END TRANSACTION**********');
+        $this->logsController->createLog(
+            'Permission',
+            "Accès <strong>{$role->name}</strong> <span class=\"bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-semibold px-1 rounded\">retiré</span> à <strong>{$user->first_name} {$user->last_name}</strong>.",
+            $initiator->id
+        );
 
         return response()->json([
             'message' => "Le rôle {$role->name} a été retiré de l'utilisateur {$user->first_name} {$user->last_name} pour le cours {$course->name}."

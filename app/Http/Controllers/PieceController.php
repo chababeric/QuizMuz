@@ -8,11 +8,17 @@ use App\Models\PieceReserve;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class PieceController extends Controller
 {
+    protected LogsController $logsController;
+
+    public function __construct(LogsController $logsController)
+    {
+        $this->logsController = $logsController;
+    }
+
     /**
      * Get all pieces from a specific level
      *
@@ -108,6 +114,9 @@ class PieceController extends Controller
         // Find the piece by id
         $piece = Piece::findOrFail($validatedData['id']);
 
+        $originalTitle = $piece->title;
+        $originalComposer = $piece->composer;
+
         // Update the piece with the validated data
         $piece->update([
 //            'course' => $validatedData['course'],
@@ -138,20 +147,47 @@ class PieceController extends Controller
 //            // Save the new file
 //            $audioFile->storeAs('public/litmus_pieces', $fileName);
 //        }
-
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Piece updated');
-        Log::info('PIECE ID: ' . $piece->id);
-        Log::info('PIECE Title: ' . $piece->title);
-        Log::info('PIECE Composer: ' . $piece->composer);
-        Log::info('PIECE Level: ' . $piece->level_id);
-        Log::info('INITIATOR ID: ' . $initiator->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('**********END TRANSACTION**********');
-
         $level = Level::with('course')->find($validatedData['level']);
+        $courseName = $level->course->name;
+
+        $courseType = '';
+        $logAction = '';
+
+        if ($courseName === 'Histoire de la Musique') {
+            $courseType = 'Histoire';
+            $logAction = 'Histoire';
+        } else {
+            $courseType = 'Littérature Musicale';
+            $logAction = 'LitMus';
+        }
+
+        $titleChanged = $originalTitle !== $piece->title;
+        $composerChanged = $originalComposer !== $piece->composer;
+
+        $logMessage = "La pièce ";
+
+        if ($titleChanged) {
+            $logMessage .= "<span class=\"line-through text-gray-500 dark:text-gray-400\">{$originalTitle}</span> → <strong>{$piece->title}</strong>";
+        } else {
+            $logMessage .= "<strong>{$piece->title}</strong>";
+        }
+
+        $logMessage .= " de ";
+
+        if ($composerChanged) {
+            $logMessage .= "<span class=\"line-through text-gray-500 dark:text-gray-400\">{$originalComposer}</span> → <strong>{$piece->composer}</strong>";
+        } else {
+            $logMessage .= "<strong>{$piece->composer}</strong>";
+        }
+
+        $logMessage .= " (Cours: <strong>{$courseType}</strong>, Niveau: <strong>{$level->name}</strong>) " .
+            "a été <span class=\"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-semibold px-1 rounded\">mise à jour</span>.";
+
+        $this->logsController->createLog(
+            $logAction,
+            $logMessage,
+            $initiator->id
+        );
 
         if ($level && $level->course->name === 'Histoire de la Musique') {
             return redirect()
@@ -171,17 +207,11 @@ class PieceController extends Controller
         $piece = Piece::findOrFail($id);
         $piece->delete();
 
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Piece deleted');
-        Log::info('PIECE ID: ' . $piece->id);
-        Log::info('PIECE Title: ' . $piece->title);
-        Log::info('PIECE Composer: ' . $piece->composer);
-        Log::info('PIECE Level: ' . $piece->level_id);
-        Log::info('INITIATOR ID: ' . $initiator->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('**********END TRANSACTION**********');
+        $this->logsController->createLog(
+            'LitMus',
+            "La pièce '{$piece->title}' de '{$piece->composer}' a été <span class=\"bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-semibold px-1 rounded\">supprimée</span>.",
+            $initiator->id
+        );
 
         return response()->json(['message' => 'La pièce a été supprimée avec succès.']);
     }
@@ -336,20 +366,40 @@ class PieceController extends Controller
 
         // Save the new piece to the database
         $piece->save();
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Piece created');
-        Log::info('PIECE ID: ' . $piece->id);
-        Log::info('PIECE Title: ' . $piece->title);
-        Log::info('PIECE Composer: ' . $piece->composer);
-        Log::info('PIECE Level: ' . $piece->level_id);
-        Log::info('INITIATOR ID: ' . $initiator->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('**********END TRANSACTION**********');
+        $level = Level::with('course')->find($validatedData['level']);
+        $institutionName = \App\Models\Institution::findOrFail($initiator->institution_id)->name;
 
-//        return response()->json(['message' => 'La pièce a été ajoutée avec succès.']);
-        return redirect()->route('piece.edit');
+        // Determine course type for logging
+        $courseType = '';
+        $logAction = '';
+
+        if ($level->course->name === 'Histoire de la Musique') {
+            $courseType = 'Histoire';
+            $logAction = 'Histoire';
+        } else {
+            $courseType = 'Littérature Musicale';
+            $logAction = 'LitMus';
+        }
+
+        // Create log entry with more details
+        $this->logsController->createLog(
+            $logAction,
+            "La pièce <strong>{$piece->title}</strong> de <strong>{$piece->composer}</strong> " .
+            "(Cours: <strong>{$courseType}</strong>, Niveau: <strong>{$level->name}</strong>, Institution: <strong>{$institutionName}</strong>) " .
+            "a été <span class=\"bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 font-semibold px-1 rounded\">créée</span>.",
+            $initiator->id
+        );
+
+        // Return different responses based on course type
+        if ($level->course->name === 'Histoire de la Musique') {
+            return redirect()
+                ->route('history.edit')
+                ->with('success', 'Pièce ajoutée avec succès.');
+        } else {
+            return redirect()
+                ->route('piece.edit')
+                ->with('success', 'Pièce ajoutée avec succès.');
+        }
     }
 
     public function getPiecesInReserve(): JsonResponse
@@ -361,21 +411,12 @@ class PieceController extends Controller
     public function updateOrder(Request $request): JsonResponse
     {
         $pieces = $request->input('pieces');
-        $initiator = auth()->user();
 
         foreach ($pieces as $pieceData) {
             $piece = Piece::findOrFail($pieceData['id']);
             $piece->order = $pieceData['order'];
             $piece->save();
         }
-
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Pieces order updated');
-        Log::info('INITIATOR ID: ' . $initiator->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('**********END TRANSACTION**********');
 
         return response()->json(['message' => 'L\'ordre des pièces a été mis à jour avec succès.']);
     }

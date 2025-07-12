@@ -25,6 +25,7 @@ class AccessControlService
             'canAccessFMA' => false,
             'canAccessLitmus' => false,
             'canAccessHistory' => false,
+            'canAccessLogs' => false,
         ];
 
         // If user has SuperAdmin privilege, grant all permissions immediately

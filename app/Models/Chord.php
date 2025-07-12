@@ -15,6 +15,7 @@ class Chord extends Model
         'chord_name',
         'file_name',
         'order',
+        'institution_id',
     ];
 
     public function level(): BelongsTo

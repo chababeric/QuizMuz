@@ -63,6 +63,12 @@ export default function Authenticated({ user, header, children }) {
                                     </NavLink>
                                 )}
 
+                                {permissions.canAccessLogs && (
+                                    <NavLink href={route('logs.edit')} active={route().current('logs.edit')} className="dark:text-white">
+                                        Registres
+                                    </NavLink>
+                                )}
+
                                 <NavLink href={route('welcome')} className="dark:text-white">
                                     Retour
                                 </NavLink>
@@ -137,6 +143,10 @@ export default function Authenticated({ user, header, children }) {
 
                             {permissions.canAccessFMA && (
                                 <ResponsiveNavLink href={route('chord.edit')} active={route().current('chord.edit')} className="dark:bg-gray-900 dark:text-white">FMA</ResponsiveNavLink>
+                            )}
+
+                            {permissions.canAccessLogs && (
+                                <ResponsiveNavLink href={route('logs.edit')} active={route().current('logs.edit')} className="dark:bg-gray-900 dark:text-white">Registres</ResponsiveNavLink>
                             )}
 
                             <ResponsiveNavLink href={route('welcome')} className="dark:bg-gray-900 dark:text-white">Retour</ResponsiveNavLink>

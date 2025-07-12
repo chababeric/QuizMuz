@@ -11,6 +11,13 @@ use Illuminate\Support\Facades\Storage;
 
 class ChordController extends Controller
 {
+    protected LogsController $logsController;
+
+    public function __construct(LogsController $logsController)
+    {
+        $this->logsController = $logsController;
+    }
+
     public function getAllChords(): JsonResponse
     {
         $initiator = auth()->user();
@@ -70,13 +77,18 @@ class ChordController extends Controller
 
         $chord->save();
 
+        $this->logsController->createLog(
+            'FMA',
+            "Formule / Accord <strong>{$chord->chord_name}</strong> (Niveau <strong>{$level->name}</strong>) <span class=\"bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 font-semibold px-1 rounded\">ajouté</span>.",
+            $initiator->id
+        );
+
         return redirect()->route('chord.edit');
     }
 
     public function updateOrder(Request $request): JsonResponse
     {
         $chords = $request->input('chords');
-//        $initiator = auth()->user();
 
         foreach ($chords as $chordData) {
             $chord = Chord::findOrFail($chordData['id']);
@@ -100,10 +112,20 @@ class ChordController extends Controller
         ]);
 
         $chord = Chord::findOrFail($request->id);
+        $originalChordName = $chord->chord_name;
+        $originalLevel = Level::findOrFail($chord->level_id);
+
+        $level = Level::findOrFail($request->level);
         $chord->update([
             'level_id' => $request->level,
             'chord_name' => $request->chord_name,
         ]);
+
+        $this->logsController->createLog(
+            'FMA',
+            "Formule / Accord <span class=\"line-through text-gray-500 dark:text-gray-400\">{$originalChordName}</span> → <strong>{$chord->chord_name}</strong> (Niveau: <span class=\"line-through text-gray-500 dark:text-gray-400\">{$originalLevel->name}</span> → <strong>{$level->name}</strong>) <span class=\"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-semibold px-1 rounded\">mis à jour</span>.",
+            $request->user()->id
+        );
 
         return redirect()->route('chord.edit')->with('success', 'Formule / Accord mis à jour avec succès.');
     }
@@ -111,7 +133,15 @@ class ChordController extends Controller
 public function destroy(int $id): RedirectResponse
     {
         $chord = Chord::findOrFail($id);
+        $level = $chord->level;
+        $initiator = auth()->user();
         $chord->delete();
+
+        $this->logsController->createLog(
+            'FMA',
+            "Formule / Accord <strong>{$chord->chord_name}</strong> (Niveau <strong>{$level->name}</strong>) <span class=\"bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-semibold px-1 rounded\">supprimé</span>.",
+            $initiator->id
+        );
 
         return redirect()->route('chord.edit')->with('success', 'Formule / Accord supprimé avec succès.');
     }

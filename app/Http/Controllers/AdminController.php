@@ -6,13 +6,19 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AdminController extends Controller
 {
+    protected LogsController $logsController;
+
+    public function __construct(LogsController $logsController)
+    {
+        $this->logsController = $logsController;
+    }
+
     public function index(): Response
     {
         return Inertia::render('AdminControl');
@@ -70,42 +76,33 @@ class AdminController extends Controller
         $user->save();
 
         // Log the action
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Username update');
-        Log::info('INITIATOR ID: ' . $user->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('Usernames Updated: ' . $request->old_username . ' -> ' . $request->new_username);
-        Log::info('**********END TRANSACTION**********');
+        $this->logsController->createLog(
+            'Compte',
+            "Nom d'utilisateur <span class=\"line-through text-gray-500 dark:text-gray-400\">{$request->old_username}</span> → <strong>{$request->new_username}</strong> <span class=\"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-semibold px-1 rounded\">mis à jour</span>.",
+            $initiator->id
+        );
 
         return Redirect::route('account.edit');
     }
 
     public function findUser(Request $request): RedirectResponse
     {
-        Log::info('findUser method called with request: ' . json_encode($request->all()));
-
         $request->validate([
             'usernameToDelete' => 'required|string',
         ]);
 
         $initiator = auth()->user();
-        Log::info('User initiating request: ' . $initiator->username);
 
         if (!$initiator->hasPrivilege('SuperAdmin')) {
-            Log::info('Access denied: User does not have SuperAdmin privilege');
             return redirect()->back()->withErrors(['usernameToDelete' => 'Vous n\'avez pas les privilèges nécessaires pour supprimer des utilisateurs.']);
         }
 
         $userToDelete = User::where('username', $request->usernameToDelete)->first();
 
         if (!$userToDelete) {
-            Log::info('User not found: ' . $request->usernameToDelete);
             return redirect()->back()->withErrors(['usernameToDelete' => 'L\'utilisateur n\'a pas été trouvé.']);
         }
 
-        Log::info('User found: ' . $userToDelete->username);
         // Store the user in the session and redirect back
         session()->flash('userToDelete', $userToDelete);
         return redirect()->back();
@@ -136,14 +133,11 @@ class AdminController extends Controller
                 $user->delete();
 
                 // Log the action
-                Log::info('**********START TRANSACTION**********');
-                Log::info('ACTION: User deletion');
-                Log::info('INITIATOR ID: ' . $user->id);
-                Log::info('INITIATOR First Name: ' . $initiator->first_name);
-                Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-                Log::info('INITIATOR Username: ' . $initiator->username);
-                Log::info('User Deleted: ' . $request->usernameToDelete);
-                Log::info('**********END TRANSACTION**********');
+                $this->logsController->createLog(
+                    'Compte',
+                    "L'utilisateur <strong>{$user->username}</strong> a été <span class=\"bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-semibold px-1 rounded\">supprimé</span>.",
+                    $initiator->id
+                );
 
                 return Redirect::route('account.edit');
             }

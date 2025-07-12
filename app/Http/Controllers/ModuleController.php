@@ -2,14 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Institution;
+use App\Models\Level;
 use App\Models\Module;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class ModuleController extends Controller
 {
+    protected LogsController $logsController;
+
+    public function __construct(LogsController $logsController)
+    {
+        $this->logsController = $logsController;
+    }
+
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $initiator = auth()->user();
@@ -41,16 +49,17 @@ class ModuleController extends Controller
         // Create the module
         $module = Module::create($validatedData);
 
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Module created');
-        Log::info('MODULE ID: ' . $module->id);
-        Log::info('MODULE Title: ' . $module->title);
-        Log::info('MODULE Level: ' . $module->level_id);
-        Log::info('INITIATOR ID: ' . $initiator->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('**********END TRANSACTION**********');
+        $level = Level::with('course')->findOrFail($module->level_id);
+        $institutionName = Institution::findOrFail($initiator->institution_id)->name;
+
+        $this->logsController->createLog(
+            "LitMus",
+            "Le module <strong>{$module->title}</strong> (Niveau: <strong>{$level->name}</strong>, " .
+            "Cours: <strong>{$level->course->name}</strong>, Institution: <strong>{$institutionName}</strong>) " .
+            "a été <span class=\"bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 font-semibold px-1 rounded\">créé</span>.",
+            $initiator->id,
+        );
+
 
         // Return different responses based on request type
         if ($request->expectsJson()) {
@@ -86,8 +95,14 @@ class ModuleController extends Controller
             ]
         );
 
-        // Find the module
-        $module = Module::findOrFail($validatedData['id']);
+        // Find the module and load its level relationship before updating
+        $module = Module::with('level')->findOrFail($validatedData['id']);
+
+        // Store original values before updating
+        $originalTitle = $module->title;
+        $originalDescription = $module->description ?? '';
+        $originalLevelId = $module->level_id;
+        $originalLevel = $module->level;
 
         // Update the module
         $module->update([
@@ -97,16 +112,51 @@ class ModuleController extends Controller
             'order' => $validatedData['order'],
         ]);
 
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Module updated');
-        Log::info('MODULE ID: ' . $module->id);
-        Log::info('MODULE Title: ' . $module->title);
-        Log::info('MODULE Level: ' . $module->level_id);
-        Log::info('INITIATOR ID: ' . $initiator->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('**********END TRANSACTION**********');
+        // Reload the module with the new level relationship
+        $module->load('level');
+
+        // Create log message with before/after comparison
+        $titleChanged = $originalTitle !== $module->title;
+        $levelChanged = $originalLevelId !== $module->level_id;
+        $descriptionChanged = $originalDescription !== ($module->description ?? '');
+
+        $logMessage = "Module ";
+
+        // Show title change if it occurred
+        if ($titleChanged) {
+            $logMessage .= "<span class=\"line-through text-gray-500 dark:text-gray-400\">{$originalTitle}</span> → <strong>{$module->title}</strong> ";
+        } else {
+            $logMessage .= "<strong>{$module->title}</strong> ";
+        }
+
+        // Show level change if it occurred
+        if ($levelChanged) {
+            $logMessage .= "(Niveau: <span class=\"line-through text-gray-500 dark:text-gray-400\">{$originalLevel->name}</span> → <strong>{$module->level->name}</strong>) ";
+        } else {
+            $logMessage .= "(Niveau: <strong>{$module->level->name}</strong>) ";
+        }
+
+        // Show description change if it occurred and if descriptions aren't empty
+        if ($descriptionChanged && ($originalDescription || $module->description)) {
+            $originalDescShort = mb_substr($originalDescription, 0, 30) . (mb_strlen($originalDescription) > 30 ? '...' : '');
+            $newDescShort = mb_substr($module->description ?? '', 0, 30) . (mb_strlen($module->description ?? '') > 30 ? '...' : '');
+
+            if ($originalDescription && $module->description) {
+                $logMessage .= "Description: <span class=\"line-through text-gray-500 dark:text-gray-400\">{$originalDescShort}</span> → <strong>{$newDescShort}</strong> ";
+            } elseif ($originalDescription) {
+                $logMessage .= "Description: <span class=\"line-through text-gray-500 dark:text-gray-400\">{$originalDescShort}</span> → <strong>(supprimée)</strong> ";
+            } else {
+                $logMessage .= "Description: <strong>{$newDescShort}</strong> (ajoutée) ";
+            }
+        }
+
+        $logMessage .= "<span class=\"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-semibold px-1 rounded\">mis à jour</span> par <strong>{$initiator->first_name} {$initiator->last_name}</strong>.";
+
+        $this->logsController->createLog(
+            "LitMus",
+            $logMessage,
+            $initiator->id,
+        );
 
         // Return different responses based on request type
         if ($request->expectsJson()) {
@@ -132,20 +182,17 @@ class ModuleController extends Controller
 
         $module = Module::findOrFail($validatedData['id']);
 
-        // Log before deleting
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Module deleted');
-        Log::info('MODULE ID: ' . $module->id);
-        Log::info('MODULE Title: ' . $module->title);
-        Log::info('MODULE Level: ' . $module->level_id);
-        Log::info('INITIATOR ID: ' . $initiator->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('**********END TRANSACTION**********');
-
         // Delete the module
         $module->delete();
+
+        $institutionName = Institution::findOrFail($initiator->institution_id)->name;
+
+        $this->logsController->createLog(
+            "LitMus",
+            "Le module <strong>{$module->title}</strong> (Niveau: <strong>{$module->level->name}</strong>) a été " .
+            "<span class=\"bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-semibold px-1 rounded\">supprimé</span> de l'institution <strong>{$institutionName}</strong>.",
+            $initiator->id,
+        );
 
         return response()->json([
             'success' => true,
@@ -168,13 +215,11 @@ class ModuleController extends Controller
             $module->update(['order' => $moduleData['order']]);
         }
 
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Module order updated');
-        Log::info('INITIATOR ID: ' . $initiator->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('**********END TRANSACTION**********');
+        $this->logsController->createLog(
+            "LitMus",
+            "L'ordre des modules a été <span class=\"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-semibold px-1 rounded\">mis à jour</span>.",
+            $initiator->id,
+        );
 
         return response()->json([
             'success' => true,

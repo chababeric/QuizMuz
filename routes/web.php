@@ -7,6 +7,7 @@ use App\Http\Controllers\ChordController;
 use App\Http\Controllers\CourseAdminController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\InstitutionController;
+use App\Http\Controllers\LogsController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\PieceController;
 use App\Http\Controllers\PracticeController;
@@ -251,6 +252,11 @@ Route::middleware(['auth', 'verified', 'fma', 'check_timeout', 'update_user_acti
     Route::post('/admin/update-chord-order', [ChordController::class, 'updateOrder'])->name('admin.update-chord-order');
     Route::patch('/admin/update-chord', [ChordController::class, 'update'])->name('admin.update-chord');
     Route::delete('/chords/{id}', [ChordController::class, 'destroy'])->name('admin.delete-chord');
+});
+
+//! Logs Routes
+Route::middleware(['auth', 'verified', 'access:SuperAdmin','check_timeout', 'update_user_action_time', AddUserPermissions::class])->group(function () {
+    Route::get('logs/edit', [LogsController::class, 'index'])->name('logs.edit');
 });
 
 require __DIR__.'/auth.php';

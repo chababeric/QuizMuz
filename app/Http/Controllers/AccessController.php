@@ -7,12 +7,18 @@ use App\Models\Course;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AccessController extends Controller
 {
+    protected LogsController $logsController;
+
+    public function __construct(LogsController $logsController)
+    {
+        $this->logsController = $logsController;
+    }
+
     public function index(): Response
     {
         $roles = AdminControl::all();
@@ -56,16 +62,12 @@ class AccessController extends Controller
 
         // Log the action
         $initiator = $request->user();
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Role addition');
-        Log::info('INITIATOR ID: ' . $initiator->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('User ID: ' . $user->id);
-        Log::info('User Name: ' . $user->first_name . ' ' . $user->last_name);
-        Log::info('Role Added: ' . $role->name);
-        Log::info('**********END TRANSACTION**********');
+
+        $this->logsController->createLog(
+            'Permission',
+            "Accès <strong>{$role->name}</strong> <span class=\"bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 font-semibold px-1 rounded\">accordé</span> à <strong>{$user->first_name} {$user->last_name}</strong>.",
+            $initiator->id
+        );
 
         return response()->json(['message' => "Le rôle {$role->name} a été ajouté à l'utilisateur {$user->first_name} {$user->last_name}."]);
     }
@@ -90,16 +92,11 @@ class AccessController extends Controller
 
         // Log the action
         $initiator = $request->user();
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Role removal');
-        Log::info('INITIATOR ID: ' . $initiator->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('User ID: ' . $user->id);
-        Log::info('User Name: ' . $user->first_name . ' ' . $user->last_name);
-        Log::info('Role Removed: ' . $role->name);
-        Log::info('**********END TRANSACTION**********');
+        $this->logsController->createLog(
+            'Permission',
+            "Accès <strong>{$role->name}</strong> <span class=\"text-red-600 dark:text-red-400 font-semibold bg-red-100 dark:bg-red-900/30 px-1 rounded\">retiré</span> à <strong>{$user->first_name} {$user->last_name}</strong>.",
+            $initiator->id
+        );
 
         return response()->json(['message' => "Le rôle {$role->name} a été retiré de l'utilisateur {$user->first_name} {$user->last_name}."]);
     }

@@ -3,20 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
-use App\Models\FmaGame;
 use App\Models\Institution;
 use App\Models\Level;
-use App\Models\SoloGame;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class LevelController extends Controller
 {
+    protected LogsController $logsController;
+
+    public function __construct(LogsController $logsController)
+    {
+        $this->logsController = $logsController;
+    }
+
     public function index(Request $request): Response
     {
         $courseId = $request->route('courseId');
@@ -73,14 +78,17 @@ class LevelController extends Controller
 
             $message = $newStatus ? 'Le niveau ' . $request->name . ' a été activé avec succès.' : 'Le niveau ' . $request->name . ' a été désactivé avec succès.';
 
-            Log::info('**********START TRANSACTION**********');
-            Log::info('ACTION: Level access toggling');
-            Log::info('INITIATOR ID: ' . $initiator->id);
-            Log::info('INITIATOR First Name: ' . $initiator->first_name);
-            Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-            Log::info('INITIATOR Username: ' . $initiator->username);
-            Log::info('Level Toggled: ' . $request->name);
-            Log::info('**********END TRANSACTION**********');
+            // Enhanced logging with all requested information and styling
+            $statusSpan = $newStatus
+                ? '<span class="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 font-semibold px-1 rounded">activé</span>'
+                : '<span class="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-semibold px-1 rounded">désactivé</span>';
+
+            $this->logsController->createLog(
+                'Niveau',
+                "Le niveau <strong>{$request->name}</strong> du cours <strong>{$level->course->name}</strong> a été {$statusSpan}. " .
+                "Institution: <strong>{$institution_name}</strong>",
+                $initiator->id
+            );
 
             return response()->json(['message' => $message]);
         }
@@ -133,14 +141,12 @@ class LevelController extends Controller
             'institution_id' => $institution,
         ]);
 
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Level creation');
-        Log::info('INITIATOR ID: ' . $initiator->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('Level Created: ' . $request->name . ' for course ' . $request->course_id . ' in institution ' . $institution_name);
-        Log::info('**********END TRANSACTION**********');
+        $this->logsController->createLog(
+            'Niveau',
+            "Le niveau <strong>{$request->name}</strong> a été <span class=\"bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 font-semibold px-1 rounded\">ajouté</span> au cours <strong>" . Course::find($request->course_id)->name . "</strong> " .
+            "à l'institution <strong>{$institution_name}</strong>.",
+            $initiator->id
+        );
 
         return response()->json(['message' => 'Le niveau \'' . $request->name . '\' a été ajouté avec succès.'], 200);
     }
@@ -169,26 +175,23 @@ class LevelController extends Controller
         } else {
             try {
                 // Use transaction to ensure database consistency
-                \Illuminate\Support\Facades\DB::beginTransaction();
+                DB::beginTransaction();
 
                 // Delete the level without cascading to user
                 $level->delete();
 
-                \Illuminate\Support\Facades\DB::commit();
+                DB::commit();
 
-                Log::info('**********START TRANSACTION**********');
-                Log::info('ACTION: Level deletion');
-                Log::info('INITIATOR ID: ' . $initiator->id);
-                Log::info('INITIATOR First Name: ' . $initiator->first_name);
-                Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-                Log::info('INITIATOR Username: ' . $initiator->username);
-                Log::info('Level Deleted: ' . $request->name . ' in institution ' . $institution_name);
-                Log::info('**********END TRANSACTION**********');
+                $this->logsController->createLog(
+                    'Niveau',
+                    "Le niveau <strong>{$request->name}</strong> a été <span class=\"bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-semibold px-1 rounded\">supprimé</span> du cours <strong>" . Course::find($level->course_id)->name . "</strong> " .
+                    "de l'institution <strong>{$institution_name}</strong>.",
+                    $initiator->id
+                );
 
                 return response()->json(['message' => 'Le niveau \'' . $request->name . '\' a été supprimé avec succès.'], 200);
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\DB::rollBack();
-                Log::error('Error deleting level: ' . $e->getMessage());
+                DB::rollBack();
                 return response()->json(['message' => 'Une erreur est survenue lors de la suppression du niveau.'], 500);
             }
         }

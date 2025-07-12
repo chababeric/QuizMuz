@@ -7,14 +7,17 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 
 class AdminKeyController extends Controller
 {
-    //Validates the input key.
-    //Hashes the key.
-    //Stores the hashed key in the database.
+    protected LogsController $logsController;
+
+    public function __construct(LogsController $logsController)
+    {
+        $this->logsController = $logsController;
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
@@ -40,14 +43,11 @@ class AdminKeyController extends Controller
         $hashedKey = Hash::make($request->newKey);
         AdminKey::updateOrCreate([], ['hashed_key' => $hashedKey]);
 
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Update Admin Key');
-        Log::info('INITIATOR ID: ' . $user->id);
-        Log::info('INITIATOR First Name: ' . $user->first_name);
-        Log::info('INITIATOR Last Name: ' . $user->last_name);
-        Log::info('INITIATOR Username: ' . $user->username);
-        Log::info('New Key: ' . $request->newKey);
-        Log::info('**********END TRANSACTION**********');
+        $this->logsController->createLog(
+            'Clé Admin',
+            "Clé Admin <span class=\"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-semibold px-1 rounded\">mise à jour</span> par <strong>{$user->first_name} {$user->last_name}</strong>.",
+            $user->id,
+        );
 
         return Redirect::route('account.edit');
     }
