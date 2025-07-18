@@ -33,10 +33,16 @@ class CourseController extends Controller
         ], [
             'name.required' => 'Le nom du cours est requis',
         ]);
+        $initiator = auth()->user();
+
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas autorisé à créer un cours',
+            ], 403);
+        }
 
         $institution = auth()->user()->institution_id;
         $institution_name = Institution::where('id', $institution)->first()->name;
-        $initiator = auth()->user();
 
         if ($request->selectedInstitutionName != $institution_name) {
             return response()->json(['message' => 'Vous n\'avez pas l\'autorisation de créer un cours pour une autre institution'], 403);
@@ -64,9 +70,16 @@ class CourseController extends Controller
             'institution_name' => 'required|string',
         ]);
 
+        $initiator = auth()->user();
+
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas autorisé à supprimer un cours',
+            ], 403);
+        }
+
         $institution = auth()->user()->institution_id;
         $institution_name = Institution::where('id', $institution)->first()->name;
-        $initiator = auth()->user();
 
         if ($request->institution_name != $institution_name) {
             return response()->json(['message' => 'Vous n\'avez pas l\'autorisation de supprimer un cours d\'une autre institution'], 403);

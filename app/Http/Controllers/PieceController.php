@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Institution;
 use App\Models\Level;
 use App\Models\Piece;
 use App\Models\PieceReserve;
+use App\Services\AccessControlService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -83,6 +85,16 @@ class PieceController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $initiator = auth()->user();
+        $accessControlService = app(AccessControlService::class);
+        $access_name = $request->input('courseName') === 'Histoire de la Musique' ? 'history_admin' : 'litmus_admin';
+
+        if (!$initiator->isAdmin()) {
+            return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour modifier une pièce.']);
+        }
+        if (!$accessControlService->hasCourseAccess($initiator, $access_name) && !$initiator->hasPrivilege('SuperAdmin')) {
+            return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour modifier une pièce.']);
+        }
+
         $validatedData = $request->validate(
             [
                 'id' => 'required|integer',
@@ -200,9 +212,19 @@ class PieceController extends Controller
         }
     }
 
-    public function destroy($id): JsonResponse
+    public function destroy(Request $request ,$id): JsonResponse
     {
         $initiator = auth()->user();
+        $accessControlService = app(AccessControlService::class);
+        $access_name = $request->input('courseName') === 'Histoire de la Musique' ? 'history_admin' : 'litmus_admin';
+
+        if (!$initiator->isAdmin()) {
+            return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour supprimer une pièce.'], 403);
+        }
+        if (!$accessControlService->hasCourseAccess($initiator, $access_name) && !$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour supprimer une pièce.'], 403);
+        }
+
 //        $piece = PieceReserve::findOrFail($id);
         $piece = Piece::findOrFail($id);
         $piece->delete();
@@ -303,6 +325,7 @@ class PieceController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $initiator = auth()->user();
+        $accessControlService = app(AccessControlService::class);
         $validatedData = $request->validate(
             [
                 'courseName' => 'required|string',
@@ -329,6 +352,14 @@ class PieceController extends Controller
                 'module_id.exists' => 'Le module sélectionné n\'existe pas.'
             ]
         );
+
+        $access_name = $validatedData['courseName'] === 'Histoire de la Musique' ? 'history_admin' : 'litmus_admin';
+        if (!$initiator->isAdmin()) {
+            return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour ajouter une pièce.']);
+        }
+        if (!$accessControlService->hasCourseAccess($initiator, $access_name) && !$initiator->hasPrivilege('SuperAdmin')) {
+            return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour ajouter une pièce.']);
+        }
 
         // Check if audioFile is present and not null
         if ($request->hasFile('audioFile')) {
@@ -367,7 +398,7 @@ class PieceController extends Controller
         // Save the new piece to the database
         $piece->save();
         $level = Level::with('course')->find($validatedData['level']);
-        $institutionName = \App\Models\Institution::findOrFail($initiator->institution_id)->name;
+        $institutionName = Institution::findOrFail($initiator->institution_id)->name;
 
         // Determine course type for logging
         $courseType = '';
@@ -410,6 +441,18 @@ class PieceController extends Controller
 
     public function updateOrder(Request $request): JsonResponse
     {
+        $initiator = auth()->user();
+        $accessControlService = app(AccessControlService::class);
+        $courseName = $request->input('courseName');
+        $access_name = $courseName === 'Histoire de la Musique' ? 'history_admin' : 'litmus_admin';
+
+        if (!$initiator->isAdmin()) {
+            return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour modifier l\'ordre des pièces.'], 403);
+        }
+        if (!$accessControlService->hasCourseAccess($initiator, $access_name) && !$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour modifier l\'ordre des pièces.'], 403);
+        }
+
         $pieces = $request->input('pieces');
 
         foreach ($pieces as $pieceData) {

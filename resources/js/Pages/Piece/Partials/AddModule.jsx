@@ -5,13 +5,12 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { useForm } from '@inertiajs/react';
+import { Transition } from '@headlessui/react';
 
 export default function AddModule({ className = '', courseName }) {
     const [levels, setLevels] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [successMessage, setSuccessMessage] = useState('');
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors, reset, recentlySuccessful } = useForm({
         level_id: '',
         title: '',
         description: '',
@@ -33,21 +32,22 @@ export default function AddModule({ className = '', courseName }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        setLoading(true);
-        setSuccessMessage('');
 
-        // Submit the form data to create a new module
-        axios.post(route('admin.add-module'), data)
-            .then(response => {
-                setSuccessMessage(response.data.message);
+        post(route('admin.add-module'), {
+            preserveScroll: true,
+            onSuccess: () => {
                 reset();
-            })
-            .catch(error => {
-                console.error('Error creating module:', error);
-            })
-            .finally(() => {
-                setLoading(false);
-            });
+            },
+            onError: (errors) => {
+                console.error('Error creating module:', errors);
+
+                setData({
+                    level_id: '',
+                    title: '',
+                    description: '',
+                });
+            },
+        });
     };
 
     return (
@@ -59,13 +59,13 @@ export default function AddModule({ className = '', courseName }) {
                 </p>
             </header>
 
-            <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-                {successMessage && (
-                    <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
-                        <span className="block sm:inline">{successMessage}</span>
-                    </div>
-                )}
+            {errors.error && (
+                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {errors.error}
+                </div>
+            )}
 
+            <form onSubmit={handleSubmit} className="mt-6 space-y-6">
                 <div>
                     <InputLabel htmlFor="level_id" value="Niveau" />
                     <select
@@ -111,9 +111,19 @@ export default function AddModule({ className = '', courseName }) {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing || loading}>
-                        {loading ? 'Création en cours...' : 'Créer le module'}
+                    <PrimaryButton disabled={processing}>
+                        {processing ? 'Création en cours...' : 'Créer le module'}
                     </PrimaryButton>
+
+                    <Transition
+                        show={recentlySuccessful}
+                        enter="transition ease-in-out"
+                        enterFrom="opacity-0"
+                        leave="transition ease-in-out"
+                        leaveTo="opacity-0"
+                    >
+                        <p className="text-sm text-green-500">Module créé avec succès.</p>
+                    </Transition>
                 </div>
             </form>
         </section>

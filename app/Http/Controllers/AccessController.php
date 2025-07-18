@@ -21,6 +21,12 @@ class AccessController extends Controller
 
     public function index(): Response
     {
+        $initiator = auth()->user();
+
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return Inertia::render('Welcome');
+        }
+
         $roles = AdminControl::all();
         $courses = Course::all();
         $user = auth()->user()->load('roles');
@@ -45,10 +51,16 @@ class AccessController extends Controller
 
     public function addRole(Request $request): JsonResponse
     {
+        $initiator = auth()->user();
+
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'role_id' => 'required|exists:admin_controls,id',
         ]);
+
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé à ajouter un rôle.'], 403);
+        }
 
         $user = User::find($request->user_id);
         $role = AdminControl::find($request->role_id);
@@ -59,9 +71,6 @@ class AccessController extends Controller
         }
         // Attach the role to the user
         $user->roles()->attach($role->id);
-
-        // Log the action
-        $initiator = $request->user();
 
         $this->logsController->createLog(
             'Permission',
@@ -74,10 +83,16 @@ class AccessController extends Controller
 
     public function removeRole(Request $request): JsonResponse
     {
+        $initiator = auth()->user();
+
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'role_id' => 'required|exists:admin_controls,id',
         ]);
+
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé à retirer un rôle.'], 403);
+        }
 
         $user = User::find($request->user_id);
         $role = AdminControl::find($request->role_id);
@@ -90,8 +105,6 @@ class AccessController extends Controller
         // Detach the role from the user
         $user->roles()->detach($role->id);
 
-        // Log the action
-        $initiator = $request->user();
         $this->logsController->createLog(
             'Permission',
             "Accès <strong>{$role->name}</strong> <span class=\"text-red-600 dark:text-red-400 font-semibold bg-red-100 dark:bg-red-900/30 px-1 rounded\">retiré</span> à <strong>{$user->first_name} {$user->last_name}</strong>.",

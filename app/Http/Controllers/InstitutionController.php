@@ -27,8 +27,15 @@ class InstitutionController extends Controller
             'name' => 'required|string',
         ]);
 
-        $institution = new Institution();
         $initiator = auth()->user();
+
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas autorisé à créer des institutions.'
+            ], 403);
+        }
+
+        $institution = new Institution();
         $institution->name = $request->name;
         $institution->save();
 
@@ -50,6 +57,13 @@ class InstitutionController extends Controller
         ]);
 
         $initiator = auth()->user();
+
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas autorisé à supprimer des institutions.'
+            ], 403);
+        }
+
         $institutions = Institution::findOrFail($request->institution_id);
         $institutions->delete();
 

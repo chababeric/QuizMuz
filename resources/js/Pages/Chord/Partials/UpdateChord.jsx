@@ -76,18 +76,16 @@ export default function UpdateChord({ className = '', chordsList, setChordsList,
         // Flatten the grouped chords back to a single array
         const flattenedUpdatedChords = Object.values(groupedChords).flat();
 
-        // Update state with the new list
-        setChordsList(flattenedUpdatedChords);
-
         // Update the order in the database for the specific level
         axios
             .post('/admin/update-chord-order', { chords: flattenedUpdatedChords })
             .then((response) => {
+                setChordsList(flattenedUpdatedChords);
                 setSuccessMessage(response.data.message);
                 setErrorMessage('');
             })
             .catch((error) => {
-                setErrorMessage("Échec de la mise à jour de l'ordre");
+                setErrorMessage(error.response.data.error);
                 setSuccessMessage('');
             });
     };
@@ -96,9 +94,8 @@ export default function UpdateChord({ className = '', chordsList, setChordsList,
         e.preventDefault();
 
         patch(route('admin.update-chord'), {
+            preserveScroll: true,
             onSuccess: () => {
-                reset();
-                setIsEditModalOpen(false);
                 setSuccessMessage('Accord modifié avec succès');
                 setErrorMessage('');
                 axios.get(route('allChords'))
@@ -111,15 +108,19 @@ export default function UpdateChord({ className = '', chordsList, setChordsList,
                         console.log(error);
                     });
             },
-            onError: () => {
-                setErrorMessage("Échec de la modification");
+            onError: (errors) => {
+                // setErrorMessage(errors.error || "Échec de la modification de l'accord");
                 setSuccessMessage('');
+            },
+            onFinish: () => {
+                setIsEditModalOpen(false);
+                reset();
             }
         });
     };
 
     const handleDelete = (id) => {
-        axios.delete(`/chords/${id}`)
+        axios.post(`/chords/${id}`)
             .then(response => {
                 setIsDeleteModalOpen(false);
                 setSuccessMessage(response.data.message || "Formule / Accord supprimé avec succès");
@@ -135,7 +136,8 @@ export default function UpdateChord({ className = '', chordsList, setChordsList,
                     });
             })
             .catch(error => {
-                setErrorMessage("Échec de la suppression");
+                setIsDeleteModalOpen(false);
+                setErrorMessage(error.response?.data?.error || "Échec de la suppression de l'accord");
                 setSuccessMessage('');
             });
     };
@@ -185,6 +187,12 @@ export default function UpdateChord({ className = '', chordsList, setChordsList,
                     />
                 </button>
             </header>
+
+            {errors.error && (
+                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {errors.error}
+                </div>
+            )}
 
             <Transition
                 show={filterDisplay}

@@ -38,6 +38,7 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
         form: '',
         file_name: '',
         module_id: '',
+        courseName: courseName,
     });
 
     const openDeleteModal = (piece) => {
@@ -159,18 +160,16 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
         // Flatten the grouped pieces back to a single array
         const flattenedUpdatedPieces = Object.values(groupedPieces).flat();
 
-        // Update state with the new list
-        setPiecesList(flattenedUpdatedPieces);
-
         // Update the order in the database for the specific level
         axios
-            .post('/admin/update-order', { pieces: flattenedUpdatedPieces })
+            .post('/admin/update-order', { pieces: flattenedUpdatedPieces, courseName: courseName })
             .then((response) => {
+                setPiecesList(flattenedUpdatedPieces);
                 setSuccessMessage(response.data.message);
                 setErrorMessage('');
             })
             .catch((error) => {
-                setErrorMessage("Échec de la mise à jour de l'ordre");
+                setErrorMessage(error.response.data.error);
                 setSuccessMessage('');
             });
     };
@@ -179,9 +178,8 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
         e.preventDefault();
 
         patch(route('admin.update-piece'), {
+            preserveScroll: true,
             onSuccess: () => {
-                reset();
-                setIsEditModalOpen(false);
                 setSuccessMessage('Pièce modifiée avec succès');
                 setErrorMessage('');
                 axios.get(route('allPieces'))
@@ -195,16 +193,20 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                         console.log(error);
                     });
             },
-            onError: () => {
-                setErrorMessage('Échec de la modification de la pièce');
+            onError: (errors) => {
+                setErrorMessage(errors.error || 'Échec de la modification de la pièce');
                 setSuccessMessage('');
+            },
+            onFinish: () => {
+                reset();
+                setIsEditModalOpen(false);
             }
         });
     };
 
     const handleDelete = (id) => {
         // axios.post(`/pieces/${id}/move-to-reserve`)
-        axios.post(`/delete-piece/${id}`)
+        axios.post(`/delete-piece/${id}`, courseName)
             .then(response => {
                 setIsDeleteModalOpen(false);
                 setSuccessMessage(response.data.message);
@@ -214,7 +216,6 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                     .then((response) => {
                         // Sort the piecesList by order
                         const sortedPieces = response.data.sort((a, b) => a.order - b.order);
-
                         setPiecesList(sortedPieces);
                     })
                     .catch((error) => {
@@ -222,7 +223,8 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                     });
             })
             .catch(error => {
-                setErrorMessage('Échec de la suppression de la pièce');
+                setIsDeleteModalOpen(false);
+                setErrorMessage(error.response.data.error || 'Échec de la suppression de la pièce');
                 setSuccessMessage('');
             });
     };

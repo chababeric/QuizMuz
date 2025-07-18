@@ -33,6 +33,12 @@ export default function UpdateProfileInformation({ className = '' }) {
                 </p>
             </header>
 
+            {errors.error && (
+                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {errors.error}
+                </div>
+            )}
+
             <form onSubmit={submit} className="mt-6 space-y-6">
                 <div>
                     <InputLabel htmlFor="name" value="Nom d'utilisateur actuel" className="dark:text-white"/>

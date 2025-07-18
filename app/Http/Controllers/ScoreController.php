@@ -89,8 +89,10 @@ class ScoreController extends Controller
     {
         $initiator = auth()->user();
 
-        if (!$initiator || !$initiator->institution_id) {
-            return response()->json(['message' => 'User or institution not found.'], 400);
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas autorisé à réinitialiser les scores',
+            ], 403);
         }
 
         Score::whereHas('user', function ($query) use ($initiator) {

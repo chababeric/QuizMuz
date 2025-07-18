@@ -47,6 +47,12 @@ export default function UpdatePasswordForm({ className = '' }) {
                 </p>
             </header>
 
+            {errors.error && (
+                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {errors.error}
+                </div>
+            )}
+
             <form onSubmit={updatePassword} className="mt-6 space-y-6">
                 <div>
                     <InputLabel htmlFor="username" value="Nom d'utilisateur" className="dark:text-white"/>

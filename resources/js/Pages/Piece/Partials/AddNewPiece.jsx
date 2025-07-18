@@ -81,15 +81,11 @@ export default function AddNewPiece({ className = '', piecesList, getAllPieces, 
         e.preventDefault();
 
         post(route('admin.new-piece'), {
-            preserveScroll: true,
             onSuccess: () => {
-                reset();
                 getAllPieces();
             },
-            onError: (errors) => {
-                if (errors.level) {
-                    reset('level', 'period', 'genre', 'composer', 'title', 'element', 'no_mvt', 'mvt', 'form', 'fileName', 'audioFile', 'module_id');
-                }
+            onFinish: () => {
+                reset();
             },
         });
     }
@@ -99,6 +95,12 @@ export default function AddNewPiece({ className = '', piecesList, getAllPieces, 
             <header>
                 <h2 className="text-lg font-medium text-gray-900 dark:text-white">Ajouter une nouvelle pièce</h2>
             </header>
+
+            {errors.error && (
+                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {errors.error}
+                </div>
+            )}
 
             <form onSubmit={submitNewPiece} className="mt-6 space-y-6">
                 <div>

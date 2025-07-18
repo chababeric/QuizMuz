@@ -251,7 +251,7 @@ Route::middleware(['auth', 'verified', 'fma', 'check_timeout', 'update_user_acti
     Route::post('/new-chord', [ChordController::class, 'store'])->name('admin.new-chord');
     Route::post('/admin/update-chord-order', [ChordController::class, 'updateOrder'])->name('admin.update-chord-order');
     Route::patch('/admin/update-chord', [ChordController::class, 'update'])->name('admin.update-chord');
-    Route::delete('/chords/{id}', [ChordController::class, 'destroy'])->name('admin.delete-chord');
+    Route::post('/chords/{id}', [ChordController::class, 'destroy'])->name('admin.delete-chord');
 });
 
 //! Logs Routes

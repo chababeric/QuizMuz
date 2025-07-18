@@ -20,6 +20,7 @@ class AdminKeyController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $initiator = auth()->user();
         $request->validate([
             'newKey' => [
                 'required',
@@ -33,6 +34,10 @@ class AdminKeyController extends Controller
             'newKey.min' => 'La clé Admin doit contenir au moins 8 caractères.',
         ]);
 
+        if (!$initiator->isAdmin()) {
+            return Redirect::back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour mettre à jour la clé Admin.']);
+        }
+
         $user = Auth::user();
         // Verify the user's password
         if (!Hash::check($request->userPassword, $user->password)) {
@@ -45,7 +50,7 @@ class AdminKeyController extends Controller
 
         $this->logsController->createLog(
             'Clé Admin',
-            "Clé Admin <span class=\"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-semibold px-1 rounded\">mise à jour</span> par <strong>{$user->first_name} {$user->last_name}</strong>.",
+            "La clé admin a été <span class=\"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-semibold px-1 rounded\">mise à jour</span>.",
             $user->id,
         );
 
@@ -58,9 +63,15 @@ class AdminKeyController extends Controller
     //Returns a JSON response indicating whether the key is valid or not.
     public function validateKey(Request $request): RedirectResponse
     {
+        $initiator = auth()->user();
+
         $request->validate([
             'key' => 'required|string',
         ]);
+
+        if (!$initiator->isAdmin()) {
+            return Redirect::back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour valider la clé Admin.']);
+        }
 
         $adminKey = AdminKey::first();
 

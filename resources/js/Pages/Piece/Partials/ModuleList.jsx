@@ -69,15 +69,14 @@ export default function ModuleList({ className = '', courseName }) {
                 setSuccessMessage(response.data.message);
                 setErrorMessage('');
                 fetchModules(selectedLevel);
-                setConfirmDelete(null);
             })
             .catch(error => {
-                console.error('Error deleting module:', error);
-                setErrorMessage('Erreur lors de la suppression du module');
+                setErrorMessage(error.response.data.error || 'Erreur lors de la suppression du module');
                 setSuccessMessage('');
             })
             .finally(() => {
                 setLoading(false);
+                setConfirmDelete(null);
             });
     };
 
@@ -120,8 +119,7 @@ export default function ModuleList({ className = '', courseName }) {
                 setErrorMessage('');
             })
             .catch(error => {
-                console.error('Error updating module order:', error);
-                setErrorMessage('Erreur lors de la mise à jour de l\'ordre des modules');
+                setErrorMessage(error.response.data.error || 'Erreur lors de la mise à jour de l\'ordre des modules');
                 setSuccessMessage('');
                 // Restore original order by refetching
                 fetchModules(selectedLevel);

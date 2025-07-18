@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Institution;
 use App\Models\Level;
 use App\Models\Module;
+use App\Services\AccessControlService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,9 +19,18 @@ class ModuleController extends Controller
         $this->logsController = $logsController;
     }
 
-    public function store(Request $request): RedirectResponse|JsonResponse
+    public function store(Request $request): RedirectResponse
     {
         $initiator = auth()->user();
+        $accessControlService = app(AccessControlService::class);
+
+        if (!$initiator->isAdmin()) {
+            return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour mettre à jour un module.']);
+        }
+
+        if (!$accessControlService->hasCourseAccess($initiator, 'litmus_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
+            return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour mettre à jour un module.']);
+        }
 
         $validatedData = $request->validate(
             [
@@ -60,24 +70,23 @@ class ModuleController extends Controller
             $initiator->id,
         );
 
-
-        // Return different responses based on request type
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Module créé avec succès.',
-                'module' => $module
-            ]);
-        }
-
         return redirect()
             ->route('piece.edit')
             ->with('success', 'Module créé avec succès.');
     }
 
-    public function update(Request $request): RedirectResponse|JsonResponse
+    public function update(Request $request): RedirectResponse
     {
         $initiator = auth()->user();
+        $accessControlService = app(AccessControlService::class);
+
+        if (!$initiator->isAdmin()) {
+            return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour mettre à jour un module.']);
+        }
+
+        if (!$accessControlService->hasCourseAccess($initiator, 'litmus_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
+            return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour mettre à jour un module.']);
+        }
 
         $validatedData = $request->validate(
             [
@@ -85,7 +94,6 @@ class ModuleController extends Controller
                 'level_id' => 'required|integer|exists:levels,id',
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'order' => 'nullable|integer',
             ],
             [
                 'id.required' => 'L\'identifiant du module est requis.',
@@ -109,7 +117,6 @@ class ModuleController extends Controller
             'level_id' => $validatedData['level_id'],
             'title' => $validatedData['title'],
             'description' => $validatedData['description'],
-            'order' => $validatedData['order'],
         ]);
 
         // Reload the module with the new level relationship
@@ -150,22 +157,13 @@ class ModuleController extends Controller
             }
         }
 
-        $logMessage .= "<span class=\"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-semibold px-1 rounded\">mis à jour</span> par <strong>{$initiator->first_name} {$initiator->last_name}</strong>.";
+        $logMessage .= "<span class=\"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-semibold px-1 rounded\">mis à jour</span>";
 
         $this->logsController->createLog(
             "LitMus",
             $logMessage,
             $initiator->id,
         );
-
-        // Return different responses based on request type
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Module mis à jour avec succès.',
-                'module' => $module
-            ]);
-        }
 
         return redirect()
             ->route('piece.edit')
@@ -175,6 +173,14 @@ class ModuleController extends Controller
     public function destroy(Request $request): JsonResponse
     {
         $initiator = auth()->user();
+        $accessControlService = app(AccessControlService::class);
+
+        if (!$initiator->isAdmin()) {
+            return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour supprimer un module.'], 403);
+        }
+        if (!$accessControlService->hasCourseAccess($initiator, 'litmus_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour supprimer un module.'], 403);
+        }
 
         $validatedData = $request->validate([
             'id' => 'required|integer|exists:modules,id',
@@ -203,6 +209,14 @@ class ModuleController extends Controller
     public function updateOrder(Request $request): JsonResponse
     {
         $initiator = auth()->user();
+        $accessControlService = app(AccessControlService::class);
+
+        if (!$initiator->isAdmin()) {
+            return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour mettre à jour l\'ordre des modules.'], 403);
+        }
+        if (!$accessControlService->hasCourseAccess($initiator, 'litmus_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour mettre à jour l\'ordre des modules.'], 403);
+        }
 
         $validatedData = $request->validate([
             'modules' => 'required|array',

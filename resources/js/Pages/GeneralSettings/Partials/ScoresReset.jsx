@@ -19,7 +19,7 @@ export default function ScoresReset({auth, scores, getScores, successMessage, se
 
             getScores();
         } catch (error) {
-            setErrorMessage('An error occurred while resetting scores.');
+            setErrorMessage(error.response?.data?.message || 'Une erreur est survenue lors de la réinitialisation des scores.');
             setSuccessMessage('');
         }
     };

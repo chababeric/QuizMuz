@@ -56,7 +56,8 @@ class AdminController extends Controller
 
     public function updateUsername(Request $request): RedirectResponse
     {
-        $initiator = $request->user();
+        $initiator = auth()->user();
+
         $request->validate([
             'old_username' => 'required|string',
             'new_username' => 'required|string|unique:users,username|max:18',
@@ -65,6 +66,11 @@ class AdminController extends Controller
             'new_username.unique' => 'Le nouveau nom d\'utilisateur est déjà pris.',
             'new_username.max' => 'Le nom d\'utilisateur ne doit pas dépasser 16 caractères.',
         ]);
+
+        if (!$initiator->isAdmin()) {
+            return Redirect::back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour mettre à jour le nom d\'utilisateur.']);
+        }
+
         // Find the user by current username
         $user = User::where('username', $request->old_username)->first();
 
@@ -78,7 +84,7 @@ class AdminController extends Controller
         // Log the action
         $this->logsController->createLog(
             'Compte',
-            "Nom d'utilisateur <span class=\"line-through text-gray-500 dark:text-gray-400\">{$request->old_username}</span> → <strong>{$request->new_username}</strong> <span class=\"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-semibold px-1 rounded\">mis à jour</span>.",
+            "Le nom d'utilisateur <span class=\"line-through text-gray-500 dark:text-gray-400\">{$request->old_username}</span> → <strong>{$request->new_username}</strong> a été <span class=\"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-semibold px-1 rounded\">mis à jour</span>.",
             $initiator->id
         );
 

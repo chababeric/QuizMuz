@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Chord;
 use App\Models\Level;
+use App\Services\AccessControlService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,6 +39,15 @@ class ChordController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $initiator = auth()->user();
+        $accessControlService = app(AccessControlService::class);
+
+        if (!$initiator->isAdmin()) {
+            return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour ajouter une formule ou un accord.']);
+        }
+
+        if (!$accessControlService->hasCourseAccess($initiator, 'fma_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
+            return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour ajouter une formule ou un accord.']);
+        }
 
         $request->validate([
             'level' => 'required|exists:levels,id',
@@ -88,7 +98,17 @@ class ChordController extends Controller
 
     public function updateOrder(Request $request): JsonResponse
     {
+        $initiator = auth()->user();
+        $accessControlService = app(AccessControlService::class);
         $chords = $request->input('chords');
+
+        if (!$initiator->isAdmin()) {
+            return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour modifier l\'ordre des formules ou accords.'], 403);
+        }
+
+        if (!$accessControlService->hasCourseAccess($initiator, 'fma_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour modifier l\'ordre des formules ou accords.'], 403);
+        }
 
         foreach ($chords as $chordData) {
             $chord = Chord::findOrFail($chordData['id']);
@@ -100,6 +120,16 @@ class ChordController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
+        $initiator = auth()->user();
+        $accessControlService = app(AccessControlService::class);
+
+        if (!$initiator->isAdmin()) {
+            return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour modifier une formule ou un accord.']);
+        }
+        if (!$accessControlService->hasCourseAccess($initiator, 'fma_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
+            return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour modifier une formule ou un accord.']);
+        }
+
         $request->validate([
             'id' => 'required|exists:chords,id',
             'level' => 'required|exists:levels,id',
@@ -124,17 +154,27 @@ class ChordController extends Controller
         $this->logsController->createLog(
             'FMA',
             "Formule / Accord <span class=\"line-through text-gray-500 dark:text-gray-400\">{$originalChordName}</span> → <strong>{$chord->chord_name}</strong> (Niveau: <span class=\"line-through text-gray-500 dark:text-gray-400\">{$originalLevel->name}</span> → <strong>{$level->name}</strong>) <span class=\"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-semibold px-1 rounded\">mis à jour</span>.",
-            $request->user()->id
+            $initiator->id
         );
 
         return redirect()->route('chord.edit')->with('success', 'Formule / Accord mis à jour avec succès.');
     }
 
-public function destroy(int $id): RedirectResponse
+public function destroy(int $id): JsonResponse
     {
+        $initiator = auth()->user();
+        $accessControlService = app(AccessControlService::class);
+
+        if (!$initiator->isAdmin()) {
+            return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour supprimer une formule ou un accord.'], 403);
+        }
+
+        if (!$accessControlService->hasCourseAccess($initiator, 'fma_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour supprimer une formule ou un accord.'], 403);
+        }
+
         $chord = Chord::findOrFail($id);
         $level = $chord->level;
-        $initiator = auth()->user();
         $chord->delete();
 
         $this->logsController->createLog(
@@ -142,7 +182,6 @@ public function destroy(int $id): RedirectResponse
             "Formule / Accord <strong>{$chord->chord_name}</strong> (Niveau <strong>{$level->name}</strong>) <span class=\"bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-semibold px-1 rounded\">supprimé</span>.",
             $initiator->id
         );
-
-        return redirect()->route('chord.edit')->with('success', 'Formule / Accord supprimé avec succès.');
+        return response()->json(['message' => 'Formule / Accord supprimé avec succès.']);
     }
 }

@@ -67,6 +67,12 @@ export default function UpdateAdminKeyForm({ className = '' }) {
                 </p>
             </header>
 
+            {errors.error && (
+                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {errors.error}
+                </div>
+            )}
+
             <form onSubmit={validateKey} className="mt-6 space-y-6">
                 <p className="text-sm text-gray-800 dark:text-white">
                     Pour des raisons de sécurité, la clé d'administrateur ne peut pas être affichée à cause de son chiffrement.

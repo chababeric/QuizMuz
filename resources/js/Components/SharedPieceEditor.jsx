@@ -4,6 +4,7 @@ import AddModule from '@/Pages/Piece/Partials/AddModule';
 import ModuleList from '@/Pages/Piece/Partials/ModuleList';
 import UpdatePiece from '@/Pages/Piece/Partials/UpdatePiece';
 import AddNewPiece from '@/Pages/Piece/Partials/AddNewPiece';
+import UpdateModule from "@/Pages/Piece/Partials/UpdateModule.jsx";
 
 export default function SharedPieceEditor({
   piecesList = [],
@@ -123,6 +124,16 @@ export default function SharedPieceEditor({
 
             {mode === 'litmus' && (
                 <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
+                    <ModuleList
+                        className="max-w-xl"
+                        user={user}
+                        courseName={mode === 'litmus' ? 'Littérature Musicale' : 'Histoire de la Musique'}
+                    />
+                </div>
+            )}
+
+            {mode === 'litmus' && (
+                <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
                     <AddModule
                         className="max-w-xl"
                         coursesList={filteredCoursesList || []}
@@ -134,9 +145,9 @@ export default function SharedPieceEditor({
 
             {mode === 'litmus' && (
                 <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                    <ModuleList
+                    <UpdateModule
+                        coursesList={filteredCoursesList || []}
                         className="max-w-xl"
-                        user={user}
                         courseName={mode === 'litmus' ? 'Littérature Musicale' : 'Histoire de la Musique'}
                     />
                 </div>

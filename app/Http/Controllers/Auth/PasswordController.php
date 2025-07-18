@@ -3,26 +3,37 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\LogsController;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
 
 class PasswordController extends Controller
 {
+    protected LogsController $logsController;
+
+    public function __construct(LogsController $logsController)
+    {
+        $this->logsController = $logsController;
+    }
+
     /**
      * Update the user's password.
      */
     public function update(Request $request): RedirectResponse
     {
-        $initiator = $request->user();
+        $initiator = auth()->user();
         $request->validate([
             'username' => ['required', 'string'],
             'password' => ['required', Password::defaults(), 'confirmed'],
             'password_confirmation' => ['required'],
         ]);
+
+        if (!$initiator->isAdmin()) {
+            return back()->withErrors(['error' => 'Vous n\'êtes pas autorisé à modifier le mot de passe d\'un utilisateur.']);
+        }
 
         $user = User::where('username', $request->username)->first();
 
@@ -40,14 +51,11 @@ class PasswordController extends Controller
                 $user->password = Hash::make($request->password);
                 $user->save();
 
-                Log::info('**********START TRANSACTION**********');
-                Log::info('ACTION: Password update');
-                Log::info('INITIATOR ID: ' . $user->id);
-                Log::info('INITIATOR First Name: ' . $initiator->first_name);
-                Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-                Log::info('INITIATOR Username: ' . $initiator->username);
-                Log::info('User affected: ' . $request->username);
-                Log::info('**********END TRANSACTION**********');
+                $this->logsController->createLog(
+                    'Compte',
+                    "Le mot de passe de l'utilisateur <strong>{$user->username}</strong> a été <span class=\"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-semibold px-1 rounded\">mis à jour</span>.",
+                    $initiator->id
+                );
             }
         }
 

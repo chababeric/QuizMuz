@@ -18,14 +18,11 @@ export default function AddNewChord({ className = '', levelsList, getAllChords }
         post(route('admin.new-chord'), {
             preserveScroll: true,
             onSuccess: () => {
-                reset();
                 getAllChords();
             },
-            onError: (errors) => {
-                if (errors.level) {
-                    reset('level', 'chord_name', 'audioFile');
-                }
-            },
+            onFinish: () => {
+                reset();
+            }
         });
     }
 
@@ -34,6 +31,12 @@ export default function AddNewChord({ className = '', levelsList, getAllChords }
             <header>
                 <h2 className="text-lg font-medium text-gray-900 dark:text-white">Ajouter une nouvelle formule hormonique</h2>
             </header>
+
+            {errors.error && (
+                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {errors.error}
+                </div>
+            )}
 
             <form onSubmit={submitNewChord} className="mt-6 space-y-6">
                 <div>

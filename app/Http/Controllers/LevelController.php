@@ -65,6 +65,12 @@ class LevelController extends Controller
             'selectedInstitutionName' => 'required|string',
         ]);
 
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas autorisé à modifier l\'accès aux niveaux.',
+            ], 403);
+        }
+
         $institution = auth()->user()->institution_id;
         $institution_name = Institution::where('id', $institution)->first()->name;
 
@@ -128,6 +134,12 @@ class LevelController extends Controller
             'course_id.exists' => 'Le cours sélectionné n\'existe pas.',
         ]);
 
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas autorisé à créer des niveaux.',
+            ], 403);
+        }
+
         $institution = auth()->user()->institution_id;
         $institution_name = Institution::where('id', $institution)->first()->name;
 
@@ -160,6 +172,12 @@ class LevelController extends Controller
             'name' => 'required|string',
             'institution_name' => 'required|string',
         ]);
+
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas autorisé à supprimer des niveaux.',
+            ], 403);
+        }
 
         $institution = auth()->user()->institution_id;
         $institution_name = Institution::where('id', $institution)->first()->name;

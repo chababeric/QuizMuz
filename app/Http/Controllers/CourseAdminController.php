@@ -19,13 +19,18 @@ class CourseAdminController extends Controller
 
     public function getCourseAdmins(Request $request, $courseId): JsonResponse
     {
+        $initiator = auth()->user();
         $course = Course::findOrFail($courseId);
+
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json(['error' => 'Non autorisé'], 403);
+        }
 
         // Check permission
         if (!auth()->user()->hasPrivilege('SuperAdmin') &&
             !auth()->user()->hasPrivilege('Teacher') &&
             !auth()->user()->isCourseAdmin($courseId)) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            return response()->json(['error' => 'Non autorisé'], 403);
         }
 
         $admins = $course->admins;
@@ -35,11 +40,17 @@ class CourseAdminController extends Controller
 
     public function addCourseAdmin(Request $request): JsonResponse
     {
+        $initiator = auth()->user();
+
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'course_id' => 'required|exists:courses,id',
             'admin_control_id' => 'required|exists:admin_controls,id',
         ]);
+
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé à ajouter un administrateur de cours'], 403);
+        }
 
         $user = User::find($request->user_id);
         $course = Course::find($request->course_id);
@@ -60,8 +71,6 @@ class CourseAdminController extends Controller
         // Attach the role to the user for the specific course
         $user->adminCourses()->attach($course->id, ['admin_control_id' => $role->id]);
 
-        // Log the action
-        $initiator = $request->user();
         $this->logsController->createLog(
             'Permission',
             "Accès <strong>{$role->name}</strong> <span class=\"bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 font-semibold px-1 rounded\">accordé</span> à <strong>{$user->first_name} {$user->last_name}</strong>.",
@@ -78,11 +87,17 @@ class CourseAdminController extends Controller
      */
     public function removeCourseAdmin(Request $request): JsonResponse
     {
+        $initiator = auth()->user();
+
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'course_id' => 'required|exists:courses,id',
             'admin_control_id' => 'required|exists:admin_controls,id', // Changed from 'role_id' to 'admin_control_id'
         ]);
+
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé à retirer un administrateur de cours'], 403);
+        }
 
         $user = User::find($request->user_id);
         $course = Course::find($request->course_id);
@@ -105,8 +120,6 @@ class CourseAdminController extends Controller
             ->wherePivot('admin_control_id', $role->id)
             ->detach();
 
-        // Log the action
-        $initiator = $request->user();
         $this->logsController->createLog(
             'Permission',
             "Accès <strong>{$role->name}</strong> <span class=\"bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-semibold px-1 rounded\">retiré</span> à <strong>{$user->first_name} {$user->last_name}</strong>.",
