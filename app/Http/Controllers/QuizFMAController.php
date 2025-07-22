@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Middleware\UserStats;
 use App\Models\Chord;
 use App\Models\FmaGame;
 use App\Models\Score;
@@ -59,6 +60,9 @@ class QuizFMAController extends BaseQuizController
             $data['difficulty'],
             $data['chords_list_id']
         );
+
+        $userStats = new UserStats();
+        $userStats->incrementUserStats($userId, $data['courseId'], 'quiz');
 
         return Inertia::render('QuizFMA', [
             'difficulty' => $data['difficulty'],

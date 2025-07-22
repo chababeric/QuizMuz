@@ -18,8 +18,8 @@ export default function MessageDisplay({ successMessage, errorMessage, setSucces
 
     return (
         <div className="w-full flex justify-center mt-4">
-            {visible && successMessage && <div className="bg-green-500 text-white p-2 rounded">{successMessage}</div>}
-            {visible && errorMessage && <div className="bg-red-500 text-white p-2 rounded">{errorMessage}</div>}
+            {visible && successMessage && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4"><span className="block sm:inline">{successMessage}</span></div>}
+            {visible && errorMessage && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"><span className="block sm:inline">{errorMessage}</span></div>}
         </div>
     );
 }

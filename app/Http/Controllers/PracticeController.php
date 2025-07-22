@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Middleware\UserStats;
 use App\Models\Chord;
 use App\Models\Module;
 use App\Models\Piece;
@@ -13,6 +14,7 @@ class PracticeController extends Controller
 {
     public function index(Request $request): Response
     {
+        $initiator = auth()->user();
         $level = $request->input('level');
         $courseId = $request->input('courseId');
         $courseName = $request->input('courseName');
@@ -111,6 +113,9 @@ class PracticeController extends Controller
                 ->first()
                 ?->updated_at;
         }
+
+        $userStats = new UserStats();
+        $userStats->incrementUserStats($initiator->id, $courseId, 'practice');
 
         return Inertia::render('Practice', [
             'level' => $level,

@@ -19,6 +19,8 @@ use App\Http\Controllers\SupportController;
 use App\Http\Controllers\UserStatsController;
 use App\Http\Middleware\AddUserPermissions;
 use App\Http\Middleware\UserStats;
+use App\Models\User;
+use App\Models\UserCourseMode;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\LoginUserController;
@@ -128,7 +130,7 @@ Route::middleware(['auth', 'verified', 'check_timeout', 'update_user_action_time
 });
 
 //! Practice and Quiz Routes (they need UserStats)
-Route::middleware(['auth', 'verified', 'check_timeout', 'update_user_action_time', UserStats::class])->group(function () {
+Route::middleware(['auth', 'verified', 'check_timeout', 'update_user_action_time', /*UserStats::class*/])->group(function () {
     Route::get('/practice', [PracticeController::class, 'index'])->name('practice');
     Route::get('/quizsolo', [QuizSoloController::class, 'show'])->name('quizsolo');
     Route::get('/quizfma', [QuizFMAController::class, 'show'])->name('quizfma');
@@ -160,7 +162,51 @@ Route::get('/admin', function () {
 
 //! Dashboard Routes
 Route::get('dashboard', function () {
-    return Inertia::render('Dashboard');
+    $totalStats = [
+        'totalUsers' => User::count(),
+        'totalSoloGames' => UserCourseMode::sum('quiz_count'), // Total quizzes across all users and courses
+        'totalPractice' => UserCourseMode::sum('practice_count'), // Total practices across all users and courses
+    ];
+
+    // Fetch all users with their institution name and stats from the user_course_modes table
+    $users = User::with('institution:id,name') // Eager load institution
+    ->get(['id', 'username', 'first_name', 'last_name', 'institution_id', 'last_action_time']) // User fields
+    ->map(function ($user) {
+        // Get all course stats for the user
+        $courses = UserCourseMode::where('user_id', $user->id)
+            ->with('course:id,name') // Eager load course
+            ->get(['course_id', 'practice_count', 'quiz_count']) // Stats fields
+            ->map(function ($courseStat) {
+                $totalParticipation = $courseStat->practice_count + $courseStat->quiz_count; // Participation per course
+                return [
+                    'course_name' => $courseStat->course->name ?? 'Unknown Course', // Get course name
+                    'course_id' => $courseStat->course_id,
+                    'total' => $totalParticipation,
+                    'practice' => $courseStat->practice_count,
+                    'quiz' => $courseStat->quiz_count,
+                ];
+            });
+
+        return [
+            'id' => $user->id,
+            'username' => $user->username,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'institution_name' => $user->institution->name ?? null,
+            'last_action_time' => $user->last_action_time,
+            'courses' => $courses, // Stats with course name
+        ];
+    });
+
+    return Inertia::render('Dashboard', [
+        'totalStats' => $totalStats,
+        'users' => $users,
+    ]);
+
+    return Inertia::render('Dashboard', [
+        'totalStats' => $totalStats,
+        'users' => $users,
+    ]);
 })->middleware(['auth', 'verified', 'access:SuperAdmin,Teacher', 'check_timeout', 'update_user_action_time', AddUserPermissions::class])->name('dashboard');
 
 Route::middleware(['auth', 'verified', 'access:SuperAdmin,Teacher', 'check_timeout', 'update_user_action_time'])->group(function () {

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Models\UserCourseMode;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,17 +18,17 @@ class UserStats
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check()) {
-            $user = auth()->user();
-            // Increment nb_practice when the user is practicing and nb_game_solo when the user is playing a solo game
-            if ($request->path() === 'practice') {
-                $user->nb_practice++;
-            }
-            else if ($request->path() === 'quizsolo') {
-                $user->nb_game_solo++;
-            }
-            $user->save();
-        }
+//        if (auth()->check()) {
+//            $user = auth()->user();
+//            // Increment nb_practice when the user is practicing and nb_game_solo when the user is playing a solo game
+//            if ($request->path() === 'practice') {
+//                $user->nb_practice++;
+//            }
+//            else if ($request->path() === 'quizsolo') {
+//                $user->nb_game_solo++;
+//            }
+//            $user->save();
+//        }
         return $next($request);
     }
 
@@ -72,5 +73,21 @@ class UserStats
         } else {
             return response()->json(['message' => 'Utilisateur non trouvé'], 404);
         }
+    }
+
+    public function incrementUserStats(int $user_id, int $course_id, string $mode): void
+    {
+        $userCourseMode = UserCourseMode::firstOrCreate(
+            ['user_id' => $user_id, 'course_id' => $course_id],
+            ['practice_count' => 0, 'quiz_count' => 0]
+        );
+
+        if ($mode === 'practice') {
+            $userCourseMode->increment('practice_count');
+        } elseif ($mode === 'quiz') {
+            $userCourseMode->increment('quiz_count');
+        }
+
+        $userCourseMode->save();
     }
 }
