@@ -76,7 +76,7 @@ Route::post('register', [RegisteredUserController::class, 'store']);
 Route::get('/institutions', [InstitutionController::class, 'index'])->name('allInstitutions');
 
 //! Routes for the main application and Students
-Route::middleware(['auth', 'verified', 'check_timeout', 'update_user_action_time'])->group(function () {
+Route::middleware(['auth', 'verified', 'check_timeout', 'update_user_action_time', 'access:SuperAdmin,Teacher,StudentAdmin,Student'])->group(function () {
     Route::get('/course', [CourseController::class, 'index'])->name('course');
     Route::get('/mainmenu/{courseId}', [LevelController::class, 'index'])->name('mainmenu');
     Route::get('/support', [SupportController::class, 'index'])->name('support');
@@ -129,8 +129,8 @@ Route::middleware(['auth', 'verified', 'check_timeout', 'update_user_action_time
     Route::get('/api/modules/level/{level_id}', [ModuleController::class, 'getModulesByLevel']);
 });
 
-//! Practice and Quiz Routes (they need UserStats)
-Route::middleware(['auth', 'verified', 'check_timeout', 'update_user_action_time', /*UserStats::class*/])->group(function () {
+//! Practice and Quiz Routes
+Route::middleware(['auth', 'verified', 'check_timeout', 'update_user_action_time', 'access:SuperAdmin,Teacher,StudentAdmin,Student'])->group(function () {
     Route::get('/practice', [PracticeController::class, 'index'])->name('practice');
     Route::get('/quizsolo', [QuizSoloController::class, 'show'])->name('quizsolo');
     Route::get('/quizfma', [QuizFMAController::class, 'show'])->name('quizfma');
@@ -197,11 +197,6 @@ Route::get('dashboard', function () {
             'courses' => $courses, // Stats with course name
         ];
     });
-
-    return Inertia::render('Dashboard', [
-        'totalStats' => $totalStats,
-        'users' => $users,
-    ]);
 
     return Inertia::render('Dashboard', [
         'totalStats' => $totalStats,
