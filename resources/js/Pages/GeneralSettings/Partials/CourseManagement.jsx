@@ -4,7 +4,7 @@ import { useState } from "react";
 import deleteIcon from "../../../../icons/delete.svg";
 import addIcon from "../../../../icons/add.svg";
 
-export default function CourseManagement({ authInstitution, courses, getCourses, updateLastActionTime, successMessage, errorMessage, setSuccessMessage, setErrorMessage, selectedInstitution }) {
+export default function CourseManagement({ authInstitution, courses, getCourses, successMessage, errorMessage, setSuccessMessage, setErrorMessage, selectedInstitution }) {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [newCourseName, setNewCourseName] = useState('');
@@ -20,7 +20,6 @@ export default function CourseManagement({ authInstitution, courses, getCourses,
     const closeDeleteModal = () => setIsDeleteModalOpen(false);
 
     const addCourse = async () => {
-        updateLastActionTime();
         closeAddModal();
 
         try {
@@ -42,7 +41,6 @@ export default function CourseManagement({ authInstitution, courses, getCourses,
     };
 
     const deleteCourse = async (course) => {
-        updateLastActionTime();
         closeDeleteModal();
 
         try {

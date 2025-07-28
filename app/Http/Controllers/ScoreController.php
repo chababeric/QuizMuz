@@ -5,10 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Score;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class ScoreController extends Controller
 {
+    protected LogsController $logsController;
+
+    public function __construct(LogsController $logsController)
+    {
+        $this->logsController = $logsController;
+    }
+
     public function getAllScores(Request $request): JsonResponse
     {
         $request->validate([
@@ -83,22 +89,21 @@ class ScoreController extends Controller
     {
         $initiator = auth()->user();
 
-        if (!$initiator || !$initiator->institution_id) {
-            return response()->json(['message' => 'User or institution not found.'], 400);
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas autorisé à réinitialiser les scores',
+            ], 403);
         }
 
         Score::whereHas('user', function ($query) use ($initiator) {
             $query->where('institution_id', $initiator->institution_id);
         })->update(['score' => 0]);
 
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Reset scores');
-        Log::info('INITIATOR ID: ' . $initiator->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('Institution name: ' . $initiator->institution->name);
-        Log::info('**********END TRANSACTION**********');
+        $this->logsController->createLog(
+            'Scores',
+            "Tous les scores ont été <span class=\"bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-semibold px-1 rounded\">réinitialisés</span>.",
+            $initiator->id
+        );
 
         return response()->json(['message' => 'Les scores ont été réinitialisés avec succès.']);
     }

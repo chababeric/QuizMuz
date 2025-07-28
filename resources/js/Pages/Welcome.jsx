@@ -24,14 +24,8 @@ export default function Welcome({ auth }) {
                                     </Link>
 
                                     {auth.isAdmin && (
-                                        // <Link
-                                        //     href={route('admincontrol')}
-                                        //     className="login-links"
-                                        // >
-                                        //     Admin
-                                        // </Link>
                                         <Link
-                                            href={route('dashboard')}
+                                            href={route('admin')}
                                             className="login-links"
                                         >
                                             Admin
@@ -53,16 +47,6 @@ export default function Welcome({ auth }) {
                                     >
                                         Déconnexion
                                     </Link>
-
-                                    {/*<Link*/}
-                                    {/*    href={route('logout')}*/}
-                                    {/*    method="post"*/}
-                                    {/*    as="button"*/}
-                                    {/*    className="login-links"*/}
-                                    {/*>*/}
-                                    {/*    Déconnexion*/}
-                                    {/*</Link>*/}
-
                                 </>
                             ) : (
                                 <>

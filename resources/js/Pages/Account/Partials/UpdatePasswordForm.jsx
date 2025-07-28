@@ -6,7 +6,7 @@ import TextInput from '@/Components/TextInput.jsx';
 import { useForm } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
 
-export default function UpdatePasswordForm({ className = '', updateLastActionTime }) {
+export default function UpdatePasswordForm({ className = '' }) {
     const passwordInput = useRef();
     const usernameInput = useRef();
 
@@ -18,7 +18,6 @@ export default function UpdatePasswordForm({ className = '', updateLastActionTim
 
     const updatePassword = (e) => {
         e.preventDefault();
-        updateLastActionTime();
 
         put(route('password.update'), {
             preserveScroll: true,
@@ -47,6 +46,12 @@ export default function UpdatePasswordForm({ className = '', updateLastActionTim
                     Modifier le mot de passe d'un compte.
                 </p>
             </header>
+
+            {errors.error && (
+                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {errors.error}
+                </div>
+            )}
 
             <form onSubmit={updatePassword} className="mt-6 space-y-6">
                 <div>

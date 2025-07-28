@@ -1,122 +1,81 @@
-import {Head} from "@inertiajs/react";
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.jsx';
-import AddNewPiece from "@/Pages/Piece/Partials/AddNewPiece.jsx";
-import UpdatePiece from "@/Pages/Piece/Partials/UpdatePiece.jsx";
-import { useEffect, useState } from "react";
-import PiecesReserve from "@/Pages/Piece/Partials/PiecesReserve.jsx";
+import React, { useState, useEffect } from 'react';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head } from '@inertiajs/react';
+import axios from 'axios';
+import SharedPieceEditor from "@/Components/SharedPieceEditor.jsx";
 
-export default function Edit({ auth, user }) {
-    const [pieces, setPieces] = useState([]);
-    const [courses, setCourses] = useState([]);
-    const [piecesInReserve, setPiecesInReserve] = useState([]);
-    const [groupedPieces, setGroupedPieces] = useState({});
+export default function Edit({ auth }) {
+    const { user } = auth;
+    const [piecesList, setPiecesList] = useState([]);
+    const [coursesList, setCoursesList] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    useEffect( () => {
-        getAllPieces();
-        getPiecesInReserve();
-    }, []);
+    useEffect(() => {
+        setIsLoading(true);
+        // Get pieces, courses, and reserve pieces
+        const fetchData = async () => {
+            try {
+                // Get pieces
+                const piecesResponse = await axios.get(route('allPieces'));
+                const sortedPieces = piecesResponse.data.sort((a, b) => a.order - b.order);
+                setPiecesList(sortedPieces);
 
-    const getAllPieces = () => {
-        axios.get(route('allPieces'))
-            .then((response) => {
-                // Sort the piecesList by order
-                const sortedPieces = response.data.sort((a, b) => a.order - b.order);
-
-                setPieces(sortedPieces);
-            })
-            .catch((error) => {
-                console.log(error);
-            });
-
-        axios.get(route('allCourses'), {
-            params: {
-                institution_id: auth.user.institution_id,
-            }
-        }).then(response => {
-            setCourses(response.data);
-        }).catch(error => {
-            console.log(error);
-        });
-    }
-
-    const getPiecesInReserve = () => {
-        axios.get(route('piecesInReserve'))
-            .then(response => {
-                const pieces = response.data;
-
-                const grouped = pieces.reduce((acc, piece) => {
-                    const courseId = piece.level?.course_id;
-                    const course = courses.find(course => course.id === courseId);
-
-                    const courseName = course ? course.name : 'Non Catégorisé';
-
-                    if (!acc[courseName]) {
-                        acc[courseName] = [];
+                // Get courses with institution_id
+                const coursesResponse = await axios.get(route('allCourses'), {
+                    params: {
+                        institution_id: user.institution_id
                     }
-                    acc[courseName].push(piece);
+                });
+                setCoursesList(coursesResponse.data);
 
-                    return acc;
-                }, {});
+                // Get reserve pieces
+                // await getPiecesInReserve();
 
-                setPiecesInReserve(pieces);
-                setGroupedPieces(grouped);
-            })
-            .catch(error => {
-                console.error('Error fetching pieces:', error);
-            });
-    }
+                setIsLoading(false);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                setIsLoading(false);
+            }
+        };
 
-    const updateLastActionTime = () => {
-        axios.post(route('updateLastActionTime'))
-            .then(response => {})
-            .catch(error => {
-                console.error('Error updating last action time:', error);
-            });
-    };
+        fetchData().then(r => {});
+    }, [user.institution_id]);
+
+    // const getPiecesInReserve = async () => {
+    //     try {
+    //         const response = await axios.get(route('piecesInReserve'));
+    //         setPiecesInReserve(response.data);
+    //     } catch (error) {
+    //         console.error('Error fetching reserve pieces:', error);
+    //     }
+    // };
 
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight dark:text-white">Pièce</h2>}
+            header={<h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Pièce</h2>}
         >
-            <Head title="Admin - Pièce" />
+            <Head title="Pièce" />
 
-            <div className="py-12 dark:bg-gray-900">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                        <AddNewPiece
-                            className="max-w-xl dark:bg-gray-800"
-                            piecesList={pieces}
-                            coursesList={courses}
-                            updateLastActionTime={updateLastActionTime}
-                            getAllPieces={getAllPieces}
-                        />
-                    </div>
-
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                        <UpdatePiece
-                            piecesList={pieces}
-                            setPiecesList={setPieces}
-                            coursesList={courses}
-                            className="dark:bg-gray-800"
-                            updateLastActionTime={updateLastActionTime}
-                            getPiecesInReserve={getPiecesInReserve}
-                        />
-                    </div>
-
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                        <PiecesReserve
-                            className="dark:bg-gray-800"
-                            updateLastActionTime={updateLastActionTime}
-                            coursesList={courses}
-                            getAllPieces={getAllPieces}
-                            piecesInReserve={piecesInReserve}
-                            groupedPieces={groupedPieces}
-                            getPiecesInReserve={getPiecesInReserve}
-                        />
+            {isLoading ? (
+                <div className="py-12">
+                    <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
+                            <p className="text-center text-gray-500 dark:text-gray-400">Chargement des données...</p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            ) : (
+                <div className="py-12 dark:bg-gray-900">
+                    <SharedPieceEditor
+                        piecesList={piecesList}
+                        setPiecesList={setPiecesList}
+                        coursesList={coursesList}
+                        mode="litmus"
+                        user={user}
+                    />
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }

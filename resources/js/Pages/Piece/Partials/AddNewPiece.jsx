@@ -6,12 +6,12 @@ import PrimaryButton from '@/Components/PrimaryButton.jsx';
 import React, { useState, useEffect } from "react";
 import FilterableSelect from "@/Components/FilterableSelect.jsx";
 
-export default function AddNewPiece({ className = '', piecesList, coursesList, updateLastActionTime, getAllPieces }) {
-    // const user = usePage().props.auth.user;
+export default function AddNewPiece({ className = '', piecesList, getAllPieces, courseName }) {
     const [levelsList, setLevelsList] = useState([]);
+    const [modules, setModules] = useState([]);
+    const [isLitMusCourse, setIsLitMusCourse] = useState(false);
 
     const { data, setData, post, reset, errors, processing, recentlySuccessful } = useForm({
-        course: '',
         level: '',
         period: '',
         genre: '',
@@ -23,23 +23,39 @@ export default function AddNewPiece({ className = '', piecesList, coursesList, u
         form: '',
         fileName: '',
         audioFile: null,
+        module_id: '',
+        courseName: courseName,
     });
 
     useEffect(() => {
-        if (data.course) {
-            axios.get(route('levelsFromCourse'), {
-                params: {
-                    course_id: data.course,
-                }
-            }).then(response => {
-                setLevelsList(response.data);
-            }).catch(error => {
-                console.log(error);
-            });
+        axios.get(route('levelsFromCourse'), {
+            params: {
+                course_name: courseName,
+            }
+        }).then(response => {
+            setLevelsList(response.data);
+        }).catch(error => {
+            console.log(error);
+        });
+
+        setIsLitMusCourse(courseName === 'Littérature Musicale');
+    }, []);
+
+    useEffect(() => {
+        if (data.level && isLitMusCourse) {
+            // Fetch modules for this level
+            axios.get(`/api/modules/level/${data.level}`)
+                .then(response => {
+                    setModules(response.data);
+                })
+                .catch(error => {
+                    console.error('Error fetching modules:', error);
+                });
         } else {
-            setLevelsList([]);
+            setModules([]);
+            setData('module_id', '');
         }
-    }, [data.course]);
+    }, [data.level, isLitMusCourse]);
 
     const generateFileName = () => {
         const { composer, title, no_mvt, mvt } = data;
@@ -63,18 +79,13 @@ export default function AddNewPiece({ className = '', piecesList, coursesList, u
 
     const submitNewPiece = (e) => {
         e.preventDefault();
-        updateLastActionTime();
 
         post(route('admin.new-piece'), {
-            preserveScroll: true,
             onSuccess: () => {
-                reset();
                 getAllPieces();
             },
-            onError: (errors) => {
-                if (errors.level) {
-                    reset('course', 'level', 'period', 'genre', 'composer', 'title', 'element', 'no_mvt', 'mvt', 'form', 'fileName', 'audioFile');
-                }
+            onFinish: () => {
+                reset();
             },
         });
     }
@@ -85,24 +96,13 @@ export default function AddNewPiece({ className = '', piecesList, coursesList, u
                 <h2 className="text-lg font-medium text-gray-900 dark:text-white">Ajouter une nouvelle pièce</h2>
             </header>
 
-            <form onSubmit={submitNewPiece} className="mt-6 space-y-6">
-                <div>
-                    <InputLabel htmlFor="course" value="Cours" className="dark:text-white"/>
-                    <select
-                        id="course"
-                        className="mt-1 block w-full rounded-md dark:bg-gray-700 dark:text-white"
-                        value={data.course}
-                        onChange={(e) => setData('course', e.target.value)}
-                        required
-                    >
-                        <option value="">Choisir un cours</option>
-                        {coursesList.map((course) => (
-                            <option key={course.id} value={course.id}>{course.name}</option>
-                        ))}
-                    </select>
-                    <InputError className="mt-2" message={errors.course}/>
+            {errors.error && (
+                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {errors.error}
                 </div>
+            )}
 
+            <form onSubmit={submitNewPiece} className="mt-6 space-y-6">
                 <div>
                     <InputLabel htmlFor="level" value="Niveau" className="dark:text-white"/>
                     <select
@@ -119,6 +119,24 @@ export default function AddNewPiece({ className = '', piecesList, coursesList, u
                     </select>
                     <InputError className="mt-2" message={errors.level}/>
                 </div>
+
+                {isLitMusCourse && data.level && (
+                    <div>
+                        <InputLabel htmlFor="module_id" value="Module (optionnel)" className="dark:text-white"/>
+                        <select
+                            id="module_id"
+                            className="mt-1 block w-full rounded-md dark:bg-gray-700 dark:text-white"
+                            value={data.module_id}
+                            onChange={(e) => setData('module_id', e.target.value)}
+                        >
+                            <option value="">Aucun module</option>
+                            {modules.map((module) => (
+                                <option key={module.id} value={module.id}>{module.title}</option>
+                            ))}
+                        </select>
+                        <InputError className="mt-2" message={errors.module_id}/>
+                    </div>
+                )}
 
                 <div>
                     <InputLabel htmlFor="period" value="Période" className="dark:text-white"/>

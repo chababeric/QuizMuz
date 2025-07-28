@@ -48,7 +48,7 @@ class AuthenticatedSessionController extends Controller
 
 //        return redirect()->intended(route('mainmenu', absolute: false));
         $user = Auth::user();
-        $isAdmin = $user->administrator()->exists();
+        $isAdmin = $user->isAdmin();
 
         return Inertia::render('Welcome', [
             'auth' => [

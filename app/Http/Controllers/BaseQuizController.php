@@ -7,7 +7,6 @@ use App\Models\Score;
 use App\Models\SoloGame;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 abstract class BaseQuizController extends Controller
 {

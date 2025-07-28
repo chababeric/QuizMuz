@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Middleware\UserStats;
 use App\Models\Piece;
 use App\Models\Score;
 use App\Models\SoloGame;
@@ -60,6 +61,9 @@ class QuizSoloController extends BaseQuizController
 
         $piecesData = $this->getPiecesData($data['difficulty'], $data['level_id'], $data['pieces_list_id']);
         $parameters_to_display = $this->getParametersToDisplay($data['difficulty'], $soloGame);
+
+        $userStats = new UserStats();
+        $userStats->incrementUserStats($userId, $data['courseId'], 'quiz');
 
         return Inertia::render('QuizSolo', [
             'difficulty' => $data['difficulty'],
@@ -183,7 +187,7 @@ class QuizSoloController extends BaseQuizController
         $validated = $request->validate([
             'selectedAnswers' => 'required|array',
         ]);
-        $this->updateLastActionTime();
+//        $this->updateLastActionTime();
         $selectedAnswers = $validated['selectedAnswers'];
         $userId = auth()->id();
 

@@ -16,6 +16,8 @@ export default function QuizFMA({ auth, difficulty, level_id, courseId, selectLi
     const [chordCount, setChordCount] = useState(difficulty === '3' ? (selectListData?.chordCount || 0) : 0);
     const [chordInputs, setChordInputs] = useState(Array(chordCount).fill(''));
 
+    const isClient = typeof window !== 'undefined';
+
     useEffect(() => {
         // Initialize chord inputs when component loads
         if (difficulty === '3' && selectListData?.chordCount) {
@@ -25,6 +27,8 @@ export default function QuizFMA({ auth, difficulty, level_id, courseId, selectLi
     }, []);
 
     const playMusic = () => {
+        if (!isClient) return;
+
         setIsPlaying(true);
         if (chordMp3) {
             if (audioRef.current) {

@@ -6,7 +6,7 @@ import TextInput from '@/Components/TextInput';
 import { useForm, usePage } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
 
-export default function UpdateAdminKeyForm({ className = '', updateLastActionTime }) {
+export default function UpdateAdminKeyForm({ className = '' }) {
     const user = usePage().props.auth.user;
     const newKey = useRef();
     const confirmationKey = useRef();
@@ -23,7 +23,6 @@ export default function UpdateAdminKeyForm({ className = '', updateLastActionTim
 
     const validateKey = (e) => {
         e.preventDefault();
-        updateLastActionTime();
 
         post(route('admin_key.validate'), {
             preserveScroll: true,
@@ -42,7 +41,6 @@ export default function UpdateAdminKeyForm({ className = '', updateLastActionTim
 
     const updateKey = (e) => {
         e.preventDefault();
-        updateLastActionTime();
 
         post(route('admin_key.update'), {
             preserveScroll: true,
@@ -68,6 +66,12 @@ export default function UpdateAdminKeyForm({ className = '', updateLastActionTim
                     Modifier la clé d'administrateur.
                 </p>
             </header>
+
+            {errors.error && (
+                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {errors.error}
+                </div>
+            )}
 
             <form onSubmit={validateKey} className="mt-6 space-y-6">
                 <p className="text-sm text-gray-800 dark:text-white">

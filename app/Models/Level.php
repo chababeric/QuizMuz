@@ -19,6 +19,11 @@ class Level extends Model
         return $this->hasMany(Piece::class, 'level_id');
     }
 
+    public function modules(): HasMany
+    {
+        return $this->hasMany(Module::class)->orderBy('order');
+    }
+
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class, 'course_id');

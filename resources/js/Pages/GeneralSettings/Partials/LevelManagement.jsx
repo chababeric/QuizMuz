@@ -4,7 +4,7 @@ import addIcon from "../../../../icons/add.svg";
 import Modal from "@/Components/Modal.jsx";
 import { useState } from "react";
 
-export default function LevelManagement({auth, courses, levels, getLevels, updateLastActionTime, successMessage, errorMessage, setSuccessMessage, setErrorMessage, selectedInstitution, selectedInstitutionId}) {
+export default function LevelManagement({auth, courses, levels, getLevels, successMessage, errorMessage, setSuccessMessage, setErrorMessage, selectedInstitution, selectedInstitutionId}) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newLevelName, setNewLevelName] = useState("");
     const [selectedCourse, setSelectedCourse] = useState("");
@@ -29,10 +29,9 @@ export default function LevelManagement({auth, courses, levels, getLevels, updat
     };
 
     const toggleLevelAccess = async (toggledLevel) => {
-        updateLastActionTime();
 
         try {
-            const response = await axios.post("/admin/toggle-level-access", {
+            const response = await axios.post(route('admin.toggle-level-access'), {
                 level_id: toggledLevel.id,
                 name: toggledLevel.name,
                 selectedInstitutionName: selectedInstitution,
@@ -49,7 +48,6 @@ export default function LevelManagement({auth, courses, levels, getLevels, updat
     };
 
     const addLevel = async () => {
-        updateLastActionTime();
         closeModal();
 
         try {
@@ -74,8 +72,6 @@ export default function LevelManagement({auth, courses, levels, getLevels, updat
 
     const deleteLevel = async () => {
         if (!levelToDelete) return;
-
-        updateLastActionTime();
 
         try {
             const response = await axios.post(route("admin.delete-level"), {

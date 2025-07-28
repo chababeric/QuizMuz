@@ -6,12 +6,18 @@ use App\Models\Course;
 use App\Models\Institution;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class CourseController extends Controller
 {
+    protected LogsController $logsController;
+
+    public function __construct(LogsController $logsController)
+    {
+        $this->logsController = $logsController;
+    }
+
     public function index(): Response
     {
         return Inertia::render('Course', [
@@ -27,6 +33,13 @@ class CourseController extends Controller
         ], [
             'name.required' => 'Le nom du cours est requis',
         ]);
+        $initiator = auth()->user();
+
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas autorisé à créer un cours',
+            ], 403);
+        }
 
         $institution = auth()->user()->institution_id;
         $institution_name = Institution::where('id', $institution)->first()->name;
@@ -40,6 +53,12 @@ class CourseController extends Controller
             'institution_id' => $institution,
         ]);
 
+        $this->logsController->createLog(
+            'Cours',
+            "Le cours <strong>'{$request->name}'</strong> a été <span class=\"bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 font-semibold px-1 rounded\">créé</span> pour l'institution <strong>{$institution_name}</strong>.",
+            $initiator->id
+        );
+
         return response()->json(['message' => 'Le cours a été créé avec succès pour l\'institution \''. $institution_name . '\'']);
     }
 
@@ -51,6 +70,14 @@ class CourseController extends Controller
             'institution_name' => 'required|string',
         ]);
 
+        $initiator = auth()->user();
+
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas autorisé à supprimer un cours',
+            ], 403);
+        }
+
         $institution = auth()->user()->institution_id;
         $institution_name = Institution::where('id', $institution)->first()->name;
 
@@ -60,6 +87,12 @@ class CourseController extends Controller
 
         $course = Course::find($request->course_id);
         $course->delete();
+
+        $this->logsController->createLog(
+            'Cours',
+            "Le cours <strong>'{$request->name}'</strong> a été <span class=\"bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-semibold px-1 rounded\">supprimé</span> pour l'institution <strong>{$institution_name}</strong>.",
+            $initiator->id
+        );
 
         return response()->json(['message' => 'Le cours \''. $course->name . '\' a été supprimé avec succès']);
     }

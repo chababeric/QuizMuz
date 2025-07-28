@@ -1,49 +1,34 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import Modal from '@/Components/Modal';
 import { Head } from '@inertiajs/react';
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import moment from 'moment';
 
-export default function Dashboard({ auth }) {
-    const [totalStats, setTotalStats] = useState([]);
-    const [users, setUsers] = useState([]);
+export default function Dashboard({ auth, totalStats, users }) {
     const [sortedUsers, setSortedUsers] = useState([]);
     const [nbConnectedUsers, setNbConnectedUsers] = useState(0);
+    const [modalOpen, setModalOpen] = useState(false); // Modal state
+    const [selectedUser, setSelectedUser] = useState(null); // Currently selected user
+    const isClient = typeof window !== 'undefined';
 
     useEffect(() => {
-        const fetchTotalStats = async () => {
-            try {
-                const response = await fetch('/admin/total-stats');
-                const data = await response.json();
-                setTotalStats(data);
-            } catch (error) {
-                console.error("There was an error fetching the total stats!", error);
-            }
-        }
-
-        const fetchUsers = async () => {
-            try {
-                const response = await fetch(route('allUsers'));
-                const data = await response.json();
-                setUsers(data);
-            } catch (error) {
-                console.error("There was an error fetching the users!", error);
-            }
-        }
-
-        fetchTotalStats().then(r => {});
-        fetchUsers().then(r => {});
-        updateLastActionTime();
-    }, []);
-
-    useEffect(() => {
-        // Sort users alphabetically by last name
         const sorted = [...users].sort((a, b) => a.last_name.localeCompare(b.last_name));
         setSortedUsers(sorted);
-
         updateNbConnectedUsers();
     }, [users]);
 
+    const openModal = (user) => {
+        setSelectedUser(user);
+        setModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setSelectedUser(null);
+        setModalOpen(false);
+    };
+
     const getStatus = (lastActionTime) => {
+        if (!isClient) return '';
         const now = moment();
         const lastAction = moment(lastActionTime);
         const diff = now.diff(lastAction, 'minutes');
@@ -59,14 +44,6 @@ export default function Dashboard({ auth }) {
         setNbConnectedUsers(onlineUsers);
     };
 
-    const updateLastActionTime = () => {
-        axios.post(route('updateLastActionTime'))
-            .then(response => {})
-            .catch(error => {
-                console.error('Error updating last action time:', error);
-            });
-    };
-
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -77,31 +54,27 @@ export default function Dashboard({ auth }) {
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg dark:bg-gray-800">
-                        <div className="p-6 text-gray-900">
+                        <div className="p-6 text-gray-900 dark:text-white">
                             <h1 className="text-2xl font-semibold text-gray-900 mb-4 dark:text-white">Statistiques</h1>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="p-4 bg-gray-200 shadow rounded-lg flex items-center justify-center dark:bg-gray-700">
-                                    <p className="text-lg font-medium text-gray-700 dark:text-white">
-                                        Nombre total d'utilisateurs : <span
-                                        className="font-semibold">{totalStats.totalUsers}</span>
+                                    <p className="text-lg font-medium text-gray-900 dark:text-white">
+                                        Nombre total d'utilisateurs : <span className="font-semibold">{totalStats.totalUsers}</span>
                                     </p>
                                 </div>
                                 <div className="p-4 bg-gray-200 shadow rounded-lg flex items-center justify-center dark:bg-gray-700">
                                     <p className="text-lg font-medium text-gray-900 dark:text-white">
-                                        Nombre total de parties Quiz : <span
-                                        className="font-semibold">{totalStats.totalSoloGames}</span>
+                                        Nombre total de parties Quiz : <span className="font-semibold">{totalStats.totalSoloGames}</span>
                                     </p>
                                 </div>
                                 <div className="p-4 bg-gray-200 shadow rounded-lg flex items-center justify-center dark:bg-gray-700">
                                     <p className="text-lg font-medium text-gray-900 dark:text-white">
-                                        Nombre total de parties Pratiques : <span
-                                        className="font-semibold">{totalStats.totalPractice}</span>
+                                        Nombre total de parties Pratiques : <span className="font-semibold">{totalStats.totalPractice}</span>
                                     </p>
                                 </div>
                                 <div className="p-4 bg-gray-200 shadow rounded-lg flex items-center justify-center dark:bg-gray-700">
                                     <p className="text-lg font-medium text-gray-900 dark:text-white">
-                                        Nombre d'utilisateurs connectés : <span
-                                        className="font-semibold">{nbConnectedUsers}</span>
+                                        Nombre d'utilisateurs connectés : <span className="font-semibold">{nbConnectedUsers}</span>
                                     </p>
                                 </div>
                             </div>
@@ -125,32 +98,36 @@ export default function Dashboard({ auth }) {
                                                     <th scope="col" className="px-6 py-4">#</th>
                                                     <th scope="col" className="px-6 py-4">Utilisateur</th>
                                                     <th scope="col" className="px-6 py-4">Institution</th>
-                                                    <th scope="col" className="px-6 py-4">Pratique</th>
-                                                    <th scope="col" className="px-6 py-4">Quiz</th>
                                                     <th scope="col" className="px-6 py-4">Dernière connexion</th>
                                                     <th scope="col" className="px-6 py-4">Statut</th>
+                                                    <th scope="col" className="px-6 py-4">Actions</th>
                                                 </tr>
                                                 </thead>
                                                 <tbody>
-                                                {sortedUsers.map((item, rowIndex) => (
+                                                {sortedUsers.map((user, rowIndex) => (
                                                     <tr key={rowIndex} className="border-b dark:border-neutral-500">
                                                         <td className="whitespace-nowrap px-6 py-4 font-medium">{rowIndex + 1}</td>
                                                         <td className="whitespace-nowrap px-6 py-4">
-                                                            <span
-                                                                className="font-semibold text-gray-900 dark:text-white">{item.last_name}, {item.first_name}</span>
-                                                            <br/>
-                                                            <span
-                                                                className="text-sm text-gray-600 dark:text-white">{item.username}</span>
+                                                            <span className="font-semibold text-gray-900 dark:text-white">
+                                                                {user.last_name}, {user.first_name}
+                                                            </span>
+                                                            <br />
+                                                            <span className="text-sm text-gray-600 dark:text-white">{user.username}</span>
                                                         </td>
-                                                        <td className="whitespace-nowrap px-6 py-4">{item.institution_name}</td>
-                                                        <td className="whitespace-nowrap px-6 py-4">{item.nb_practice}</td>
-                                                        <td className="whitespace-nowrap px-6 py-4">{item.nb_game_solo}</td>
+                                                        <td className="whitespace-nowrap px-6 py-4">{user.institution_name || 'N/A'}</td>
                                                         <td className="whitespace-nowrap px-6 py-4">
-                                                            {item.last_action_time ? item.last_action_time.split(' ')[0] : ''}
+                                                            {user.last_action_time ? user.last_action_time.split(' ')[0] : ''}
                                                         </td>
-                                                        <td className="whitespace-nowrap px-6 py-4"
-                                                            style={getStatusStyle(getStatus(item.last_action_time))}>
-                                                            {getStatus(item.last_action_time)}
+                                                        <td className="whitespace-nowrap px-6 py-4" style={isClient ? getStatusStyle(getStatus(user.last_action_time)) : {}}>
+                                                            {isClient ? getStatus(user.last_action_time) : ''}
+                                                        </td>
+                                                        <td className="whitespace-nowrap px-6 py-4">
+                                                            <button
+                                                                onClick={() => openModal(user)}
+                                                                className="text-blue-500 font-semibold hover:underline"
+                                                            >
+                                                                Voir les stats
+                                                            </button>
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -164,6 +141,31 @@ export default function Dashboard({ auth }) {
                     </div>
                 </div>
             </div>
+
+            {modalOpen && selectedUser && (
+                <Modal show={modalOpen} onClose={closeModal}>
+                    <div>
+                        <h2 className="text-xl font-bold mb-4 dark:text-white">
+                            Statistiques pour {selectedUser.first_name} {selectedUser.last_name} ({selectedUser.username})
+                        </h2>
+                        {selectedUser.courses && selectedUser.courses.length > 0 ? (
+
+                            <div className="space-y-2">
+                                {selectedUser.courses.map((course) => (
+                                    <div key={course.course_id} className="p-3 bg-gray-200 rounded-lg shadow dark:bg-gray-700">
+                                        <p className="text-lg font-semibold dark:text-white">{course.course_name}</p>
+                                        <p className="text-sm dark:text-gray-400">Practice: {course.practice}</p>
+                                        <p className="text-sm dark:text-gray-400">Quiz: {course.quiz}</p>
+                                        <p className="text-sm dark:text-gray-400">Total de visites: {course.total}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-gray-600 dark:text-white">Aucune donnée disponible pour cet utilisateur.</p>
+                        )}
+                    </div>
+                </Modal>
+            )}
         </AuthenticatedLayout>
     );
 }

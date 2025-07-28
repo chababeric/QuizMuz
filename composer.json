@@ -5,13 +5,13 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
-        "inertiajs/inertia-laravel": "^1.0",
-        "laravel/framework": "^11.0",
+        "php": "^8.4",
+        "ext-intl": "*",
+        "inertiajs/inertia-laravel": "^2.0",
+        "laravel/framework": "12.1.1.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
-        "tightenco/ziggy": "^2.0",
-        "ext-intl": "*"
+        "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

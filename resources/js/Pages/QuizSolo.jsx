@@ -37,6 +37,8 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
         { name: "Nom mouvement ou partie", col: "mvt" },
         { name: "Forme", col: "form" }
     ];
+    const isClient = typeof window !== 'undefined';
+
 
     useEffect(() => {
         // Filter out parameters that are null or empty for the current difficulty
@@ -45,6 +47,8 @@ export default function QuizSolo({ auth, difficulty, level, courseId, current_pi
     }, [parameters_to_display]);
 
     const playMusic = () => {
+        if (!isClient) return;
+
         setIsPlaying(true);
         if (pieceMp3) {
             if (audioRef.current) {

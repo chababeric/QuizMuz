@@ -2,19 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AdminControl;
-use App\Models\Level;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AdminController extends Controller
 {
+    protected LogsController $logsController;
+
+    public function __construct(LogsController $logsController)
+    {
+        $this->logsController = $logsController;
+    }
+
     public function index(): Response
     {
         return Inertia::render('AdminControl');
@@ -22,10 +26,10 @@ class AdminController extends Controller
 
     public function getAllUsers(): JsonResponse
     {
-        $users = User::with('institution')->get();
+        $users = User::with(['institution', 'roles'])->get();
 
         foreach ($users as $user) {
-            $user->is_admin = $user->administrator()->exists();
+            $user->is_admin = $user->isAdmin();
             // Access the institution name directly
             $user->institution_name = $user->institution ? $user->institution->name : null;
         }
@@ -42,7 +46,7 @@ class AdminController extends Controller
         $users = User::where('institution_id', $request->institution_id)->get();
 
         foreach ($users as $user) {
-            $user->is_admin = $user->administrator()->exists();
+            $user->is_admin = $user->isAdmin();
             // Access the institution name directly
             $user->institution_name = $user->institution ? $user->institution->name : null;
         }
@@ -52,7 +56,8 @@ class AdminController extends Controller
 
     public function updateUsername(Request $request): RedirectResponse
     {
-        $initiator = $request->user();
+        $initiator = auth()->user();
+
         $request->validate([
             'old_username' => 'required|string',
             'new_username' => 'required|string|unique:users,username|max:18',
@@ -61,6 +66,11 @@ class AdminController extends Controller
             'new_username.unique' => 'Le nouveau nom d\'utilisateur est déjà pris.',
             'new_username.max' => 'Le nom d\'utilisateur ne doit pas dépasser 16 caractères.',
         ]);
+
+        if (!$initiator->isAdmin()) {
+            return Redirect::back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour mettre à jour le nom d\'utilisateur.']);
+        }
+
         // Find the user by current username
         $user = User::where('username', $request->old_username)->first();
 
@@ -72,110 +82,36 @@ class AdminController extends Controller
         $user->save();
 
         // Log the action
-        Log::info('**********START TRANSACTION**********');
-        Log::info('ACTION: Username update');
-        Log::info('INITIATOR ID: ' . $user->id);
-        Log::info('INITIATOR First Name: ' . $initiator->first_name);
-        Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-        Log::info('INITIATOR Username: ' . $initiator->username);
-        Log::info('Usernames Updated: ' . $request->old_username . ' -> ' . $request->new_username);
-        Log::info('**********END TRANSACTION**********');
+        $this->logsController->createLog(
+            'Compte',
+            "Le nom d'utilisateur <span class=\"line-through text-gray-500 dark:text-gray-400\">{$request->old_username}</span> → <strong>{$request->new_username}</strong> a été <span class=\"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-semibold px-1 rounded\">mis à jour</span>.",
+            $initiator->id
+        );
 
         return Redirect::route('account.edit');
     }
 
-    public function makeAdmin(Request $request): JsonResponse
-    {
-        $initiator = $request->user();
-        $request->validate([
-            'user_id' => 'required|integer',
-            'name' => 'required|string',
-        ]);
-
-        $user = User::find($request->user_id);
-
-        if (!$user) {
-            return response()->json(['message' => $request->name . ' n\'a pas été trouvé.'], 404);
-        }
-//        else if ($initiator->institution_id !== $user->institution_id) {
-//            return response()->json(['message' => 'Vous ne pouvez pas promouvoir des utilisateurs d\'autres institutions.'], 403);}
-        else if ($initiator->id === $user->id) {
-            return response()->json(['message' => 'Vous ne pouvez pas vous promouvoir vous-même.'], 403);
-        } else {
-            $adminControl = new AdminControl();
-            $adminControl->user_id = $request->user_id;
-            $adminControl->save();
-
-            Log::info('**********START TRANSACTION**********');
-            Log::info('ACTION: Admin promotion');
-            Log::info('INITIATOR ID: ' . $initiator->id);
-            Log::info('INITIATOR First Name: ' . $initiator->first_name);
-            Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-            Log::info('INITIATOR Username: ' . $initiator->username);
-            Log::info('User Promoted: ' . $request->name);
-            Log::info('**********END TRANSACTION**********');
-
-            return response()->json(['message' => $request->name . ' a été promu·e avec succès.'], 200);
-        }
-    }
-
-    public function removeAdmin(Request $request): JsonResponse
-    {
-        $initiator = $request->user();
-        $request->validate([
-            'user_id' => 'required|integer',
-            'name' => 'required|string',
-        ]);
-        $user = User::find($request->user_id);
-
-        if (!$user) {
-            return response()->json(['message' => $request->name . ' n\'a pas été trouvé.'], 404);
-        } else if ($initiator->institution_id !== $user->institution_id) {
-            return response()->json(['message' => 'Vous ne pouvez pas rétrograder des utilisateurs d\'autres institutions.'], 403);
-        } else if ($initiator->id === $user->id) {
-            return response()->json(['message' => 'Vous ne pouvez pas vous rétrograder vous-même.'], 403);
-        }
-        else {
-            $adminControl = AdminControl::where('user_id', $request->user_id)->first();
-            $adminControl->delete();
-
-            Log::info('**********START TRANSACTION**********');
-            Log::info('ACTION: Admin removal');
-            Log::info('INITIATOR ID: ' . $initiator->id);
-            Log::info('INITIATOR First Name: ' . $initiator->first_name);
-            Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-            Log::info('INITIATOR Username: ' . $initiator->username);
-            Log::info('User Removed: ' . $request->name);
-            Log::info('**********END TRANSACTION**********');
-
-            return response()->json(['message' => $request->name . ' a été rétrogradé.e avec succès.'], 200);
-        }
-    }
-
-    public function findUser(Request $request): JsonResponse
+    public function findUser(Request $request): RedirectResponse
     {
         $request->validate([
             'usernameToDelete' => 'required|string',
         ]);
 
-        $initiator = $request->user();
+        $initiator = auth()->user();
+
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return redirect()->back()->withErrors(['usernameToDelete' => 'Vous n\'avez pas les privilèges nécessaires pour supprimer des utilisateurs.']);
+        }
+
         $userToDelete = User::where('username', $request->usernameToDelete)->first();
 
         if (!$userToDelete) {
-            return response()->json(['error' => 'L\'utilisateur n\'a pas été trouvé.'], 404);
+            return redirect()->back()->withErrors(['usernameToDelete' => 'L\'utilisateur n\'a pas été trouvé.']);
         }
 
-        // Make sure the user is not an admin
-        if ($userToDelete->administrator()->exists()) {
-            return response()->json(['error' => 'Vous ne pouvez pas supprimer le compte d\'un administrateur.'], 403);
-        }
-
-        // Make sure the user is in the same institution as the current user
-        if ($userToDelete->institution_id !== $initiator->institution_id) {
-            return response()->json(['error' => 'Vous ne pouvez pas supprimer le compte d\'un utilisateur d\'une autre institution.'], 403);
-        }
-
-        return response()->json(['user' => $userToDelete], 200);
+        // Store the user in the session and redirect back
+        session()->flash('userToDelete', $userToDelete);
+        return redirect()->back();
     }
 
     public function deleteUser(Request $request): RedirectResponse
@@ -186,6 +122,10 @@ class AdminController extends Controller
         ]);
 
         $initiator = $request->user();
+        if (!$initiator->hasPrivilege('SuperAdmin')) {
+            return Redirect::back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour supprimer des utilisateurs.']);
+        }
+
         if (!password_verify($request->password, $initiator->password)) {
             return Redirect::back()->withErrors(['password' => 'Le mot de passe est incorrect.']);
         }
@@ -199,14 +139,11 @@ class AdminController extends Controller
                 $user->delete();
 
                 // Log the action
-                Log::info('**********START TRANSACTION**********');
-                Log::info('ACTION: User deletion');
-                Log::info('INITIATOR ID: ' . $user->id);
-                Log::info('INITIATOR First Name: ' . $initiator->first_name);
-                Log::info('INITIATOR Last Name: ' . $initiator->last_name);
-                Log::info('INITIATOR Username: ' . $initiator->username);
-                Log::info('User Deleted: ' . $request->usernameToDelete);
-                Log::info('**********END TRANSACTION**********');
+                $this->logsController->createLog(
+                    'Compte',
+                    "L'utilisateur <strong>{$user->username}</strong> a été <span class=\"bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-semibold px-1 rounded\">supprimé</span>.",
+                    $initiator->id
+                );
 
                 return Redirect::route('account.edit');
             }

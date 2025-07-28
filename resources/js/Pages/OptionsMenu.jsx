@@ -6,10 +6,13 @@ import { v4 as uuidv4 } from "uuid";
 
 export default function OptionsMenu({ auth, level, courseId, courseName }) {
     const [pieces, setPieces] = useState([]);
+    const [modules, setModules] = useState([]);
+    const [nonModulePieces, setNonModulePieces] = useState([]);
     const [checkedPieces, setCheckedPieces] = useState([]);
     const [checkText, setCheckText] = useState("Sélectionner tout");
     const [difficulty, setDifficulty] = useState(auth.user.last_difficulty || 1);
     const [canPlay, setCanPlay] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (level) {
@@ -18,9 +21,87 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                     .then(response => {
                         const sortedPieces = sortPiecesByOrder(response.data);
                         setPieces(sortedPieces);
+                        setLoading(false);
                     })
                     .catch(error => {
                         console.error("There was an error fetching the chords!", error);
+                        setLoading(false);
+                    });
+            }
+            else if (courseName === "Littérature Musicale") {
+                // First get all pieces for the level, including those without modules
+                axios.get(`/api/pieces/level/${level}`)
+                    .then(response => {
+                        const piecesData = response.data;
+
+                        // Sort all pieces by order
+                        const sortedPieces = sortPiecesByOrder(piecesData);
+
+                        // Group pieces by module_id
+                        const groupedByModule = {};
+                        const nonModulePieces = [];
+
+                        // Identify pieces without modules
+                        sortedPieces.forEach(piece => {
+                            if (piece.module_id) {
+                                if (!groupedByModule[piece.module_id]) {
+                                    groupedByModule[piece.module_id] = {
+                                        module: {
+                                            id: piece.module_id,
+                                            title: '', // Will be updated when we find module data
+                                            order: 0,  // Will be updated when we find module data
+                                            description: ''
+                                        },
+                                        pieces: []
+                                    };
+                                }
+                                groupedByModule[piece.module_id].pieces.push(piece);
+                            } else {
+                                nonModulePieces.push(piece);
+                            }
+                        });
+
+                        // Fetch modules data to get titles and order
+                        axios.get(`/api/modules/level/${level}`)
+                            .then(modulesResponse => {
+                                const modulesData = modulesResponse.data;
+
+                                // Update module information in grouped pieces
+                                modulesData.forEach(module => {
+                                    if (groupedByModule[module.id]) {
+                                        groupedByModule[module.id].module = {
+                                            id: module.id,
+                                            title: module.title,
+                                            order: module.order,
+                                            description: module.description
+                                        };
+                                    }
+                                });
+
+                                // Convert to array and sort by module order
+                                const modulesArray = Object.values(groupedByModule)
+                                    .sort((a, b) => a.module.order - b.module.order);
+
+                                setModules(modulesArray);
+                                setNonModulePieces(nonModulePieces);
+
+                                // Combine all pieces for general use
+                                const allPieces = [
+                                    ...modulesArray.flatMap(m => m.pieces),
+                                    ...nonModulePieces
+                                ];
+
+                                setPieces(allPieces);
+                                setLoading(false);
+                            })
+                            .catch(error => {
+                                console.error("Error fetching modules:", error);
+                                setLoading(false);
+                            });
+                    })
+                    .catch(error => {
+                        console.error("There was an error fetching the pieces!", error);
+                        setLoading(false);
                     });
             }
             else {
@@ -28,9 +109,11 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                     .then(response => {
                         const sortedPieces = sortPiecesByOrder(response.data);
                         setPieces(sortedPieces);
+                        setLoading(false);
                     })
                     .catch(error => {
                         console.error("There was an error fetching the pieces!", error);
+                        setLoading(false);
                     });
             }
         }
@@ -62,6 +145,41 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                 ? prevState.filter(id => id !== pieceId)
                 : [...prevState, pieceId]
         );
+    };
+
+    const handleCheckModule = (moduleData, isChecked) => {
+        const modulePieceIds = moduleData.pieces.map(piece => piece.id);
+
+        if (isChecked) {
+            // Add all module pieces that aren't already checked
+            setCheckedPieces(prevState => {
+                const newCheckedPieces = [...prevState];
+                modulePieceIds.forEach(id => {
+                    if (!newCheckedPieces.includes(id)) {
+                        newCheckedPieces.push(id);
+                    }
+                });
+                return newCheckedPieces;
+            });
+        } else {
+            // Remove all module pieces
+            setCheckedPieces(prevState =>
+                prevState.filter(id => !modulePieceIds.includes(id))
+            );
+        }
+    };
+
+    // Check if all pieces in a module are selected
+    const isModuleFullyChecked = (moduleData) => {
+        if (!moduleData.pieces || moduleData.pieces.length === 0) return false;
+        return moduleData.pieces.every(piece => checkedPieces.includes(piece.id));
+    };
+
+    // Check if some but not all pieces in a module are selected
+    const isModulePartiallyChecked = (moduleData) => {
+        if (!moduleData.pieces || moduleData.pieces.length === 0) return false;
+        const hasChecked = moduleData.pieces.some(piece => checkedPieces.includes(piece.id));
+        return hasChecked && !isModuleFullyChecked(moduleData);
     };
 
     useEffect(() => {
@@ -101,6 +219,80 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
         }
     };
 
+    const renderModulesPieces = () => {
+        return (
+            <>
+                {modules.map((moduleData) => (
+                    <div key={moduleData.module.id} className="mb-4">
+                        <div className="bg-rose-900/50 p-2 rounded-t-lg">
+                            <label className="flex items-center">
+                                <Checkbox
+                                    checked={isModuleFullyChecked(moduleData)}
+                                    onChange={(e) => handleCheckModule(moduleData, e.target.checked)}
+                                />
+                                <span className="ml-2 text-xl font-bold text-white">
+                                    Module {moduleData.module.order}: {moduleData.module.title}
+                                </span>
+                            </label>
+                        </div>
+
+                        {moduleData.module.description && (
+                            <p className="text-gray-900 p-2 bg-white/30 mb-2 italic text-left">
+                                {moduleData.module.description}
+                            </p>
+                        )}
+
+                        <div>
+                            {moduleData.pieces && moduleData.pieces.map((piece, pieceIndex) => (
+                                <div key={piece.id} className="mb-1 p-2 border-b border-gray-600">
+                                    <label className="flex items-center w-full">
+                                        <Checkbox
+                                            checked={checkedPieces.includes(piece.id)}
+                                            onChange={() => handleCheckItem(piece.id)}
+                                        />
+                                        <span className="ml-2 text-lg text-black text-left">
+                                            <span className="inline-block w-8 font-bold mr-2">{pieceIndex + 1}.</span>
+                                            {piece.composer} - {piece.title}
+                                            {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
+                                            {piece.mvt && `, ${piece.mvt}`}
+                                        </span>
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+
+                {/* Render pieces without modules */}
+                {nonModulePieces.length > 0 && (
+                    <div className="mb-4">
+                        <h2 className="text-2xl font-bold text-white bg-rose-900/50 p-2 rounded-t-lg">
+                            Pièces sans module
+                        </h2>
+                        <div>
+                            {nonModulePieces.map((piece, index) => (
+                                <div key={piece.id} className="mb-1 p-2 border-b border-gray-600">
+                                    <label className="flex items-center w-full">
+                                        <Checkbox
+                                            checked={checkedPieces.includes(piece.id)}
+                                            onChange={() => handleCheckItem(piece.id)}
+                                        />
+                                        <span className="ml-2 text-lg text-black text-left">
+                                            <span className="inline-block w-8 font-bold mr-2">{index + 1}.</span>
+                                            {piece.composer} - {piece.title}
+                                            {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
+                                            {piece.mvt && `, ${piece.mvt}`}
+                                        </span>
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </>
+        );
+    };
+
     return (
         <div className="main-app">
             <div className="background-container"></div>
@@ -112,39 +304,55 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                 <span className="text-black text-3xl mb-4 block hover:cursor-default">
                     Choisir les pièces à inclure dans le quiz
                 </span>
-                {pieces.length > 0 ? (
+
+                {loading ? (
+                    <div className="text-black text-2xl py-4">
+                        Chargement...
+                    </div>
+                ) : pieces.length > 0 ? (
                     <>
                         <label className="flex items-center mb-5">
                             <Checkbox onChange={handleCheckAll}/>
                             <span className="ml-2 text-lg text-black">{checkText}</span>
                         </label>
-                        <ul>
-                            {pieces.map((piece, index) => (
-                                <li key={piece.id}>
-                                    <label className="flex items-center w-full mb-3">
-                                        <Checkbox
-                                            checked={checkedPieces.includes(piece.id)}
-                                            onChange={() => handleCheckItem(piece.id)}
-                                        />
-                                        <span className="ml-2 text-lg text-black text-left">
-                                            {courseName === "Formation Musicale et Auditive" ? (
-                                                <span>
-                                                    <strong className="mr-2">{index + 1}.</strong>
-                                                    {piece.chord_name}
-                                                </span>
-                                            ) : (
-                                                <>
-                                                    {piece.composer} - {piece.title}
-                                                    {piece.element && ` - ${piece.element}`}
-                                                    {piece.no_mvt && ` - ${piece.no_mvt}`}
-                                                    {piece.mvt && ` - ${piece.mvt}`}
-                                                </>
-                                            )}
-                                        </span>
-                                    </label>
-                                </li>
-                            ))}
-                        </ul>
+
+                        {courseName === "Littérature Musicale" ? (
+                            modules.length > 0 || nonModulePieces.length > 0 ? (
+                                renderModulesPieces()
+                            ) : (
+                                <p className="text-black text-2xl hover:cursor-default">
+                                    Il n'y a pas de pièces trouvées pour ce niveau.
+                                </p>
+                            )
+                        ) : (
+                            <ul>
+                                {pieces.map((piece, index) => (
+                                    <li key={piece.id}>
+                                        <label className="flex items-center w-full mb-3">
+                                            <Checkbox
+                                                checked={checkedPieces.includes(piece.id)}
+                                                onChange={() => handleCheckItem(piece.id)}
+                                            />
+                                            <span className="ml-2 text-lg text-black text-left">
+                                                {courseName === "Formation Musicale et Auditive" ? (
+                                                    <span>
+                                                        <strong className="mr-2">{index + 1}.</strong>
+                                                        {piece.chord_name}
+                                                    </span>
+                                                ) : (
+                                                    <>
+                                                        {piece.composer} - {piece.title}
+                                                        {piece.element && ` - ${piece.element}`}
+                                                        {piece.no_mvt && ` - ${piece.no_mvt}`}
+                                                        {piece.mvt && ` - ${piece.mvt}`}
+                                                    </>
+                                                )}
+                                            </span>
+                                        </label>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </>
                 ) : (
                     <p className="text-black text-2xl hover:cursor-default">

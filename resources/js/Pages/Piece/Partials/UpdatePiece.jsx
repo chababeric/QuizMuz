@@ -12,10 +12,9 @@ import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import DangerButton from "@/Components/DangerButton.jsx";
 import {Transition} from "@headlessui/react";
 
-export default function UpdatePiece({ className = '', piecesList, setPiecesList, coursesList, updateLastActionTime, getPiecesInReserve }) {
+export default function UpdatePiece({ className = '', piecesList, setPiecesList, courseName }) {
     const [levelsList, setLevelsList] = useState([]);
     const [levelsModifyOptions, setLevelsModifyOptions] = useState([]);
-    const [selectedFilterCourse, setSelectedFilterCourse] = useState('');
     const [selectedFilterLevel, setSelectedFilterLevel] = useState('');
     const [filterDisplay, setFilterDisplay] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
@@ -23,6 +22,8 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const currentPiece = useRef(piecesList[0] || null);
+    const [modules, setModules] = useState([]);
+    const [isLitMusCourse, setIsLitMusCourse] = useState(false);
     const { data, setData, patch, reset, errors, processing, recentlySuccessful } = useForm({
         id: '',
         course: '',
@@ -36,6 +37,8 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
         mvt: '',
         form: '',
         file_name: '',
+        module_id: '',
+        courseName: courseName,
     });
 
     const openDeleteModal = (piece) => {
@@ -58,41 +61,69 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
             mvt: piece.mvt || '',
             form: piece.form || '',
             file_name: piece.file_name || '',
+            module_id: piece.module_id || '',
         })
+        setIsLitMusCourse(courseName === 'Littérature Musicale');
+
+        // If it's a LitMus course, fetch modules for the level
+        if (courseName === 'Littérature Musicale' && piece.level.id) {
+            fetchModules(piece.level.id);
+        }
+
         setIsEditModalOpen(true);
     };
 
     useEffect(() => {
-        if (selectedFilterCourse) {
-            axios.get(route('levelsFromCourse'), {
-                params: {
-                    course_id: selectedFilterCourse,
-                }
-            }).then(response => {
-                setLevelsList(response.data);
-            }).catch(error => {
-                console.log(error);
-            });
-        } else {
-            setLevelsList([]);
-        }
-    }, [selectedFilterCourse]);
+        axios.get(route('levelsFromCourse'), {
+            params: {
+                course_name: courseName,
+            }
+        }).then(response => {
+            setLevelsList(response.data);
+        }).catch(error => {
+            console.log(error);
+        });
+    }, []);
 
     useEffect(() => {
-        if (data.course) {
-            axios.get(route('levelsFromCourse'), {
-                params: {
-                    course_id: data.course,
-                }
-            }).then(response => {
-                setLevelsModifyOptions(response.data);
-            }).catch(error => {
-                console.log(error);
-            });
-        } else {
-            setLevelsModifyOptions([]);
+        axios.get(route('levelsFromCourse'), {
+            params: {
+                course_name: courseName,
+            }
+        }).then(response => {
+            setLevelsModifyOptions(response.data);
+        }).catch(error => {
+            console.log(error);
+        });
+        setIsLitMusCourse(courseName === 'Littérature Musicale');
+
+        // Reset module_id if not a LitMus course
+        if (courseName !== 'Littérature Musicale') {
+            setData('module_id', '');
+            setModules([]);
         }
-    }, [data.course]);
+    }, []);
+
+    useEffect(() => {
+        if (isLitMusCourse && data.level) {
+            fetchModules(data.level);
+        } else {
+            setModules([]);
+            if (!isLitMusCourse) {
+                setData('module_id', '');
+            }
+        }
+    }, [data.level, isLitMusCourse]);
+
+    const fetchModules = (levelId) => {
+        axios.get(`/api/modules/level/${levelId}`)
+            .then(response => {
+                setModules(response.data);
+            })
+            .catch(error => {
+                console.error('Error fetching modules:', error);
+            });
+    };
 
     const handleOnDragEnd = (result) => {
         if (!result.destination) return;
@@ -129,30 +160,26 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
         // Flatten the grouped pieces back to a single array
         const flattenedUpdatedPieces = Object.values(groupedPieces).flat();
 
-        // Update state with the new list
-        setPiecesList(flattenedUpdatedPieces);
-
         // Update the order in the database for the specific level
         axios
-            .post('/admin/update-order', { pieces: flattenedUpdatedPieces })
+            .post('/admin/update-order', { pieces: flattenedUpdatedPieces, courseName: courseName })
             .then((response) => {
+                setPiecesList(flattenedUpdatedPieces);
                 setSuccessMessage(response.data.message);
                 setErrorMessage('');
             })
             .catch((error) => {
-                setErrorMessage("Échec de la mise à jour de l'ordre");
+                setErrorMessage(error.response.data.error);
                 setSuccessMessage('');
             });
     };
 
     const submitModifications = (e) => {
         e.preventDefault();
-        updateLastActionTime();
 
         patch(route('admin.update-piece'), {
+            preserveScroll: true,
             onSuccess: () => {
-                reset();
-                setIsEditModalOpen(false);
                 setSuccessMessage('Pièce modifiée avec succès');
                 setErrorMessage('');
                 axios.get(route('allPieces'))
@@ -166,26 +193,29 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                         console.log(error);
                     });
             },
-            onError: () => {
-                setErrorMessage('Échec de la modification de la pièce');
+            onError: (errors) => {
+                setErrorMessage(errors.error || 'Échec de la modification de la pièce');
                 setSuccessMessage('');
+            },
+            onFinish: () => {
+                reset();
+                setIsEditModalOpen(false);
             }
         });
     };
 
     const handleDelete = (id) => {
-        updateLastActionTime();
-        axios.post(`/pieces/${id}/move-to-reserve`)
+        // axios.post(`/pieces/${id}/move-to-reserve`)
+        axios.post(`/delete-piece/${id}`, courseName)
             .then(response => {
                 setIsDeleteModalOpen(false);
                 setSuccessMessage(response.data.message);
                 setErrorMessage('');
-                getPiecesInReserve();
+                // getPiecesInReserve();
                 axios.get(route('allPieces'))
                     .then((response) => {
                         // Sort the piecesList by order
                         const sortedPieces = response.data.sort((a, b) => a.order - b.order);
-
                         setPiecesList(sortedPieces);
                     })
                     .catch((error) => {
@@ -193,7 +223,8 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                     });
             })
             .catch(error => {
-                setErrorMessage('Échec de la suppression de la pièce');
+                setIsDeleteModalOpen(false);
+                setErrorMessage(error.response.data.error || 'Échec de la suppression de la pièce');
                 setSuccessMessage('');
             });
     };
@@ -201,7 +232,7 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
     const groupAndSortPieces = (pieces) => {
         // Group pieces by level
         const groupedPieces = pieces.reduce((groups, piece) => {
-            const level = piece.level.name; // You can use level.id instead if needed
+            const level = piece.level.name;
             if (!groups[level]) {
                 groups[level] = [];
             }
@@ -222,7 +253,7 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
         if (selectedFilterLevel) {
             return piece.level.id.toString() === selectedFilterLevel.toString();
         }
-        return true; // Otherwise, include all pieces
+        return true;
     });
 
     const groupedPieces = groupAndSortPieces(filteredPieces);
@@ -255,23 +286,6 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
             >
                 <div className="origin-top mt-6 space-y-6">
                     <div>
-                        <InputLabel htmlFor="course" value="Cours" className="dark:text-white" />
-                        <select
-                            id="course"
-                            className="mt-1 block w-full rounded-md dark:text-white dark:bg-gray-800"
-                            value={selectedFilterCourse}
-                            onChange={(e) => setSelectedFilterCourse(e.target.value)}
-                        >
-                            <option value="">Choisir un cours</option>
-                            {coursesList.map((course) => (
-                                <option key={course.id} value={course.id}>
-                                    {course.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div>
                         <InputLabel htmlFor="level" value="Niveau" className="dark:text-white" />
                         <select
                             id="level"
@@ -280,7 +294,7 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                             onChange={(e) => setSelectedFilterLevel(e.target.value)}
                         >
                             <option value="">
-                                Choisir un niveau {!selectedFilterCourse && "-- choisissez un cours pour voir les niveaux"}
+                                Choisir un niveau
                             </option>
                             {levelsList.map((level) => (
                                 <option key={level.id} value={level.id}>
@@ -320,29 +334,12 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                 </div>
             </Modal>
 
-            <Modal show={isEditModalOpen} close={() => setIsEditModalOpen(false)}>
-                <div className="p-4">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Modifier une pièce</h2>
+            <Modal show={isEditModalOpen} close={() => setIsEditModalOpen(false)} maxWidth="2xl">
+                <div className="p-6">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Modifier une pièce</h2>
 
-                    <form onSubmit={submitModifications} className={`processing ? 'opacity-50' : '' space-y-2`}>
+                    <form onSubmit={submitModifications} className={`processing ? 'opacity-50' : '' space-y-3`}>
                         <div className="max-h-96 overflow-y-auto hide-scrollbar">
-                            <div>
-                                <InputLabel htmlFor="course" value="Cours" className="dark:text-white"/>
-                                <select
-                                    id="course"
-                                    className="mt-1 block w-full rounded-md dark:text-white dark:bg-gray-800"
-                                    value={data.course}
-                                    onChange={(e) => setData('course', e.target.value)}
-                                >
-                                    <option value={currentPiece.current?.level?.course?.id || ''}>
-                                        {coursesList.find(course => course.id === parseInt(currentPiece.current?.level?.course?.id))?.name || 'Sélectionner un cours'}
-                                    </option>
-                                    {coursesList.filter(course => course.id !== parseInt(currentPiece.current?.level?.course?.id)).map((course) => (
-                                        <option key={course.id} value={course.id}>{course.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-
                             <div>
                                 <InputLabel htmlFor="level" value="Niveau" className="dark:text-white"/>
                                 <select
@@ -359,6 +356,26 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                                     ))}
                                 </select>
                             </div>
+
+                            {/* Add module selection for LitMus courses */}
+                            {isLitMusCourse && (
+                                <div>
+                                    <InputLabel htmlFor="module_id" value="Module (optionnel)" className="dark:text-white"/>
+                                    <select
+                                        id="module_id"
+                                        className="mt-1 block w-full rounded-md dark:text-white dark:bg-gray-800"
+                                        value={data.module_id || ''}
+                                        onChange={(e) => setData('module_id', e.target.value)}
+                                    >
+                                        <option value="">Aucun module</option>
+                                        {modules.map((module) => (
+                                            <option key={module.id} value={module.id}>
+                                                {module.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
 
                             <div>
                                 <InputLabel htmlFor="period" value="Période" className="dark:text-white"/>

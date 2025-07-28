@@ -7,52 +7,25 @@ import nextIcon from "../../icons/next.svg";
 import previousIcon from "../../icons/previous.svg";
 import backIcon from "../../icons/back.svg";
 
-export default function Practice({ auth, level, courseId, courseName }) {
-    const [pieces, setPieces] = useState([]);
+export default function Practice({ auth, level, courseId, courseName, lastUpdated, piecesList = [], modulesList = [], nonModulePiecesList = [], initialLoading = false }) {
+    const [pieces, setPieces] = useState(piecesList);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [currentPiece, setCurrentPiece] = useState(null);
+    const [modules, setModules] = useState(modulesList);
+    const [nonModulePieces, setNonModulePieces] = useState(nonModulePiecesList);
+    const [currentPiece, setCurrentPiece] = useState(piecesList.length > 0 ? piecesList[0] : null);
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(initialLoading);
     const audioRef = useRef(new Audio());
     const progressRef = useRef(null);
 
-    useEffect(() => {
-        if (level) {
-            if (courseName === "Formation Musicale et Auditive") {
-                axios.get(`/api/chords/level/${level}`)
-                    .then(response => {
-                        const sortedPieces = sortPiecesByOrder(response.data);
-                        setPieces(sortedPieces);
-                        setCurrentPiece(sortedPieces[0]);
-                        setLoading(false);
-                        // console.log(response.data);
-                    })
-                    .catch(error => {
-                        console.error("There was an error fetching the chords!", error);
-                    });
-            }
-            else {
-                axios.get(`/api/pieces/level/${level}`)
-                    .then(response => {
-                        const sortedPieces = sortPiecesByOrder(response.data);
-                        setPieces(sortedPieces);
-                        setCurrentPiece(sortedPieces[0]);
-                        setLoading(false);
-                    })
-                    .catch(error => {
-                        console.error("There was an error fetching the pieces!", error);
-                    });
-            }
-        }
-
-        return () => {
-            // Cleanup function to stop and reset audio when component unmounts
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-            setIsPlaying(false);
-        };
-    }, [level]);
+    const formattedLastUpdate = lastUpdated
+        ? new Date(lastUpdated).toLocaleDateString('fr-FR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        })
+        : 'Non disponible';
 
     const sortPiecesByOrder = (pieces) => {
         return pieces.sort((a, b) => {
@@ -117,6 +90,15 @@ export default function Practice({ auth, level, courseId, courseName }) {
         }
     }, [isPlaying]);
 
+    // Clean up on component unmount
+    useEffect(() => {
+        return () => {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+            setIsPlaying(false);
+        };
+    }, []);
+
     const handlePlayPause = () => {
         setIsPlaying(prevIsPlaying => !prevIsPlaying);
         updateLastActionTime();
@@ -172,11 +154,74 @@ export default function Practice({ auth, level, courseId, courseName }) {
     };
 
     const updateLastActionTime = () => {
-        axios.post('/update-last-action-time')
+        axios.post(route('updateLastActionTime'))
             .then(response => {})
             .catch(error => {
                 console.error('Error updating last action time:', error);
             });
+    };
+
+    const renderModulesPieces = () => {
+        return (
+            <>
+                {modules.map((moduleData) => (
+                    <div key={moduleData.module.id} className="mb-4">
+                        <h2 className="text-2xl font-bold text-white bg-rose-900/50 p-2 rounded-t-lg">
+                            Module {moduleData.module.order}: {moduleData.module.title}
+                        </h2>
+
+                        {moduleData.module.description && (
+                            <p className="text-gray-300 p-2 bg-black/70 mb-2 italic">
+                                {moduleData.module.description}
+                            </p>
+                        )}
+                        <div>
+                            {moduleData.pieces && moduleData.pieces.map((piece, pieceIndex) => (
+                                <div
+                                    key={piece.id}
+                                    className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
+                                    onClick={() => handlePieceClick(piece)}
+                                >
+                                    <h2 className="text-xl font-semibold text-white">
+                                        <span className="inline-block w-8 font-bold mr-2">{pieceIndex + 1}.</span>
+                                        {piece.title}
+                                        {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
+                                        {piece.mvt && `, ${piece.mvt}`}
+                                    </h2>
+                                    <p className="text-lg text-gray-300 ml-10">{piece.composer}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+
+                {/* Render pieces without modules */}
+                {nonModulePieces.length > 0 && (
+                    <div className="mb-4">
+                        <h2 className="text-2xl font-bold text-white bg-rose-900/50 p-2 rounded-t-lg">
+                            Pièces sans module
+                        </h2>
+                        <div>
+                            {nonModulePieces.map((piece, index) => (
+                                <div
+                                    key={piece.id}
+                                    className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
+                                    onClick={() => handlePieceClick(piece)}
+                                >
+                                    <h2 className="text-xl font-semibold text-white">
+                                        <span className="inline-block w-8 font-bold mr-2">{index + 1}.</span>
+                                        {piece.title}
+                                        {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
+                                        {piece.mvt && `, ${piece.mvt}`}
+                                    </h2>
+                                    <p className="text-lg text-gray-300 ml-10">{piece.composer}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </>
+        );
     };
 
     return (
@@ -200,6 +245,12 @@ export default function Practice({ auth, level, courseId, courseName }) {
                 <h1 className="text-6xl font-bold text-white hover:cursor-default mb-4 mx-auto">Pratique</h1>
             </div>
 
+            {!loading && (
+                <div className="text-sm text-white text-center mb-2">
+                    Dernière mise à jour: {formattedLastUpdate}
+                </div>
+            )}
+
             {loading ? (
                 <div className="text-white text-center mt-4 text-4xl font-semibold">
                     Chargement...
@@ -207,36 +258,45 @@ export default function Practice({ auth, level, courseId, courseName }) {
             ) : (
                 <>
                     <div className="flex-1 overflow-y-auto w-11/12 mx-auto hide-scrollbar bg-black/50">
-                        {pieces.length > 0 ? (
-                            pieces.map((piece, index) => (
-                                courseName === "Formation Musicale et Auditive" ? (
-                                    <div
-                                        key={piece.id}
-                                        className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
-                                        onClick={() => handlePieceClick(piece)}
-                                    >
-                                        <h2 className="text-xl font-semibold text-white flex items-center">
-                                            <span className="inline-block w-8 font-bold mr-2">{index + 1}.</span>
-                                            {piece.chord_name}
-                                        </h2>
-                                    </div>
-                                ) : (
-                                    <div
-                                        key={piece.id}
-                                        className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
-                                        onClick={() => handlePieceClick(piece)}
-                                    >
-                                        <h2 className="text-xl font-semibold text-white">
-                                            {piece.title}
-                                            {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
-                                            {piece.mvt && `, ${piece.mvt}`}
-                                        </h2>
-                                        <p className="text-lg text-gray-300">{piece.composer}</p>
-                                    </div>
-                                )
-                            ))
+                        {/* Conditional rendering based on course name */}
+                        {courseName === "Littérature Musicale" ? (
+                            modules.length > 0 || nonModulePieces.length > 0 ? (
+                                renderModulesPieces()
+                            ) : (
+                                <p className="text-lg text-gray-400 p-4">Aucune pièce trouvée pour ce niveau.</p>
+                            )
                         ) : (
-                            <p className="text-lg text-gray-400">Aucune pièce trouvée pour ce niveau.</p>
+                            pieces.length > 0 ? (
+                                pieces.map((piece, index) => (
+                                    courseName === "Formation Musicale et Auditive" ? (
+                                        <div
+                                            key={piece.id}
+                                            className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
+                                            onClick={() => handlePieceClick(piece)}
+                                        >
+                                            <h2 className="text-xl font-semibold text-white flex items-center">
+                                                <span className="inline-block w-8 font-bold mr-2">{index + 1}.</span>
+                                                {piece.chord_name}
+                                            </h2>
+                                        </div>
+                                    ) : (
+                                        <div
+                                            key={piece.id}
+                                            className={`mb-1 rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer ${currentPiece?.id === piece.id ? 'bg-rose-600/70' : ''}`}
+                                            onClick={() => handlePieceClick(piece)}
+                                        >
+                                            <h2 className="text-xl font-semibold text-white">
+                                                {piece.title}
+                                                {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
+                                                {piece.mvt && `, ${piece.mvt}`}
+                                            </h2>
+                                            <p className="text-lg text-gray-300">{piece.composer}</p>
+                                        </div>
+                                    )
+                                ))
+                            ) : (
+                                <p className="text-lg text-gray-400 p-4">Aucune pièce trouvée pour ce niveau.</p>
+                            )
                         )}
                     </div>
 
@@ -276,7 +336,7 @@ export default function Practice({ auth, level, courseId, courseName }) {
                         />
 
                         <div className="flex justify-between w-full text-white text-sm mt-2">
-                        <span>{new Date(progress * 1000).toISOString().substr(14, 5)}</span>
+                            <span>{new Date(progress * 1000).toISOString().substr(14, 5)}</span>
                             <span>{new Date(duration * 1000).toISOString().substr(14, 5)}</span>
                         </div>
 

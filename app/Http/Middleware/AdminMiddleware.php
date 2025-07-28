@@ -15,13 +15,13 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check()) {
-            $user = auth()->user();
-            if ($user->administrator()->exists()) {
-                return $next($request);
-            }
+        if (!$request->user() ||
+            (!$request->user()->hasPrivilege('SuperAdmin') &&
+                !$request->user()->hasPrivilege('Teacher') &&
+                !$request->user()->hasPrivilege('StudentAdmin'))) {
+            return redirect('/');
         }
 
-        return redirect('/');
+        return $next($request);
     }
 }
