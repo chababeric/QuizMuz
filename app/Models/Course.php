@@ -24,6 +24,21 @@ class Course extends Model
         return $this->hasMany(Level::class);
     }
 
+    public function scores(): HasMany
+    {
+        return $this->hasMany(Score::class);
+    }
+
+    public function soloGames(): HasMany
+    {
+        return $this->hasMany(SoloGame::class);
+    }
+
+    public function fmaGames(): HasMany
+    {
+        return $this->hasMany(FmaGame::class);
+    }
+
     public function admins(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'course_user_roles')

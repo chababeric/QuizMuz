@@ -116,7 +116,7 @@ Route::middleware(['auth', 'verified', 'check_timeout', 'update_user_action_time
     Route::get('/all-courses', [CourseController::class, 'getAllCourses'])->name('allCourses');
     Route::get('/pieces/level/{level_id}/no-module', [PieceController::class, 'getPiecesByLevelNoModule']);
 
-    // Route for history mode (solo mode)
+    // Route for history mode
     Route::post('/check-answers', [QuizSoloController::class, 'grade'])->name('checkAnswers');
     Route::post('/get-next-piece', [QuizSoloController::class, 'getNextPiece'])->name('getNextPiece');
 

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FmaGame extends Model
 {
@@ -11,6 +12,7 @@ class FmaGame extends Model
 
     protected $fillable = [
         'user_id',
+        'course_id',
         'level_id',
         'difficulty',
         'chords_list_id',
@@ -23,4 +25,9 @@ class FmaGame extends Model
         'chords_list_id' => 'array',
         'correct_answer' => 'string',
     ];
+
+    public function course(): BelongsTo
+    {
+        return $this->belongsTo(Course::class);
+    }
 }

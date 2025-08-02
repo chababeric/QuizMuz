@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SoloGame extends Model
 {
@@ -11,6 +12,7 @@ class SoloGame extends Model
 
     protected $fillable = [
         'user_id',
+        'course_id',
         'level_id',
         'difficulty',
         'pieces_list_id',
@@ -23,4 +25,24 @@ class SoloGame extends Model
         'pieces_list_id' => 'array',
         'correct_answers' => 'array',
     ];
+
+    public function course(): BelongsTo
+    {
+        return $this->belongsTo(Course::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function level(): BelongsTo
+    {
+        return $this->belongsTo(Level::class);
+    }
+
+    public function currentPiece(): BelongsTo
+    {
+        return $this->belongsTo(Piece::class, 'current_piece_id');
+    }
 }

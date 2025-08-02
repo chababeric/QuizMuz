@@ -31,9 +31,12 @@ class ScoreController extends Controller
         return response()->json($scores);
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $course_id = $request->input('course_id');
+
         $scores = Score::with('user')
+            ->where('course_id', $course_id)
             ->orderBy('score', 'desc')
             ->take(10)
             ->get()

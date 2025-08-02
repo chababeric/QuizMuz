@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Institution;
 use App\Models\Level;
+use App\Models\Module;
 use App\Models\Piece;
 use App\Models\PieceReserve;
 use App\Services\AccessControlService;
@@ -36,7 +37,7 @@ class PieceController extends Controller
 
         if ($level && $level->course->name === 'LitMus') {
             // For LitMus course, get pieces grouped by modules
-            $modules = \App\Models\Module::with(['pieces' => function ($query) {
+            $modules = Module::with(['pieces' => function ($query) {
                 $query->orderBy('order');
             }])->where('level_id', $level_id)->orderBy('order')->get();
 
@@ -374,9 +375,67 @@ class PieceController extends Controller
 //            return response()->json(['message' => 'MP3 added successfully', 'file_path' => $publicPath]);
         }
 
-        // Find the highest order for the given level
-        $highestOrder = Piece::where('level_id', $validatedData['level'])->max('order');
-        $newOrder = $highestOrder !== null ? $highestOrder + 1 : 1;
+        $newOrder = 1;
+        if ($validatedData['module_id']) {
+            // Get the module to determine its order
+            $module = Module::findOrFail($validatedData['module_id']);
+
+            // Find the highest order within this specific module
+            $highestOrderInModule = Piece::where('level_id', $validatedData['level'])
+                ->where('module_id', $validatedData['module_id'])
+                ->max('order');
+
+            if ($highestOrderInModule !== null) {
+                $newOrder = $highestOrderInModule + 1;
+            } else {
+                // If this is the first piece in the module, find where to insert it
+                // Get all modules with higher order than the current module
+                $higherOrderModules = Module::where('level_id', $validatedData['level'])
+                    ->where('order', '>', $module->order)
+                    ->pluck('id');
+
+                // Find the minimum order of pieces in higher-order modules
+                $minOrderInHigherModules = Piece::where('level_id', $validatedData['level'])
+                    ->whereIn('module_id', $higherOrderModules)
+                    ->min('order');
+
+                if ($minOrderInHigherModules !== null) {
+                    $newOrder = $minOrderInHigherModules;
+
+                    // Increment the order of all pieces in higher-order modules
+                    Piece::where('level_id', $validatedData['level'])
+                        ->whereIn('module_id', $higherOrderModules)
+                        ->increment('order');
+
+                    // Also increment pieces without modules that have order >= newOrder
+                    Piece::where('level_id', $validatedData['level'])
+                        ->whereNull('module_id')
+                        ->where('order', '>=', $newOrder)
+                        ->increment('order');
+                } else {
+                    // No pieces in higher modules, check pieces without modules
+                    $minOrderWithoutModule = Piece::where('level_id', $validatedData['level'])
+                        ->whereNull('module_id')
+                        ->min('order');
+
+                    if ($minOrderWithoutModule !== null) {
+                        $newOrder = $minOrderWithoutModule;
+
+                        // Increment the order of all pieces without modules
+                        Piece::where('level_id', $validatedData['level'])
+                            ->whereNull('module_id')
+                            ->increment('order');
+                    } else {
+                        // No pieces at all, start with 1
+                        $newOrder = 1;
+                    }
+                }
+            }
+        } else {
+            // Piece without module - should go after all module pieces
+            $highestOrder = Piece::where('level_id', $validatedData['level'])->max('order');
+            $newOrder = $highestOrder !== null ? $highestOrder + 1 : 1;
+        }
 
         // Create a new piece record in the pieces table
         $piece = new Piece([

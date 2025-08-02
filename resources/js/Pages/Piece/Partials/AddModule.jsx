@@ -38,15 +38,13 @@ export default function AddModule({ className = '', courseName }) {
             onSuccess: () => {
                 reset();
             },
-            onError: (errors) => {
-                console.error('Error creating module:', errors);
-
+            onFinish: () => {
                 setData({
                     level_id: '',
                     title: '',
                     description: '',
                 });
-            },
+            }
         });
     };
 

@@ -60,11 +60,12 @@ class AdminController extends Controller
 
         $request->validate([
             'old_username' => 'required|string',
-            'new_username' => 'required|string|unique:users,username|max:18',
+            'new_username' => 'required|string|unique:users,username|max:18|regex:/^\S*$/',
         ],
         [
             'new_username.unique' => 'Le nouveau nom d\'utilisateur est déjà pris.',
             'new_username.max' => 'Le nom d\'utilisateur ne doit pas dépasser 16 caractères.',
+            'new_username.regex' => 'Le nom d\'utilisateur ne doit pas contenir d\'espaces.',
         ]);
 
         if (!$initiator->isAdmin()) {

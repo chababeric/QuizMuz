@@ -19,6 +19,10 @@ export default function UpdateProfileInformation({ className = '' }) {
         patch(route('admin.update-username'), {
             onSuccess: () => {
                 reset();
+                setData({
+                    old_username: '',
+                    new_username: '',
+                });
             },
         });
     };

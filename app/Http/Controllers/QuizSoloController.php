@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Middleware\UserStats;
+use App\Models\Course;
 use App\Models\Piece;
 use App\Models\Score;
 use App\Models\SoloGame;
@@ -34,6 +35,7 @@ class QuizSoloController extends BaseQuizController
         $userId = Auth::id();
         $data['user_id'] = $userId;
         $gameKey = $data['game_key'];
+        $course_id = Course::where('name', $request->input('course_name'))->value('id');
 
         // Check if a game exists with the provided key
         $soloGame = null;
@@ -47,7 +49,8 @@ class QuizSoloController extends BaseQuizController
             $this->ensureSingleGame($userId, 'solo');
 
             $soloGame = SoloGame::create(array_merge($data, [
-                'game_key' => $data['game_key']
+                'game_key' => $data['game_key'],
+                'course_id' => $course_id,
             ]));
 
             // Generate a random piece for the new game
@@ -65,13 +68,17 @@ class QuizSoloController extends BaseQuizController
         $userStats = new UserStats();
         $userStats->incrementUserStats($userId, $data['courseId'], 'quiz');
 
+        $currentScore = Score::where('user_id', $userId)
+            ->where('course_id', $course_id)
+            ->first()->score ?? 0;
+
         return Inertia::render('QuizSolo', [
             'difficulty' => $data['difficulty'],
             'level' => $data['level_id'],
             'courseId' => $data['courseId'],
             'selectListData' => $piecesData,
             'current_piece_mp3' => $soloGame->current_piece_id ? (Piece::find($soloGame->current_piece_id)->file_name ?? '') : '',
-            'current_score' => Score::where('user_id', $userId)->first()->score ?? 0,
+            'current_score' => $currentScore,
             'parameters_to_display' => $parameters_to_display,
         ]);
     }
@@ -187,7 +194,6 @@ class QuizSoloController extends BaseQuizController
         $validated = $request->validate([
             'selectedAnswers' => 'required|array',
         ]);
-//        $this->updateLastActionTime();
         $selectedAnswers = $validated['selectedAnswers'];
         $userId = auth()->id();
 
@@ -203,6 +209,7 @@ class QuizSoloController extends BaseQuizController
 
         $correctAnswers = $soloGame->correct_answers ?? [];
         $difficulty = $soloGame->difficulty;
+        $courseId = $soloGame->course_id;
 
         $pointsPerCorrectAnswer = match ($difficulty) {
             1 => 2,
@@ -250,7 +257,7 @@ class QuizSoloController extends BaseQuizController
         }
 
         $totalPoints = $correctAnswersCount * $pointsPerCorrectAnswer;
-        $score = $this->updateScore($userId, $totalPoints);
+        $score = $this->updateScore($userId, $totalPoints, $courseId);
 
         return [
             'results' => $response,

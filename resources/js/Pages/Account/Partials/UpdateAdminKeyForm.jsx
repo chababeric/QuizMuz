@@ -28,6 +28,11 @@ export default function UpdateAdminKeyForm({ className = '' }) {
             preserveScroll: true,
             onSuccess: () => {
                 reset('key');
+                setData({
+                    key: '',
+                    newKey: data.newKey,
+                    userPassword: data.userPassword,
+                });
                 setRecentlyValidated(true);
                 setTimeout(() => setRecentlyValidated(false), 3000); // Clear message after 3 seconds
             },
@@ -35,6 +40,11 @@ export default function UpdateAdminKeyForm({ className = '' }) {
                 if (errors.key) {
                     reset('key');
                 }
+                setData({
+                    key: '',
+                    newKey: data.newKey,
+                    userPassword: data.userPassword,
+                });
             },
         });
     };
@@ -47,12 +57,22 @@ export default function UpdateAdminKeyForm({ className = '' }) {
             onSuccess: () => {
                 reset('newKey');
                 reset('userPassword');
+                setData({
+                    key: '',
+                    newKey: '',
+                    userPassword: '',
+                });
                 setRecentlyUpdated(true);
                 setTimeout(() => setRecentlyUpdated(false), 3000); // Clear message after 3 seconds
             },
             onError: (errors) => {
                 reset('newKey');
                 reset('userPassword');
+                setData({
+                    key: data.key,
+                    newKey: '',
+                    userPassword: '',
+                });
             },
         });
     };

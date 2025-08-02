@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Middleware\UserStats;
 use App\Models\Chord;
+use App\Models\Course;
 use App\Models\FmaGame;
 use App\Models\Score;
 use Illuminate\Http\JsonResponse;
@@ -33,6 +34,7 @@ class QuizFMAController extends BaseQuizController
         $userId = Auth::id();
         $data['user_id'] = $userId;
         $gameKey = $data['game_key'];
+        $course_id = Course::where('name', $request->input('course_name'))->value('id');
 
         $fmaGame = null;
         if ($gameKey) {
@@ -46,6 +48,7 @@ class QuizFMAController extends BaseQuizController
 
             $fmaGame = FmaGame::create(array_merge($data, [
                 'game_key' => $gameKey,
+                'course_id' => $course_id,
             ]));
 
             $randomChord = $this->generateRandomChord($data['chords_list_id']);
@@ -64,13 +67,17 @@ class QuizFMAController extends BaseQuizController
         $userStats = new UserStats();
         $userStats->incrementUserStats($userId, $data['courseId'], 'quiz');
 
+        $currentScore = Score::where('user_id', $userId)
+            ->where('course_id', $course_id)
+            ->first()->score ?? 0;
+
         return Inertia::render('QuizFMA', [
             'difficulty' => $data['difficulty'],
             'level_id' => $data['level_id'],
             'courseId' => $data['courseId'],
             'selectListData' => $chordsData,
             'current_chord_mp3' => $fmaGame && $fmaGame->current_chord_id ? (Chord::find($fmaGame->current_chord_id)->file_name ?? '') : '',
-            'current_score' => Score::where('user_id', $userId)->first()->score ?? 0,
+            'current_score' => $currentScore,
         ]);
     }
 
@@ -142,6 +149,7 @@ class QuizFMAController extends BaseQuizController
 
         $correctAnswer = $fmaGame->correct_answer;
         $difficulty = $fmaGame->difficulty;
+        $courseId = $fmaGame->course_id;
 
         $pointsPerCorrectAnswer = match ($difficulty) {
             1 => 2,
@@ -152,8 +160,8 @@ class QuizFMAController extends BaseQuizController
 
         // Only update score if the answer is correct
         $score = $isCorrect
-            ? $this->updateScore($userId, $pointsPerCorrectAnswer)
-            : Score::where('user_id', $userId)->first()->score ?? 0;
+            ? $this->updateScore($userId, $pointsPerCorrectAnswer, $courseId)
+            : Score::where('user_id', $userId)->where('course_id', $courseId)->first()->score ?? 0;
 
 
         return [

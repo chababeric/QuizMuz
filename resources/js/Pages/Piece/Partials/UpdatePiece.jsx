@@ -406,7 +406,6 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                                     className="mt-1 block border border-black w-full rounded-md dark:text-white dark:bg-gray-800"
                                     value={data.composer}
                                     onChange={(e) => setData('composer', e.target.value)}
-                                    isFocused
                                     autoComplete="composer"
                                 />
                             </div>

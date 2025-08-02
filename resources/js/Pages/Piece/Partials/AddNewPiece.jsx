@@ -81,6 +81,7 @@ export default function AddNewPiece({ className = '', piecesList, getAllPieces, 
         e.preventDefault();
 
         post(route('admin.new-piece'), {
+            preserveScroll: true,
             onSuccess: () => {
                 getAllPieces();
             },

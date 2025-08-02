@@ -9,7 +9,7 @@ export default function HighScores({ auth, courseId }) {
     const [rotation, setRotation] = useState(0);
 
     useEffect(() => {
-        axios.get('/all-scores')
+        axios.get('/all-scores', {params: {course_id: courseId}})
             .then(response => {
                 const sortedScores = response.data.sort((a, b) => b.score - a.score);
                 const rankedScores = sortedScores.map((score, index, arr) => {

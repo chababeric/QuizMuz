@@ -21,7 +21,14 @@ export default function UpdatePasswordForm({ className = '' }) {
 
         put(route('password.update'), {
             preserveScroll: true,
-            onSuccess: () => reset(),
+            onSuccess: () => {
+                reset()
+                setData({
+                    username: '',
+                    password: '',
+                    password_confirmation: '',
+                });
+            },
             onError: (errors) => {
                 if (errors.password) {
                     reset('password', 'password_confirmation');

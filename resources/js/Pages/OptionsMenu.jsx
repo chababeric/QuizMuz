@@ -205,7 +205,8 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                 difficulty,
                 level_id: level,
                 courseId,
-                game_key: gameKey
+                game_key: gameKey,
+                course_name: courseName
             });
         }
         else {
@@ -214,7 +215,8 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                 difficulty,
                 level_id: level,
                 courseId,
-                game_key: gameKey
+                game_key: gameKey,
+                course_name: courseName
             });
         }
     };

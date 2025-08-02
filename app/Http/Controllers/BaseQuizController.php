@@ -69,13 +69,24 @@ abstract class BaseQuizController extends Controller
     /**
      * Update the user's score.
      */
-    protected function updateScore(int $userId, int $points): int
+    protected function updateScore(int $userId, int $points, int $courseId): int
     {
-        $scoreModel = Score::firstOrNew(['user_id' => $userId]);
-        $scoreModel->score = ($scoreModel->score ?? 0) + $points;
-        $scoreModel->save();
+        $score = Score::where('user_id', $userId)
+            ->where('course_id', $courseId)
+            ->first();
 
-        return $scoreModel->score;
+        if ($score) {
+            $score->score += $points;
+            $score->save();
+        } else {
+            $score = Score::create([
+                'user_id' => $userId,
+                'course_id' => $courseId,
+                'score' => $points,
+            ]);
+        }
+
+        return $score->score;
     }
 
     protected function ensureSingleGame($userId, $gameType): void
