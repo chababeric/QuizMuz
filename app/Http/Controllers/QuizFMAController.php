@@ -120,17 +120,13 @@ class QuizFMAController extends BaseQuizController
         return null;
     }
 
-    public function updateLastActionTime(): JsonResponse
+    public function updateLastActionTime(): void
     {
         if (Auth::check()) {
             $user = Auth::user();
             $user->last_action_time = now();
             $user->save();
-
-            return response()->json(['message' => 'Last action time updated successfully']);
         }
-
-        return response()->json(['message' => 'Unauthorized'], 401);
     }
 
     public function grade(Request $request): array
@@ -138,11 +134,8 @@ class QuizFMAController extends BaseQuizController
         $validated = $request->validate([
             'selectedAnswer' => 'string|nullable',
         ]);
-        if (Auth::check()) {
-            $user = Auth::user();
-            $user->last_action_time = now();
-            $user->save();
-        }
+
+        $this->updateLastActionTime();
         $selectedAnswer = $validated['selectedAnswer'];
         $userId = auth()->id();
 
@@ -186,12 +179,7 @@ class QuizFMAController extends BaseQuizController
             'playChordOnce' => 'required|boolean',
         ]);
 
-        if (Auth::check()) {
-            $user = Auth::user();
-            $user->last_action_time = now();
-            $user->save();
-        }
-
+        $this->updateLastActionTime();
         $playChordOnce = $validated['playChordOnce'];
         $userId = auth()->id();
 
