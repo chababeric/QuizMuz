@@ -138,7 +138,11 @@ class QuizFMAController extends BaseQuizController
         $validated = $request->validate([
             'selectedAnswer' => 'string|nullable',
         ]);
-        $this->updateLastActionTime();
+        if (Auth::check()) {
+            $user = Auth::user();
+            $user->last_action_time = now();
+            $user->save();
+        }
         $selectedAnswer = $validated['selectedAnswer'];
         $userId = auth()->id();
 
@@ -181,6 +185,12 @@ class QuizFMAController extends BaseQuizController
         $validated = $request->validate([
             'playChordOnce' => 'required|boolean',
         ]);
+
+        if (Auth::check()) {
+            $user = Auth::user();
+            $user->last_action_time = now();
+            $user->save();
+        }
 
         $playChordOnce = $validated['playChordOnce'];
         $userId = auth()->id();
