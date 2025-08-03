@@ -387,6 +387,15 @@ class PieceController extends Controller
 
             if ($highestOrderInModule !== null) {
                 $newOrder = $highestOrderInModule + 1;
+
+                Piece::where('level_id', $validatedData['level'])
+                    ->where('order', '>=', $newOrder)
+                    ->where(function($query) use ($validatedData) {
+                        // Exclude pieces from the current module since we want to add at the end of this module
+                        $query->where('module_id', '!=', $validatedData['module_id'])
+                            ->orWhereNull('module_id');
+                    })
+                    ->increment('order');
             } else {
                 // If this is the first piece in the module, find where to insert it
                 // Get all modules with higher order than the current module
