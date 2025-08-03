@@ -120,13 +120,14 @@ class QuizFMAController extends BaseQuizController
         return null;
     }
 
-    public function updateLastActionTime(): void
+    public function updateLastActionTime(): JsonResponse
     {
         if (Auth::check()) {
             $user = Auth::user();
             $user->last_action_time = now();
             $user->save();
         }
+        return response()->json(['status' => 'success']);
     }
 
     public function grade(Request $request): array
