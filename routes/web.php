@@ -55,7 +55,10 @@ Route::get('/', function () {
 
 Route::get('welcome', function () {
     $user = auth()->user();
-    $isAdmin = $user->isAdmin();
+    $isAdmin = false;
+    if ($user != null) {
+        $isAdmin = $user->isAdmin();
+    }
 
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
