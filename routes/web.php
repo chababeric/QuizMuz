@@ -9,6 +9,7 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\InstitutionController;
 use App\Http\Controllers\LogsController;
 use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\OptionsMenuController;
 use App\Http\Controllers\PieceController;
 use App\Http\Controllers\PracticeController;
 use App\Http\Controllers\QuizFMAController;
@@ -80,14 +81,7 @@ Route::middleware(['auth', 'verified', 'check_timeout', 'update_user_action_time
     Route::get('/course', [CourseController::class, 'index'])->name('course');
     Route::get('/mainmenu/{courseId}', [LevelController::class, 'index'])->name('mainmenu');
     Route::get('/support', [SupportController::class, 'index'])->name('support');
-
-    Route::get('/optionsmenu', function (Illuminate\Http\Request $request) {
-        return Inertia::render('OptionsMenu', [
-            'level' => $request->input('level'),
-            'courseId' => $request->input('courseId'),
-            'courseName' => $request->input('courseName'),
-        ]);
-    })->name('optionsmenu');
+    Route::get('/optionsmenu', [OptionsMenuController::class, 'show'])->name('optionsmenu');
 
     Route::get('highscores', function (Illuminate\Http\Request $request) {
         return Inertia::render('HighScores', [

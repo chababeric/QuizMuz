@@ -1,157 +1,84 @@
+
+import { Head, Link } from '@inertiajs/react';
 import Checkbox from '@/Components/Checkbox';
-import { Link, Head } from '@inertiajs/react';
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from 'uuid';
+import backIcon from "../../icons/back.svg";
+import playIcon from "../../icons/play.svg";
 
-export default function OptionsMenu({ auth, level, courseId, courseName }) {
-    const [pieces, setPieces] = useState([]);
-    const [modules, setModules] = useState([]);
-    const [nonModulePieces, setNonModulePieces] = useState([]);
+export default function OptionsMenu({
+                                        auth,
+                                        level,
+                                        courseId,
+                                        courseName,
+                                        pieces = [],
+                                        modules = [],
+                                        nonModulePieces = []
+                                    }) {
     const [checkedPieces, setCheckedPieces] = useState([]);
-    const [checkText, setCheckText] = useState("Sélectionner tout");
     const [difficulty, setDifficulty] = useState(auth.user.last_difficulty || 1);
-    const [canPlay, setCanPlay] = useState(false);
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (level) {
-            if (courseName === "Formation Musicale et Auditive") {
-                axios.get(`/api/chords/level/${level}`)
-                    .then(response => {
-                        const sortedPieces = sortPiecesByOrder(response.data);
-                        setPieces(sortedPieces);
-                        setLoading(false);
-                    })
-                    .catch(error => {
-                        console.error("There was an error fetching the chords!", error);
-                        setLoading(false);
-                    });
-            }
-            else if (courseName === "Littérature Musicale") {
-                // First get all pieces for the level, including those without modules
-                axios.get(`/api/pieces/level/${level}`)
-                    .then(response => {
-                        const piecesData = response.data;
+    // Memoized values
+    const canPlay = useMemo(() => checkedPieces.length >= 2, [checkedPieces.length]);
 
-                        // Sort all pieces by order
-                        const sortedPieces = sortPiecesByOrder(piecesData);
+    const checkText = useMemo(() => {
+        const allPieceIds = pieces.map(piece => piece.id);
+        const allSelected = allPieceIds.length > 0 && allPieceIds.every(id => checkedPieces.includes(id));
+        return allSelected ? "Enlever la sélection" : "Sélectionner tout";
+    }, [pieces, checkedPieces]);
 
-                        // Group pieces by module_id
-                        const groupedByModule = {};
-                        const nonModulePieces = [];
+    const isLiteratureMusicale = courseName === "Littérature Musicale";
+    const isFormationMusicale = courseName === "Formation Musicale et Auditive";
 
-                        // Identify pieces without modules
-                        sortedPieces.forEach(piece => {
-                            if (piece.module_id) {
-                                if (!groupedByModule[piece.module_id]) {
-                                    groupedByModule[piece.module_id] = {
-                                        module: {
-                                            id: piece.module_id,
-                                            title: '', // Will be updated when we find module data
-                                            order: 0,  // Will be updated when we find module data
-                                            description: ''
-                                        },
-                                        pieces: []
-                                    };
-                                }
-                                groupedByModule[piece.module_id].pieces.push(piece);
-                            } else {
-                                nonModulePieces.push(piece);
-                            }
-                        });
-
-                        // Fetch modules data to get titles and order
-                        axios.get(`/api/modules/level/${level}`)
-                            .then(modulesResponse => {
-                                const modulesData = modulesResponse.data;
-
-                                // Update module information in grouped pieces
-                                modulesData.forEach(module => {
-                                    if (groupedByModule[module.id]) {
-                                        groupedByModule[module.id].module = {
-                                            id: module.id,
-                                            title: module.title,
-                                            order: module.order,
-                                            description: module.description
-                                        };
-                                    }
-                                });
-
-                                // Convert to array and sort by module order
-                                const modulesArray = Object.values(groupedByModule)
-                                    .sort((a, b) => a.module.order - b.module.order);
-
-                                setModules(modulesArray);
-                                setNonModulePieces(nonModulePieces);
-
-                                // Combine all pieces for general use
-                                const allPieces = [
-                                    ...modulesArray.flatMap(m => m.pieces),
-                                    ...nonModulePieces
-                                ];
-
-                                setPieces(allPieces);
-                                setLoading(false);
-                            })
-                            .catch(error => {
-                                console.error("Error fetching modules:", error);
-                                setLoading(false);
-                            });
-                    })
-                    .catch(error => {
-                        console.error("There was an error fetching the pieces!", error);
-                        setLoading(false);
-                    });
-            }
-            else {
-                axios.get(`/api/pieces/level/${level}`)
-                    .then(response => {
-                        const sortedPieces = sortPiecesByOrder(response.data);
-                        setPieces(sortedPieces);
-                        setLoading(false);
-                    })
-                    .catch(error => {
-                        console.error("There was an error fetching the pieces!", error);
-                        setLoading(false);
-                    });
-            }
+    // Check if there are no pieces at all
+    const noPiecesAvailable = useMemo(() => {
+        if (isLiteratureMusicale) {
+            // For Literature Musicale, check if there are no modules with pieces and no non-module pieces
+            const hasModulePieces = modules.some(module => module.pieces && module.pieces.length > 0);
+            const hasNonModulePieces = nonModulePieces && nonModulePieces.length > 0;
+            return !hasModulePieces && !hasNonModulePieces;
+        } else {
+            // For other courses, just check pieces array
+            return pieces.length === 0;
         }
-    }, [level]);
+    }, [pieces, modules, nonModulePieces, isLiteratureMusicale]);
 
-    const sortPiecesByOrder = (pieces) => {
-        return pieces.sort((a, b) => {
-            return a.order - b.order;
-        });
-    };
+    // API calls (only for difficulty updates)
+    const updateDifficulty = useCallback(async (newDifficulty) => {
+        try {
+            await axios.post('/set-difficulty', {
+                difficulty: newDifficulty,
+                userId: auth.user.id
+            });
+        } catch (error) {
+            console.error("Error setting difficulty:", error);
+        }
+    }, [auth.user.id]);
 
-    useEffect(() => {
-        setCanPlay(checkedPieces.length >= 2);
-    }, [checkedPieces]);
-
-    const handleCheckAll = (event) => {
-        if (event.target.checked) {
+    // Event handlers
+    const handleCheckAll = useCallback((event) => {
+        const isChecked = event.target.checked;
+        if (isChecked) {
             const allPieceIds = pieces.map(piece => piece.id);
             setCheckedPieces(allPieceIds);
         } else {
             setCheckedPieces([]);
         }
-        setCheckText(event.target.checked ? "Enlever la sélection" : "Sélectionner tout");
-    };
+    }, [pieces]);
 
-    const handleCheckItem = (pieceId) => {
+    const handleCheckItem = useCallback((pieceId) => {
         setCheckedPieces(prevState =>
             prevState.includes(pieceId)
                 ? prevState.filter(id => id !== pieceId)
                 : [...prevState, pieceId]
         );
-    };
+    }, []);
 
-    const handleCheckModule = (moduleData, isChecked) => {
+    const handleCheckModule = useCallback((moduleData, isChecked) => {
         const modulePieceIds = moduleData.pieces.map(piece => piece.id);
 
         if (isChecked) {
-            // Add all module pieces that aren't already checked
             setCheckedPieces(prevState => {
                 const newCheckedPieces = [...prevState];
                 modulePieceIds.forEach(id => {
@@ -162,36 +89,26 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
                 return newCheckedPieces;
             });
         } else {
-            // Remove all module pieces
             setCheckedPieces(prevState =>
                 prevState.filter(id => !modulePieceIds.includes(id))
             );
         }
-    };
+    }, []);
 
-    // Check if all pieces in a module are selected
-    const isModuleFullyChecked = (moduleData) => {
+    const handleDifficultyChange = useCallback((event) => {
+        const newDifficulty = parseInt(event.target.value, 10);
+        setDifficulty(newDifficulty);
+        updateDifficulty(newDifficulty).then(r => {});
+    }, [updateDifficulty]);
+
+    // Module helpers
+    const isModuleFullyChecked = useCallback((moduleData) => {
         if (!moduleData.pieces || moduleData.pieces.length === 0) return false;
         return moduleData.pieces.every(piece => checkedPieces.includes(piece.id));
-    };
+    }, [checkedPieces]);
 
-    // Check if some but not all pieces in a module are selected
-    const isModulePartiallyChecked = (moduleData) => {
-        if (!moduleData.pieces || moduleData.pieces.length === 0) return false;
-        const hasChecked = moduleData.pieces.some(piece => checkedPieces.includes(piece.id));
-        return hasChecked && !isModuleFullyChecked(moduleData);
-    };
-
-    useEffect(() => {
-        axios.post('/set-difficulty', {difficulty: difficulty, userId: auth.user.id})
-            .then(() => {
-            })
-            .catch(error => {
-                console.error("There was an error setting the difficulty!", error);
-            });
-    }, [difficulty]);
-
-    const startQuiz = () => {
+    // Quiz start handler
+    const startQuiz = useCallback(() => {
         let gameKey = localStorage.getItem("game_key");
 
         if (!gameKey) {
@@ -199,223 +116,319 @@ export default function OptionsMenu({ auth, level, courseId, courseName }) {
             localStorage.setItem("game_key", gameKey);
         }
 
-        if (courseName === "Formation Musicale et Auditive") {
-            return route("quizfma", {
-                chords_list_id: checkedPieces,
-                difficulty,
-                level_id: level,
-                courseId,
-                game_key: gameKey,
-                course_name: courseName
-            });
-        }
-        else {
-            return route("quizsolo", {
-                pieces_list_id: checkedPieces,
-                difficulty,
-                level_id: level,
-                courseId,
-                game_key: gameKey,
-                course_name: courseName
-            });
-        }
-    };
+        const baseParams = {
+            difficulty,
+            level_id: level,
+            courseId,
+            game_key: gameKey,
+            course_name: courseName
+        };
 
-    const renderModulesPieces = () => {
-        return (
-            <>
-                {modules.map((moduleData) => (
-                    <div key={moduleData.module.id} className="mb-4">
-                        <div className="bg-rose-900/50 p-2 rounded-t-lg">
-                            <label className="flex items-center">
+        if (isFormationMusicale) {
+            return route("quizfma", {
+                ...baseParams,
+                chords_list_id: checkedPieces
+            });
+        } else {
+            return route("quizsolo", {
+                ...baseParams,
+                pieces_list_id: checkedPieces
+            });
+        }
+    }, [checkedPieces, difficulty, level, courseId, courseName, isFormationMusicale]);
+
+    // Effect to handle difficulty adjustment for Formation Musicale
+    useEffect(() => {
+        if (isFormationMusicale && difficulty === 2) {
+            setDifficulty(1);
+            updateDifficulty(1).then(r => {});
+        }
+    }, [isFormationMusicale, difficulty, updateDifficulty]);
+
+    // Render helpers
+    const renderNoPiecesMessage = () => (
+        <div className="text-center">
+            <div className="inline-block bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl px-8 py-8 border border-white/10 shadow-2xl">
+                <div className="text-6xl mb-6">🎵</div>
+                <h2 className="text-2xl font-bold text-white mb-4">
+                    Aucune pièce trouvée pour ce niveau
+                </h2>
+                <p className="text-gray-300 text-lg">
+                    Il n'y a actuellement aucune pièce disponible pour ce niveau.
+                </p>
+                <div className="h-1 bg-gradient-to-r from-transparent via-gray-400 to-transparent rounded-full mt-6"></div>
+            </div>
+        </div>
+    );
+
+    const renderModulesPieces = () => (
+        <div className="space-y-6">
+            {modules.map((moduleData) => (
+                <div key={moduleData.module.id} className="bg-gradient-to-r from-rose-900/20 to-pink-900/20 backdrop-blur-sm rounded-2xl border border-rose-400/20 overflow-hidden shadow-2xl">
+                    <div className="bg-gradient-to-r from-rose-600/30 to-pink-600/30 px-6 py-4 border-b border-rose-400/20">
+                        <label className="flex items-center cursor-pointer group">
+                            <div className="relative">
                                 <Checkbox
                                     checked={isModuleFullyChecked(moduleData)}
                                     onChange={(e) => handleCheckModule(moduleData, e.target.checked)}
                                 />
-                                <span className="ml-2 text-xl font-bold text-white">
-                                    Module {moduleData.module.order}: {moduleData.module.title}
-                                </span>
-                            </label>
-                        </div>
+                            </div>
+                            <div className="ml-4 flex-1">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-2xl">📚</span>
+                                    <span className="text-xl font-bold text-white group-hover:text-rose-200 transition-colors duration-300">
+                                        Module {moduleData.module.order}: {moduleData.module.title}
+                                    </span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
 
-                        {moduleData.module.description && (
-                            <p className="text-gray-900 p-2 bg-white/30 mb-2 italic text-left">
+                    {moduleData.module.description && (
+                        <div className="px-6 py-3 bg-black/20 border-b border-rose-400/10">
+                            <p className="text-rose-200 text-sm italic leading-relaxed">
                                 {moduleData.module.description}
                             </p>
-                        )}
+                        </div>
+                    )}
 
-                        <div>
-                            {moduleData.pieces && moduleData.pieces.map((piece, pieceIndex) => (
-                                <div key={piece.id} className="mb-1 p-2 border-b border-gray-600">
-                                    <label className="flex items-center w-full">
-                                        <Checkbox
-                                            checked={checkedPieces.includes(piece.id)}
-                                            onChange={() => handleCheckItem(piece.id)}
-                                        />
-                                        <span className="ml-2 text-lg text-black text-left">
-                                            <span className="inline-block w-8 font-bold mr-2">{pieceIndex + 1}.</span>
-                                            {piece.composer} - {piece.title}
-                                            {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
-                                            {piece.mvt && `, ${piece.mvt}`}
-                                        </span>
-                                    </label>
+                    <div className="p-2">
+                        {moduleData.pieces.map((piece, index) => (
+                            <label key={piece.id} className="flex items-center p-3 hover:bg-rose-500/10 cursor-pointer rounded-xl transition-all duration-300 group">
+                                <div className="relative">
+                                    <Checkbox
+                                        checked={checkedPieces.includes(piece.id)}
+                                        onChange={() => handleCheckItem(piece.id)}
+                                    />
                                 </div>
-                            ))}
+                                <div className="ml-4 flex-1">
+                                    <span className="text-white group-hover:text-rose-200 transition-colors duration-300 font-medium">
+                                        {index + 1}. {piece.title || piece.chord_name}
+                                        {piece.composer && (
+                                            <span className="text-rose-300 font-normal"> - {piece.composer}</span>
+                                        )}
+                                    </span>
+                                </div>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            ))}
+
+            {nonModulePieces && nonModulePieces.length > 0 && (
+                <div className="bg-gradient-to-r from-amber-900/20 to-orange-900/20 backdrop-blur-sm rounded-2xl border border-amber-400/20 overflow-hidden shadow-2xl">
+                    <div className="bg-gradient-to-r from-amber-600/30 to-orange-600/30 px-6 py-4 border-b border-amber-400/20">
+                        <div className="flex items-center gap-3">
+                            <span className="text-2xl">🎼</span>
+                            <h3 className="text-xl font-bold text-white">Pièces sans module</h3>
+                            <div className="ml-auto bg-amber-500/20 rounded-lg px-3 py-1">
+                                <span className="text-sm text-amber-200 font-medium">
+                                    {nonModulePieces.length} pièce{nonModulePieces.length > 1 ? 's' : ''}
+                                </span>
+                            </div>
                         </div>
                     </div>
+                    <div className="p-2">
+                        {nonModulePieces.map((piece, index) => (
+                            <label key={piece.id} className="flex items-center p-3 hover:bg-amber-500/10 cursor-pointer rounded-xl transition-all duration-300 group">
+                                <div className="relative">
+                                    <Checkbox
+                                        checked={checkedPieces.includes(piece.id)}
+                                        onChange={() => handleCheckItem(piece.id)}
+                                    />
+                                </div>
+                                <div className="ml-4 flex-1">
+                                    <span className="text-white group-hover:text-amber-200 transition-colors duration-300 font-medium">
+                                        {index + 1}. {piece.title || piece.chord_name}
+                                        {piece.composer && (
+                                            <span className="text-amber-300 font-normal"> - {piece.composer}</span>
+                                        )}
+                                    </span>
+                                </div>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+
+    const renderRegularPieces = () => (
+        <div className="bg-gradient-to-r from-emerald-900/20 to-teal-900/20 backdrop-blur-sm rounded-2xl border border-emerald-400/20 overflow-hidden shadow-2xl">
+            <div className="bg-gradient-to-r from-emerald-600/30 to-teal-600/30 px-6 py-4 border-b border-emerald-400/20">
+                <div className="flex items-center gap-3">
+                    <span className="text-2xl">🎼</span>
+                    <h3 className="text-xl font-bold text-white">{courseName}</h3>
+                    <div className="ml-auto bg-emerald-500/20 rounded-lg px-3 py-1">
+                        <span className="text-sm text-emerald-200 font-medium">
+                            {pieces.length} pièce{pieces.length > 1 ? 's' : ''}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div className="p-2">
+                {pieces.map((piece, index) => (
+                    <label key={piece.id} className="flex items-center p-3 hover:bg-emerald-500/10 cursor-pointer rounded-xl transition-all duration-300 group">
+                        <div className="relative">
+                            <Checkbox
+                                checked={checkedPieces.includes(piece.id)}
+                                onChange={() => handleCheckItem(piece.id)}
+                            />
+                        </div>
+                        <div className="ml-4 flex-1">
+                            <span className="text-white group-hover:text-emerald-200 transition-colors duration-300 font-medium">
+                                {index + 1}. {piece.title || piece.chord_name}
+                                {piece.composer && (
+                                    <span className="text-emerald-300 font-normal"> - {piece.composer}</span>
+                                )}
+                            </span>
+                        </div>
+                    </label>
                 ))}
+            </div>
+        </div>
+    );
 
-                {/* Render pieces without modules */}
-                {nonModulePieces.length > 0 && (
-                    <div className="mb-4">
-                        <h2 className="text-2xl font-bold text-white bg-rose-900/50 p-2 rounded-t-lg">
-                            Pièces sans module
-                        </h2>
-                        <div>
-                            {nonModulePieces.map((piece, index) => (
-                                <div key={piece.id} className="mb-1 p-2 border-b border-gray-600">
-                                    <label className="flex items-center w-full">
-                                        <Checkbox
-                                            checked={checkedPieces.includes(piece.id)}
-                                            onChange={() => handleCheckItem(piece.id)}
-                                        />
-                                        <span className="ml-2 text-lg text-black text-left">
-                                            <span className="inline-block w-8 font-bold mr-2">{index + 1}.</span>
-                                            {piece.composer} - {piece.title}
-                                            {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
-                                            {piece.mvt && `, ${piece.mvt}`}
-                                        </span>
-                                    </label>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </>
-        );
-    };
+    const renderDifficultyOptions = () => (
+        <div className="bg-gradient-to-r from-purple-900/20 to-indigo-900/20 backdrop-blur-sm rounded-2xl border border-purple-400/20 overflow-hidden shadow-2xl mb-6">
+            <div className="bg-gradient-to-r from-purple-600/30 to-indigo-600/30 px-6 py-4 border-b border-purple-400/20">
+                <div className="flex items-center gap-3">
+                    <span className="text-2xl">⚙️</span>
+                    <h3 className="text-xl font-bold text-white">Niveau de difficulté</h3>
+                </div>
+            </div>
+            <div className="p-6">
+                <select
+                    value={difficulty}
+                    onChange={handleDifficultyChange}
+                    className="w-full p-4 bg-black/30 backdrop-blur-sm text-white border border-purple-400/30 rounded-xl
+                             focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none
+                             transition-all duration-300 font-medium text-lg"
+                >
+                    <option value={1} className="bg-black/90 text-white">🟢 Facile</option>
+                    {!isFormationMusicale && <option value={2} className="bg-black/90 text-white">🟡 Moyen</option>}
+                    <option value={3} className="bg-black/90 text-white">🔴 Difficile</option>
+                </select>
+            </div>
+        </div>
+    );
 
     return (
-        <div className="main-app">
+        <div className="main-app min-h-screen flex flex-col bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
             <div className="background-container"></div>
-            <Head title="Paramètres - QuizMuz"/>
-            <h1 className="text-6xl font-bold text-white hover:cursor-default mb-4">Paramètres</h1>
+            <Head title="Options - QuizMuz"/>
 
-            <div
-                className="block mt-4 bg-white/50 p-4 rounded-lg w-11/12 max-h-96 overflow-y-auto text-center hide-scrollbar">
-                <span className="text-black text-3xl mb-4 block hover:cursor-default">
-                    Choisir les pièces à inclure dans le quiz
-                </span>
+            {/* Header Section */}
+            <div className="relative w-full mt-2 mb-4 px-4">
+                {/* Back Button - Above title on mobile, beside on desktop */}
+                <div className="flex justify-start mb-4 sm:mb-0 sm:absolute sm:left-3 sm:top-1/2 sm:-translate-y-1/2 sm:z-10">
+                    <Link
+                        href={route('mainmenu', { courseId })}
+                        className="group"
+                    >
+                        <div className="bg-gradient-to-r from-slate-800/90 to-slate-700/90 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20 hover:border-violet-300 transition-all duration-300 shadow-lg hover:shadow-violet-500/30">
+                            <div className="flex items-center gap-2 text-white group-hover:text-violet-200">
+                                <svg className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                </svg>
+                                <span className="text-sm font-medium">Retour</span>
+                            </div>
+                        </div>
+                    </Link>
+                </div>
 
-                {loading ? (
-                    <div className="text-black text-2xl py-4">
-                        Chargement...
+                {/* Title - Centered */}
+                <div className="flex justify-center">
+                    <div className="text-center">
+                        <div className="inline-block bg-gradient-to-r from-violet-900/90 via-purple-900/90 to-violet-900/90 backdrop-blur-sm rounded-2xl px-8 py-4 shadow-2xl border border-white/20">
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className="text-4xl">⚙️</span>
+                                <h1 className="text-5xl font-bold bg-gradient-to-r from-white via-violet-200 to-white bg-clip-text text-transparent">
+                                    Options
+                                </h1>
+                            </div>
+                            <div className="h-1 bg-gradient-to-r from-transparent via-violet-400 to-transparent rounded-full"></div>
+                        </div>
                     </div>
-                ) : pieces.length > 0 ? (
-                    <>
-                        <label className="flex items-center mb-5">
-                            <Checkbox onChange={handleCheckAll}/>
-                            <span className="ml-2 text-lg text-black">{checkText}</span>
-                        </label>
-
-                        {courseName === "Littérature Musicale" ? (
-                            modules.length > 0 || nonModulePieces.length > 0 ? (
-                                renderModulesPieces()
-                            ) : (
-                                <p className="text-black text-2xl hover:cursor-default">
-                                    Il n'y a pas de pièces trouvées pour ce niveau.
-                                </p>
-                            )
-                        ) : (
-                            <ul>
-                                {pieces.map((piece, index) => (
-                                    <li key={piece.id}>
-                                        <label className="flex items-center w-full mb-3">
-                                            <Checkbox
-                                                checked={checkedPieces.includes(piece.id)}
-                                                onChange={() => handleCheckItem(piece.id)}
-                                            />
-                                            <span className="ml-2 text-lg text-black text-left">
-                                                {courseName === "Formation Musicale et Auditive" ? (
-                                                    <span>
-                                                        <strong className="mr-2">{index + 1}.</strong>
-                                                        {piece.chord_name}
-                                                    </span>
-                                                ) : (
-                                                    <>
-                                                        {piece.composer} - {piece.title}
-                                                        {piece.element && ` - ${piece.element}`}
-                                                        {piece.no_mvt && ` - ${piece.no_mvt}`}
-                                                        {piece.mvt && ` - ${piece.mvt}`}
-                                                    </>
-                                                )}
-                                            </span>
-                                        </label>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </>
-                ) : (
-                    <p className="text-black text-2xl hover:cursor-default">
-                        Il n'y a pas de pièces trouvées pour ce niveau.
-                    </p>
-                )}
-            </div>
-
-            <div className="w-full px-4 text-center mt-6">
-                <span className="text-white text-3xl mb-4 block hover:cursor-default">
-                    Choisir le niveau de difficulté
-                </span>
-
-                <div className="flex flex-wrap justify-center gap-4">
-                    <button
-                        className={`border-2 border-white p-2.5 text-center cursor-pointer bg-black text-white text-lg w-18 max-w-24 mx-auto rounded-lg hover:bg-opacity-80 hover:shadow-greenGlow
-                        ${difficulty === 1 && 'bg-black text-black shadow-greenGlow'}`}
-                        onClick={() => setDifficulty(1)}
-                    >
-                        Facile
-                    </button>
-                    {courseName !== "Formation Musicale et Auditive" && (
-                        <button
-                            className={`border-2 border-white p-2.5 text-center cursor-pointer bg-black text-white text-lg w-18 max-w-24 mx-auto rounded-lg hover:bg-opacity-80 hover:shadow-greenGlow
-                            ${difficulty === 2 && 'bg-black text-black shadow-greenGlow'}`}
-                            onClick={() => setDifficulty(2)}
-                        >
-                            Moyen
-                        </button>
-                    )}
-                    <button
-                        className={`border-2 border-white p-2.5 text-center cursor-pointer bg-black text-white text-lg w-18 max-w-24 mx-auto rounded-lg hover:bg-opacity-80 hover:shadow-greenGlow
-                        ${difficulty === 3 && 'bg-black text-black shadow-greenGlow'}`}
-                        onClick={() => setDifficulty(3)}
-                    >
-                        Difficile
-                    </button>
                 </div>
             </div>
 
-            <div className="flex justify-center mt-8">
-                <Link
-                    href={route('mainmenu', { courseId: courseId })}
-                    className="text-white font-bold py-2 px-4 rounded-lg bg-gray-700 hover:bg-gray-900 mt-4 mr-4 border border-white">
-                    Retourner au menu
-                </Link>
+            {/* Content */}
+            <div className="flex-1 flex flex-col px-6 w-full">
+                {/* Difficulty Options */}
+                {renderDifficultyOptions()}
 
-                {canPlay ? (
-                    <Link
-                        href={startQuiz()}
-                        className="text-white font-bold py-2 px-4 rounded-lg bg-rose-600 hover:bg-rose-800 mt-4"
-                    >
-                        Commencer le quiz
-                    </Link>
+                {/* Show message if no pieces available */}
+                {noPiecesAvailable ? (
+                    <div className="flex-1 flex items-center justify-center">
+                        {renderNoPiecesMessage()}
+                    </div>
                 ) : (
-                    <button
-                        className="text-white font-bold py-2 px-4 rounded-lg bg-gray-400 mt-4"
-                        disabled
-                    >
-                        Commencer le quiz
-                    </button>
+                    <div className="flex-1 flex flex-col space-y-6 mb-6">
+                        {/* Select All Checkbox */}
+                        {pieces.length > 0 && (
+                            <div className="bg-gradient-to-r from-cyan-900/20 to-blue-900/20 backdrop-blur-sm rounded-2xl border border-cyan-400/20 overflow-hidden shadow-2xl">
+                                <div className="bg-gradient-to-r from-cyan-600/30 to-blue-600/30 px-6 py-4">
+                                    <label className="flex items-center cursor-pointer group">
+                                        <div className="relative">
+                                            <Checkbox
+                                                checked={pieces.length > 0 && pieces.every(piece => checkedPieces.includes(piece.id))}
+                                                onChange={handleCheckAll}
+                                            />
+                                        </div>
+                                        <div className="ml-4 flex items-center gap-3">
+                                            <span className="text-2xl">✅</span>
+                                            <span className="text-white text-lg font-semibold group-hover:text-cyan-200 transition-colors duration-300">
+                                                {checkText}
+                                            </span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Pieces List */}
+                        <div className="flex-1">
+                            {isLiteratureMusicale ? renderModulesPieces() : renderRegularPieces()}
+                        </div>
+
+                        {/* Start Quiz Button */}
+                        <div className="sticky bottom-0 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent pt-6 pb-2">
+                            {canPlay ? (
+                                <Link
+                                    href={startQuiz()}
+                                    className="group relative overflow-hidden bg-gradient-to-r from-rose-600 to-pink-600 rounded-2xl border border-rose-400/50 hover:border-rose-300 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-2xl block"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-rose-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                    <div className="relative z-10 flex items-center justify-center gap-3 py-4 px-6">
+                                        <img src={playIcon} alt="Play" className="h-6 w-6 filter brightness-0 invert"/>
+                                        <span className="text-white text-xl font-bold">
+                                            Commencer le quiz
+                                        </span>
+                                        <div className="ml-auto bg-rose-500/20 rounded-lg px-3 py-1">
+                                            <span className="text-sm text-rose-200 font-medium">
+                                                {checkedPieces.length} sélectionné{checkedPieces.length > 1 ? 's' : ''}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </Link>
+                            ) : (
+                                <div className="relative overflow-hidden bg-gradient-to-r from-gray-600 to-gray-700 rounded-2xl border border-gray-500/50 cursor-not-allowed opacity-75">
+                                    <div className="flex items-center justify-center gap-3 py-4 px-6">
+                                        <span className="text-2xl">🚫</span>
+                                        <span className="text-gray-300 text-xl font-bold">
+                                            Sélectionnez au moins 2 éléments
+                                        </span>
+                                        <div className="ml-auto bg-gray-500/20 rounded-lg px-3 py-1">
+                                            <span className="text-sm text-gray-300 font-medium">
+                                                {checkedPieces.length}/2 min.
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 )}
             </div>
         </div>
