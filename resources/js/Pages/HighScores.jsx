@@ -117,8 +117,11 @@ export default function HighScores({ auth, courseId }) {
             {/* 3D Carousel Container */}
             <div
                 {...handlers}
-                className="perspective-1000 w-full h-80 flex items-center justify-center relative cursor-grab active:cursor-grabbing select-none"
-                style={{ perspective: '1000px' }}
+                className="carousel-container perspective-1000 w-full h-80 flex items-center justify-center relative cursor-grab active:cursor-grabbing select-none"
+                style={{
+                    perspective: '1000px',
+                    touchAction: 'none'
+                }}
             >
                 <div
                     className="relative w-full h-full flex items-center justify-center"
@@ -182,7 +185,7 @@ export default function HighScores({ auth, courseId }) {
     };
 
     return (
-        <div className="main-app min-h-screen flex flex-col bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="main-app min-h-screen flex flex-col bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
             <div className="background-container"></div>
             <Head title="Meilleurs Scores - QuizMuz"/>
 
