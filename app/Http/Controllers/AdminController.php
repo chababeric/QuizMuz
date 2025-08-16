@@ -69,6 +69,11 @@ class AdminController extends Controller
         ]);
 
         if (!$initiator->isAdmin()) {
+            $this->logsController->createLog(
+                'Compte',
+                "Tentative de mise à jour du nom d'utilisateur <span class=\"line-through text-gray-500 dark:text-gray-400\">{$request->old_username}</span> → <strong>{$request->new_username}</strong> par un utilisateur sans privilèges.",
+                $initiator->id
+            );
             return Redirect::back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour mettre à jour le nom d\'utilisateur.']);
         }
 
@@ -124,6 +129,11 @@ class AdminController extends Controller
 
         $initiator = $request->user();
         if (!$initiator->hasPrivilege('SuperAdmin')) {
+            $this->logsController->createLog(
+                'Compte',
+                "Tentative de suppression de l'utilisateur <strong>{$request->usernameToDelete}</strong> par un utilisateur sans privilèges.",
+                $initiator->id
+            );
             return Redirect::back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour supprimer des utilisateurs.']);
         }
 

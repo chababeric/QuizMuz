@@ -35,6 +35,11 @@ class AdminKeyController extends Controller
         ]);
 
         if (!$initiator->isAdmin()) {
+            $this->logsController->createLog(
+                "Clé Admin",
+                "Tentative de mise à jour de la clé admin par un utilisateur non autorisé.",
+                $initiator->id,
+            );
             return Redirect::back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour mettre à jour la clé Admin.']);
         }
 
@@ -70,6 +75,11 @@ class AdminKeyController extends Controller
         ]);
 
         if (!$initiator->isAdmin()) {
+            $this->logsController->createLog(
+                "Clé Admin",
+                "Tentative de validation de la clé admin par un utilisateur non autorisé.",
+                $initiator->id,
+            );
             return Redirect::back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour valider la clé Admin.']);
         }
 

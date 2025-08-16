@@ -7,6 +7,7 @@ export const useAudioPlayer = (currentPiece, courseName, onNext) => {
     const [duration, setDuration] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [currentPieceId, setCurrentPieceId] = useState(null);
+    const playPromiseRef = useRef(null); // Track ongoing play promises
 
     const handlePlayPause = useCallback(() => {
         setIsPlaying(prev => !prev);
@@ -16,6 +17,24 @@ export const useAudioPlayer = (currentPiece, courseName, onNext) => {
         const newProgress = e.target.value;
         audioRef.current.currentTime = newProgress;
         setProgress(newProgress);
+    }, []);
+
+    // Helper function to safely pause audio and cancel any ongoing play promises
+    const safelyPauseAudio = useCallback(() => {
+        const audioElement = audioRef.current;
+
+        // Cancel any ongoing play promise
+        if (playPromiseRef.current) {
+            playPromiseRef.current.catch(() => {
+                // Ignore any errors from cancelled play promises
+            });
+            playPromiseRef.current = null;
+        }
+
+        // Pause the audio
+        if (!audioElement.paused) {
+            audioElement.pause();
+        }
     }, []);
 
     // Separate effect for handling piece changes vs play/pause
@@ -41,6 +60,9 @@ export const useAudioPlayer = (currentPiece, courseName, onNext) => {
             const isNewPiece = currentPieceId !== currentPiece.id;
 
             if (isNewPiece) {
+                // First, safely pause current audio and cancel any ongoing promises
+                safelyPauseAudio();
+
                 const audioSrc = courseName === "Formation Musicale et Auditive"
                     ? `https://www.quizmuz.com/storage/fma_chords/${currentPiece.file_name}`
                     : `https://www.quizmuz.com/storage/litmus_pieces/${currentPiece.file_name}`;
@@ -74,7 +96,7 @@ export const useAudioPlayer = (currentPiece, courseName, onNext) => {
                 audioElement.removeEventListener('error', handleError);
             }
         };
-    }, [currentPiece, courseName, onNext, currentPieceId]);
+    }, [currentPiece, courseName, onNext, currentPieceId, safelyPauseAudio]);
 
     // Separate effect for handling play/pause state
     useEffect(() => {
@@ -82,48 +104,66 @@ export const useAudioPlayer = (currentPiece, courseName, onNext) => {
 
         if (currentPiece) {
             if (isPlaying) {
-                const playPromise = audioElement.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        console.error("Error playing audio:", error);
-                        setIsPlaying(false);
+                // Cancel any previous play promise before starting a new one
+                if (playPromiseRef.current) {
+                    playPromiseRef.current.catch(() => {
+                        // Ignore errors from cancelled promises
                     });
                 }
+
+                const playPromise = audioElement.play();
+                if (playPromise !== undefined) {
+                    playPromiseRef.current = playPromise;
+                    playPromise
+                        .then(() => {
+                            // Play succeeded, clear the promise reference
+                            playPromiseRef.current = null;
+                        })
+                        .catch(error => {
+                            // Only log errors that aren't AbortErrors from rapid clicking
+                            if (error.name !== 'AbortError') {
+                                console.error("Error playing audio:", error);
+                            }
+                            setIsPlaying(false);
+                            playPromiseRef.current = null;
+                        });
+                }
             } else {
-                audioElement.pause();
+                safelyPauseAudio();
             }
         }
-    }, [isPlaying, currentPiece]);
+    }, [isPlaying, currentPiece, safelyPauseAudio]);
 
     // Cleanup on unmount
     useEffect(() => {
         return () => {
             const audioElement = audioRef.current;
             if (audioElement) {
-                audioElement.pause();
+                safelyPauseAudio();
                 audioElement.currentTime = 0;
                 audioElement.src = '';
             }
         };
-    }, []);
+    }, [safelyPauseAudio]);
 
     const resetAudio = useCallback(() => {
         const audioElement = audioRef.current;
-        audioElement.pause();
+        safelyPauseAudio();
         audioElement.currentTime = 0;
         setProgress(0);
         setIsPlaying(false);
-    }, []);
+    }, [safelyPauseAudio]);
 
     // New function to restart current piece
     const restartCurrentPiece = useCallback(() => {
         if (currentPiece) {
             const audioElement = audioRef.current;
+            safelyPauseAudio();
             audioElement.currentTime = 0;
             setProgress(0);
             setIsPlaying(true);
         }
-    }, [currentPiece]);
+    }, [currentPiece, safelyPauseAudio]);
 
     return {
         audioRef,

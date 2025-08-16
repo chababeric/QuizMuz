@@ -56,6 +56,10 @@ class CourseAdminController extends Controller
         $course = Course::find($request->course_id);
         $role = AdminControl::find($request->admin_control_id);
 
+        if (!$user || !$course || !$role) {
+            return response()->json(['message' => 'Utilisateur, cours ou rôle introuvable.'], 404);
+        }
+
         // Check if user already has this role for this course
         $existingRole = $user->adminCourses()
             ->where('course_id', $course->id)

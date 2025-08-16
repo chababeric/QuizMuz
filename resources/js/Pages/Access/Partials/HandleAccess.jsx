@@ -183,7 +183,7 @@ export default function HandleAccess({ className = '', roles, courses }) {
         axios.post(route('course-admins.remove'), {
             user_id: userId,
             course_id: courseId,
-            admin_control_id: roleId // Using admin_control_id as per CourseAdminController
+            admin_control_id: roleId
         })
             .then(response => {
                 setMessage(response.data.message);
