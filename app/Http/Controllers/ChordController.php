@@ -7,6 +7,7 @@ use App\Models\Level;
 use App\Services\AccessControlService;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -156,7 +157,7 @@ class ChordController extends Controller
 
             return redirect()->back()->withErrors(['error' => 'Le niveau sélectionné n\'existe pas.']);
 
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             $this->logsController->createLog(
                 'FMA',
                 "Erreur de base de données lors de l'ajout de l'accord '{$request->chord_name}': " . $e->getMessage(),
@@ -309,6 +310,13 @@ class ChordController extends Controller
             $chord = Chord::findOrFail($id);
             $chordName = $chord->chord_name;
             $levelName = $chord->level->name;
+
+            if ($chord->file_name) {
+                $filePath = 'public/fma_chords/' . $chord->file_name;
+                if (Storage::exists($filePath)) {
+                    Storage::delete($filePath);
+                }
+            }
 
             $chord->delete();
 

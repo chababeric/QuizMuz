@@ -228,6 +228,14 @@ class PieceController extends Controller
 
 //        $piece = PieceReserve::findOrFail($id);
         $piece = Piece::findOrFail($id);
+
+        if ($piece->file_name) {
+            $filePath = 'public/litmus_pieces/' . $piece->file_name;
+            if (Storage::exists($filePath)) {
+                Storage::delete($filePath);
+            }
+        }
+
         $piece->delete();
 
         $this->logsController->createLog(
