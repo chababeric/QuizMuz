@@ -305,7 +305,7 @@ export default function Register() {
                                             <input
                                                 id="admin_password"
                                                 name="admin_password"
-                                                type="password"
+                                                type="text"
                                                 value={data.admin_password}
                                                 onChange={(e) => setData('admin_password', e.target.value)}
                                                 required
