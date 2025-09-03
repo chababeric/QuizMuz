@@ -83,7 +83,7 @@ class QuizSoloController extends BaseQuizController
         ]);
     }
 
-    public function getParametersToDisplay(string $difficulty, SoloGame $soloGame = null): array
+    public function getParametersToDisplay(string $difficulty, ?SoloGame $soloGame = null): array
     {
         if ($difficulty === '1') {
             return array_keys(array_filter($soloGame->correct_answers ?? [], fn($value) => $value !== null));

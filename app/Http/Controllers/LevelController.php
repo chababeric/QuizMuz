@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\Institution;
 use App\Models\Level;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -195,6 +196,9 @@ class LevelController extends Controller
                 // Use transaction to ensure database consistency
                 DB::beginTransaction();
 
+                // Get the course name before deleting the level
+                $courseName = $level->course->name;
+
                 // Delete the level without cascading to user
                 $level->delete();
 
@@ -202,13 +206,13 @@ class LevelController extends Controller
 
                 $this->logsController->createLog(
                     'Niveau',
-                    "Le niveau <strong>{$request->name}</strong> a été <span class=\"bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-semibold px-1 rounded\">supprimé</span> du cours <strong>" . Course::find($level->course_id)->name . "</strong> " .
+                    "Le niveau <strong>{$request->name}</strong> a été <span class=\"bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-semibold px-1 rounded\">supprimé</span> du cours <strong>{$courseName}</strong> " .
                     "de l'institution <strong>{$institution_name}</strong>.",
                     $initiator->id
                 );
 
                 return response()->json(['message' => 'Le niveau \'' . $request->name . '\' a été supprimé avec succès.'], 200);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 DB::rollBack();
                 return response()->json(['message' => 'Une erreur est survenue lors de la suppression du niveau.'], 500);
             }
