@@ -154,7 +154,7 @@ export default function Dashboard({ auth, totalStats, users }) {
                                 {selectedUser.courses.map((course) => (
                                     <div key={course.course_id} className="p-3 bg-gray-200 rounded-lg shadow dark:bg-gray-700">
                                         <p className="text-lg font-semibold dark:text-white">{course.course_name}</p>
-                                        <p className="text-sm dark:text-gray-400">Practice: {course.practice}</p>
+                                        <p className="text-sm dark:text-gray-400">Pratique: {course.practice}</p>
                                         <p className="text-sm dark:text-gray-400">Quiz: {course.quiz}</p>
                                         <p className="text-sm dark:text-gray-400">Total de visites: {course.total}</p>
                                     </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\LogsController;
 use App\Models\AdminControl;
 use App\Models\AdminKey;
 use App\Models\User;
@@ -20,6 +21,13 @@ use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
+    protected LogsController $logsController;
+
+    public function __construct(LogsController $logsController)
+    {
+        $this->logsController = $logsController;
+    }
+
     /**
      * Display the registration view.
      */
@@ -71,6 +79,12 @@ class RegisteredUserController extends Controller
 
         $user->last_action_time = now();
         $user->save();
+
+        $this->logsController->createLog(
+            'Compte',
+            "Création du compte pour l'utilisateur <strong>{$user->first_name} {$user->last_name} - ({$user->username})</strong>.",
+            $user->id
+        );
 
         $studentRole = AdminControl::where('system_name', 'student')->first();
         if ($studentRole) {
