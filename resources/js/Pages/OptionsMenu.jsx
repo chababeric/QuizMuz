@@ -4,7 +4,6 @@ import Checkbox from '@/Components/Checkbox';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
-import backIcon from "../../icons/back.svg";
 import playIcon from "../../icons/play.svg";
 
 export default function OptionsMenu({
@@ -18,7 +17,6 @@ export default function OptionsMenu({
                                     }) {
     const [checkedPieces, setCheckedPieces] = useState([]);
     const [difficulty, setDifficulty] = useState(auth.user.last_difficulty || 1);
-
     // Memoized values
     const canPlay = useMemo(() => checkedPieces.length >= 2, [checkedPieces.length]);
 
@@ -204,6 +202,12 @@ export default function OptionsMenu({
                                 <div className="ml-4 flex-1">
                                     <span className="text-white group-hover:text-rose-200 transition-colors duration-300 font-medium">
                                         {index + 1}. {piece.title || piece.chord_name}
+                                        {(piece.no_mvt || piece.mvt) && (
+                                            <span className="text-rose-200 font-normal">
+                                                {piece.no_mvt && ` - Mvt ${piece.no_mvt}`}
+                                                {piece.mvt && `: ${piece.mvt}`}
+                                            </span>
+                                        )}
                                         {piece.composer && (
                                             <span className="text-rose-300 font-normal"> - {piece.composer}</span>
                                         )}
@@ -240,6 +244,12 @@ export default function OptionsMenu({
                                 <div className="ml-4 flex-1">
                                     <span className="text-white group-hover:text-amber-200 transition-colors duration-300 font-medium">
                                         {index + 1}. {piece.title || piece.chord_name}
+                                        {(piece.no_mvt || piece.mvt) && (
+                                            <span className="text-amber-200 font-normal">
+                                                {piece.no_mvt && ` - Mvt ${piece.no_mvt}`}
+                                                {piece.mvt && `: ${piece.mvt}`}
+                                            </span>
+                                        )}
                                         {piece.composer && (
                                             <span className="text-amber-300 font-normal"> - {piece.composer}</span>
                                         )}
@@ -278,6 +288,12 @@ export default function OptionsMenu({
                         <div className="ml-4 flex-1">
                             <span className="text-white group-hover:text-emerald-200 transition-colors duration-300 font-medium">
                                 {index + 1}. {piece.title || piece.chord_name}
+                                {(piece.no_mvt || piece.mvt) && (
+                                    <span className="text-emerald-200 font-normal">
+                                        {piece.no_mvt && ` - Mvt ${piece.no_mvt}`}
+                                        {piece.mvt && `: ${piece.mvt}`}
+                                    </span>
+                                )}
                                 {piece.composer && (
                                     <span className="text-emerald-300 font-normal"> - {piece.composer}</span>
                                 )}

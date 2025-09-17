@@ -52,7 +52,7 @@ class OptionsMenuController extends Controller
     {
         return Piece::where('level_id', $level)
             ->orderBy('order')
-            ->get(['id', 'title', 'composer', 'module_id', 'order'])
+            ->get(['id', 'title', 'composer', 'module_id', 'order', 'no_mvt', 'mvt'])
             ->toArray();
     }
 

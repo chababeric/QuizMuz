@@ -2,7 +2,6 @@
 import { Head, Link } from '@inertiajs/react';
 import React, { useState, useMemo, useCallback } from 'react';
 import axios from "axios";
-import backIcon from "../../icons/back.svg";
 import { useAudioPlayer } from "@/hooks/useAudioPlayer.js";
 import PiecesList from "@/Components/PiecesList.jsx";
 import AudioControls from "@/Components/AudioControls.jsx";
