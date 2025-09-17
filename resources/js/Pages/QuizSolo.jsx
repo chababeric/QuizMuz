@@ -69,7 +69,8 @@ export default function QuizSolo({
     const handleAnswerChange = useCallback((col, value) => {
         setSelectedAnswers(prevAnswers => ({
             ...prevAnswers,
-            [col]: col === 'no_mvt' ? parseInt(value, 10) || '' : value
+            // [col]: col === 'no_mvt' ? parseInt(value, 10) || '' : value
+            [col]: value
         }));
     }, []);
 
