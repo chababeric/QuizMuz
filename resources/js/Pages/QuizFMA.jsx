@@ -178,8 +178,7 @@ export default function QuizFMA({
             return (
                 <div className="space-y-4">
                     <div className="text-center mb-4">
-                        <h4 className="text-lg font-semibold text-white mb-2">Entrez les accords dans l'ordre</h4>
-                        <p className="text-purple-200 text-sm">Saisissez chaque accord dans les champs ci-dessous</p>
+                        <h4 className="text-lg font-semibold text-white mb-2">Tapez les accords dans l'ordre</h4>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 justify-items-center">
                         {Array(chordCount).fill().map((_, index) => (
@@ -200,13 +199,12 @@ export default function QuizFMA({
             );
         }
 
-        // For easy and medium difficulties, show dropdown
+        // For easy difficulty, show dropdown
         if (Array.isArray(selectListData)) {
             return (
                 <div className="space-y-4">
                     <div className="text-center mb-4">
-                        <h4 className="text-lg font-semibold text-white mb-2">Sélectionnez l'accord</h4>
-                        <p className="text-purple-200 text-sm">Choisissez l'accord que vous entendez</p>
+                        <h4 className="text-lg font-semibold text-white mb-2">Sélectionnez la formule</h4>
                     </div>
                     <select
                         value={selectedAnswer}
@@ -356,13 +354,8 @@ export default function QuizFMA({
                             <div className="flex items-center gap-3">
                                 <span className="text-2xl">🎼</span>
                                 <h3 className="text-xl font-bold text-white">
-                                    {isHardDifficulty ? 'Analyse d\'accord' : 'Reconnaissance d\'accord'}
+                                    Formule Harmonique
                                 </h3>
-                                <div className="ml-auto bg-indigo-500/20 rounded-lg px-3 py-1">
-                                    <span className="text-sm text-indigo-200 font-medium">
-                                        Difficulté {difficulty}
-                                    </span>
-                                </div>
                             </div>
                         </div>
                         <div className="p-6">

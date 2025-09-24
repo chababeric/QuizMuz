@@ -191,7 +191,7 @@ export default function Welcome({ auth }) {
             <footer className="relative z-10 py-8 text-center">
                 <div className="bg-black/20 backdrop-blur-sm rounded-xl mx-4 py-4 border border-white/10">
                     <p className="text-white/80 text-sm font-medium">
-                        QuizMuz v3.0.4 © 2024 - Tous droits réservés
+                        QuizMuz v3.0.5 © 2024 - Tous droits réservés
                     </p>
                 </div>
             </footer>

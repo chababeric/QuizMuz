@@ -84,7 +84,8 @@ class QuizFMAController extends BaseQuizController
     public function getChordsData(string $difficulty, array $chordsList = []): array
     {
         if ($difficulty === '1') {
-            return Chord::whereIn('id', $chordsList)->pluck('chord_name')->toArray();
+            $chordNames = Chord::whereIn('id', $chordsList)->pluck('chord_name')->toArray();
+            return array_unique($chordNames);
         } elseif ($difficulty === '3') {
             $chord = Chord::find(FmaGame::where('user_id', Auth::id())->first()->current_chord_id ?? 0);
             if ($chord) {
