@@ -28,7 +28,7 @@ export default function AddModule({ className = '', courseName }) {
             .catch(error => {
                 console.error('Error fetching levels:', error);
             });
-    }, []);
+    }, [courseName]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -48,12 +48,26 @@ export default function AddModule({ className = '', courseName }) {
         });
     };
 
+    // Get the appropriate content type based on course
+    const getContentType = () => {
+        switch (courseName) {
+            case "Formation Musicale et Auditive":
+                return { single: "formule/accord", plural: "formules et accords" };
+            case "Littérature Musicale":
+                return { single: "pièce", plural: "pièces" };
+            default:
+                return { single: "élément", plural: "éléments" };
+        }
+    };
+
+    const contentType = getContentType();
+
     return (
         <section className={className}>
             <header>
                 <h2 className="text-lg font-medium text-gray-900 dark:text-white">Ajouter un Module</h2>
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    Créez un nouveau module pour organiser vos pièces dans le cours de Littérature Musicale.
+                    Créez un nouveau module pour organiser vos {contentType.plural} dans le cours de {courseName}.
                 </p>
             </header>
 
@@ -65,7 +79,7 @@ export default function AddModule({ className = '', courseName }) {
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-6">
                 <div>
-                    <InputLabel htmlFor="level_id" value="Niveau" />
+                    <InputLabel htmlFor="level_id" value="Niveau" className="dark:text-white"/>
                     <select
                         id="level_id"
                         className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
@@ -84,11 +98,11 @@ export default function AddModule({ className = '', courseName }) {
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="title" value="Titre du module" />
+                    <InputLabel htmlFor="title" value="Titre du module" className="dark:text-white"/>
                     <TextInput
                         id="title"
                         type="text"
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full dark:bg-gray-900 dark:text-white dark:border-gray-700"
                         value={data.title}
                         onChange={e => setData('title', e.target.value)}
                         required
@@ -97,7 +111,7 @@ export default function AddModule({ className = '', courseName }) {
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="description" value="Description (optionnelle)" />
+                    <InputLabel htmlFor="description" value="Description (optionnelle)" className="dark:text-white"/>
                     <textarea
                         id="description"
                         className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"

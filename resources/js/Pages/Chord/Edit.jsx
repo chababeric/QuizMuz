@@ -1,8 +1,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.jsx';
 import { useState, useEffect } from "react";
 import {Head} from "@inertiajs/react";
+import axios from 'axios';
 import AddNewChord from "@/Pages/Chord/Partials/AddNewChord.jsx";
 import UpdateChord from "@/Pages/Chord/Partials/UpdateChord.jsx";
+import AddModule from "@/Pages/Piece/Partials/AddModule.jsx";
+import UpdateModule from "@/Pages/Piece/Partials/UpdateModule.jsx";
+import ModuleList from "@/Pages/Piece/Partials/ModuleList.jsx";
+
 
 export default function Edit({ auth, user }) {
     const [chords, setChords] = useState([]);
@@ -59,6 +64,29 @@ export default function Edit({ auth, user }) {
                             chordsList={chords}
                             setChordsList={setChords}
                             levelsList={sortedLevels}
+                        />
+                    </div>
+
+                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
+                        <AddModule
+                            className="max-w-xl dark:bg-gray-800"
+                            courseName="Formation Musicale et Auditive"
+                        />
+                    </div>
+
+                    {/* Update Module Section */}
+                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
+                        <UpdateModule
+                            className="max-w-xl dark:bg-gray-800"
+                            courseName="Formation Musicale et Auditive"
+                        />
+                    </div>
+
+                    {/* Module List Section */}
+                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
+                        <ModuleList
+                            className="max-w-4xl dark:bg-gray-800"
+                            courseName="Formation Musicale et Auditive"
                         />
                     </div>
                 </div>

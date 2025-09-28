@@ -1,4 +1,3 @@
-
 import { Head, Link } from '@inertiajs/react';
 import React, { useState, useMemo, useCallback } from 'react';
 import axios from "axios";
@@ -119,7 +118,7 @@ export default function Practice({
             <Head title="Pratique - QuizMuz"/>
 
             {/* Header Section */}
-            <div className="relative w-full mt-2 mb-4 px-4">
+            <div className="relative w-full mt-2 mb-4 px-2 sm:px-4">
                 {/* Back Button - Above title on mobile, beside on desktop */}
                 <div className="flex justify-start mb-4 sm:mb-0 sm:absolute sm:left-3 sm:top-1/2 sm:-translate-y-1/2 sm:z-10">
                     <Link
@@ -127,12 +126,12 @@ export default function Practice({
                         className="group"
                         onClick={handleBackClick}
                     >
-                        <div className="bg-gradient-to-r from-slate-800/90 to-slate-700/90 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20 hover:border-emerald-300 transition-all duration-300 shadow-lg hover:shadow-emerald-500/30">
+                        <div className="bg-gradient-to-r from-slate-800/90 to-slate-700/90 backdrop-blur-sm rounded-xl px-3 py-2 sm:px-4 border border-white/20 hover:border-emerald-300 transition-all duration-300 shadow-lg hover:shadow-emerald-500/30">
                             <div className="flex items-center gap-2 text-white group-hover:text-emerald-200">
-                                <svg className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="h-3 w-3 sm:h-4 sm:w-4 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                                 </svg>
-                                <span className="text-sm font-medium">Retour</span>
+                                <span className="text-xs sm:text-sm font-medium">Retour</span>
                             </div>
                         </div>
                     </Link>
@@ -141,10 +140,10 @@ export default function Practice({
                 {/* Title - Centered */}
                 <div className="flex justify-center">
                     <div className="text-center">
-                        <div className="inline-block bg-gradient-to-r from-emerald-900/90 via-teal-900/90 to-emerald-900/90 backdrop-blur-sm rounded-2xl px-8 py-4 shadow-2xl border border-white/20">
-                            <div className="flex items-center gap-3 mb-2">
-                                <span className="text-4xl">🎯</span>
-                                <h1 className="text-5xl font-bold bg-gradient-to-r from-white via-emerald-200 to-white bg-clip-text text-transparent">
+                        <div className="inline-block bg-gradient-to-r from-emerald-900/90 via-teal-900/90 to-emerald-900/90 backdrop-blur-sm rounded-xl sm:rounded-2xl px-4 py-2 sm:px-8 sm:py-4 shadow-2xl border border-white/20">
+                            <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+                                <span className="text-2xl sm:text-4xl">🎯</span>
+                                <h1 className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-white via-emerald-200 to-white bg-clip-text text-transparent">
                                     Pratique
                                 </h1>
                             </div>
@@ -156,11 +155,11 @@ export default function Practice({
 
             {/* Last Update Info */}
             {!loading && (
-                <div className="text-center mb-6">
-                    <div className="inline-block bg-black/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/10">
+                <div className="text-center mb-4 sm:mb-6">
+                    <div className="inline-block bg-black/30 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 py-1 sm:px-4 sm:py-2 border border-white/10">
                         <div className="flex items-center gap-2 text-emerald-200">
-                            <span className="text-lg">📅</span>
-                            <span className="text-sm font-medium">
+                            <span className="text-base sm:text-lg">📅</span>
+                            <span className="text-xs sm:text-sm font-medium">
                                 Dernière mise à jour: {formattedLastUpdate}
                             </span>
                         </div>
@@ -169,7 +168,7 @@ export default function Practice({
             )}
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col px-6 lg:px-0 w-full">
+            <div className="flex-1 flex flex-col px-0 sm:px-6 lg:px-0 w-full">
                 {loading ? (
                     <div className="flex-1 flex items-center justify-center">
                         <div className="text-center">
@@ -184,19 +183,19 @@ export default function Practice({
                     </div>
                 ) : (
                     <>
-                        {/* Content Area - Full width on large screens */}
+                        {/* Content Area - Full width on mobile, contained on larger screens */}
                         <div className={`flex-1 ${isAudioControlsExpanded ? 'mb-6' : 'mb-20'} transition-all duration-300`}>
-                            <div className="bg-black/20 backdrop-blur-sm rounded-2xl border border-white/10 shadow-2xl overflow-hidden lg:mx-6">
-                                <div className="bg-gradient-to-r from-emerald-600/20 via-teal-600/20 to-emerald-600/20 px-6 py-4 border-b border-white/10">
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-2xl">🎵</span>
-                                        <h2 className="text-xl font-bold text-white">
+                            <div className="bg-black/20 backdrop-blur-sm rounded-none sm:rounded-2xl border-0 sm:border sm:border-white/10 shadow-none sm:shadow-2xl overflow-hidden sm:mx-6">
+                                <div className="bg-gradient-to-r from-emerald-600/20 via-teal-600/20 to-emerald-600/20 px-3 py-2 sm:px-6 sm:py-4 border-b border-white/10">
+                                    <div className="flex items-center gap-2 sm:gap-3">
+                                        <span className="text-lg sm:text-2xl">🎵</span>
+                                        <h2 className="text-base sm:text-xl font-bold text-white truncate">
                                             Liste des Pièces - {courseName}
                                         </h2>
                                     </div>
                                 </div>
 
-                                <div className="p-6">
+                                <div className="p-1 sm:p-6 pb-10 sm:pb-6">
                                     <PiecesList
                                         courseName={courseName}
                                         pieces={pieces}

@@ -127,7 +127,7 @@ export default function UpdateModule({ className = '', courseName }) {
                 )}
 
                 <div>
-                    <InputLabel htmlFor="level_id" value="Niveau" />
+                    <InputLabel htmlFor="level_id" value="Niveau" className="dark:text-white"/>
                     <select
                         id="level_id"
                         className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
@@ -146,7 +146,7 @@ export default function UpdateModule({ className = '', courseName }) {
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="module" value="Module" />
+                    <InputLabel htmlFor="module" value="Module" className="dark:text-white"/>
                     <select
                         id="module"
                         className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
@@ -167,11 +167,11 @@ export default function UpdateModule({ className = '', courseName }) {
                 {selectedModule && (
                     <>
                         <div>
-                            <InputLabel htmlFor="title" value="Titre du module" />
+                            <InputLabel htmlFor="title" value="Titre du module" className="dark:text-white"/>
                             <TextInput
                                 id="title"
                                 type="text"
-                                className="mt-1 block w-full"
+                                className="mt-1 block w-full dark:bg-gray-900 dark:text-white dark:border-gray-700"
                                 value={data.title}
                                 onChange={e => setData('title', e.target.value)}
                                 required
@@ -180,7 +180,7 @@ export default function UpdateModule({ className = '', courseName }) {
                         </div>
 
                         <div>
-                            <InputLabel htmlFor="description" value="Description (optionnelle)" />
+                            <InputLabel htmlFor="description" value="Description (optionnelle)" className="dark:text-white"/>
                             <textarea
                                 id="description"
                                 className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"

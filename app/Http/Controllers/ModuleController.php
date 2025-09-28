@@ -28,10 +28,6 @@ class ModuleController extends Controller
             return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour mettre à jour un module.']);
         }
 
-        if (!$accessControlService->hasCourseAccess($initiator, 'litmus_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
-            return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour mettre à jour un module.']);
-        }
-
         $validatedData = $request->validate(
             [
                 'level_id' => 'required|integer|exists:levels,id',
@@ -46,6 +42,25 @@ class ModuleController extends Controller
             ]
         );
 
+        // Get the level with course information to determine course access and redirect
+        $level = Level::with('course')->findOrFail($validatedData['level_id']);
+
+        // Check course-specific access based on the level's course
+        if ($level->course->name === 'Formation Musicale et Auditive' || $level->course->name === 'FMA') {
+            if (!$accessControlService->hasCourseAccess($initiator, 'fma_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
+                return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour créer un module pour ce cours.']);
+            }
+        } elseif ($level->course->name === 'Littérature Musicale' || $level->course->name === 'LitMus') {
+            if (!$accessControlService->hasCourseAccess($initiator, 'litmus_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
+                return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour créer un module pour ce cours.']);
+            }
+        } else {
+            // For other courses, default to litmus admin access
+            if (!$accessControlService->hasCourseAccess($initiator, 'litmus_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
+                return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour créer un module.']);
+            }
+        }
+
         // Set a default order if not provided
         if (!isset($validatedData['order'])) {
             // Get the highest order number for this level and add 1
@@ -59,19 +74,32 @@ class ModuleController extends Controller
         // Create the module
         $module = Module::create($validatedData);
 
-        $level = Level::with('course')->findOrFail($module->level_id);
         $institutionName = Institution::findOrFail($initiator->institution_id)->name;
 
+        // Determine log action based on course
+        $logAction = match($level->course->name) {
+            'Formation Musicale et Auditive', 'FMA' => 'FMA',
+            'Histoire de la Musique' => 'Histoire',
+            default => 'LitMus'
+        };
+
         $this->logsController->createLog(
-            "LitMus",
+            $logAction,
             "Le module <strong>{$module->title}</strong> (Niveau: <strong>{$level->name}</strong>, " .
             "Cours: <strong>{$level->course->name}</strong>, Institution: <strong>{$institutionName}</strong>) " .
             "a été <span class=\"bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 font-semibold px-1 rounded\">créé</span>.",
             $initiator->id,
         );
 
+        // Redirect to the appropriate page based on the course
+        $redirectRoute = match($level->course->name) {
+            'Formation Musicale et Auditive', 'FMA' => 'chord.edit',
+            'Histoire de la Musique' => 'history.edit',
+            default => 'piece.edit'
+        };
+
         return redirect()
-            ->route('piece.edit')
+            ->route($redirectRoute)
             ->with('success', 'Module créé avec succès.');
     }
 
@@ -81,10 +109,6 @@ class ModuleController extends Controller
         $accessControlService = app(AccessControlService::class);
 
         if (!$initiator->isAdmin()) {
-            return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour mettre à jour un module.']);
-        }
-
-        if (!$accessControlService->hasCourseAccess($initiator, 'litmus_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
             return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour mettre à jour un module.']);
         }
 
@@ -103,14 +127,25 @@ class ModuleController extends Controller
             ]
         );
 
-        // Find the module and load its level relationship before updating
-        $module = Module::with('level')->findOrFail($validatedData['id']);
+        $module = Module::findOrFail($validatedData['id']);
+        $level = Level::with('course')->findOrFail($validatedData['level_id']);
 
-        // Store original values before updating
+        // Check course-specific access
+        if ($level->course->name === 'Formation Musicale et Auditive' || $level->course->name === 'FMA') {
+            if (!$accessControlService->hasCourseAccess($initiator, 'fma_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
+                return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour modifier un module pour ce cours.']);
+            }
+        } elseif ($level->course->name === 'Littérature Musicale' || $level->course->name === 'LitMus') {
+            if (!$accessControlService->hasCourseAccess($initiator, 'litmus_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
+                return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour modifier un module pour ce cours.']);
+            }
+        } else {
+            if (!$accessControlService->hasCourseAccess($initiator, 'litmus_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
+                return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour modifier un module.']);
+            }
+        }
+
         $originalTitle = $module->title;
-        $originalDescription = $module->description ?? '';
-        $originalLevelId = $module->level_id;
-        $originalLevel = $module->level;
 
         // Update the module
         $module->update([
@@ -119,54 +154,32 @@ class ModuleController extends Controller
             'description' => $validatedData['description'],
         ]);
 
-        // Reload the module with the new level relationship
-        $module->load('level');
+        $institutionName = Institution::findOrFail($initiator->institution_id)->name;
 
-        // Create log message with before/after comparison
-        $titleChanged = $originalTitle !== $module->title;
-        $levelChanged = $originalLevelId !== $module->level_id;
-        $descriptionChanged = $originalDescription !== ($module->description ?? '');
-
-        $logMessage = "Module ";
-
-        // Show title change if it occurred
-        if ($titleChanged) {
-            $logMessage .= "<span class=\"line-through text-gray-500 dark:text-gray-400\">{$originalTitle}</span> → <strong>{$module->title}</strong> ";
-        } else {
-            $logMessage .= "<strong>{$module->title}</strong> ";
-        }
-
-        // Show level change if it occurred
-        if ($levelChanged) {
-            $logMessage .= "(Niveau: <span class=\"line-through text-gray-500 dark:text-gray-400\">{$originalLevel->name}</span> → <strong>{$module->level->name}</strong>) ";
-        } else {
-            $logMessage .= "(Niveau: <strong>{$module->level->name}</strong>) ";
-        }
-
-        // Show description change if it occurred and if descriptions aren't empty
-        if ($descriptionChanged && ($originalDescription || $module->description)) {
-            $originalDescShort = mb_substr($originalDescription, 0, 30) . (mb_strlen($originalDescription) > 30 ? '...' : '');
-            $newDescShort = mb_substr($module->description ?? '', 0, 30) . (mb_strlen($module->description ?? '') > 30 ? '...' : '');
-
-            if ($originalDescription && $module->description) {
-                $logMessage .= "Description: <span class=\"line-through text-gray-500 dark:text-gray-400\">{$originalDescShort}</span> → <strong>{$newDescShort}</strong> ";
-            } elseif ($originalDescription) {
-                $logMessage .= "Description: <span class=\"line-through text-gray-500 dark:text-gray-400\">{$originalDescShort}</span> → <strong>(supprimée)</strong> ";
-            } else {
-                $logMessage .= "Description: <strong>{$newDescShort}</strong> (ajoutée) ";
-            }
-        }
-
-        $logMessage .= "<span class=\"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-semibold px-1 rounded\">mis à jour</span>";
+        // Determine log action based on course
+        $logAction = match($level->course->name) {
+            'Formation Musicale et Auditive', 'FMA' => 'FMA',
+            'Histoire de la Musique' => 'Histoire',
+            default => 'LitMus'
+        };
 
         $this->logsController->createLog(
-            "LitMus",
-            $logMessage,
+            $logAction,
+            "Le module <span class=\"line-through text-gray-500 dark:text-gray-400\">{$originalTitle}</span> → <strong>{$module->title}</strong> " .
+            "(Niveau: <strong>{$level->name}</strong>, Cours: <strong>{$level->course->name}</strong>, Institution: <strong>{$institutionName}</strong>) " .
+            "a été <span class=\"bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-semibold px-1 rounded\">mis à jour</span>.",
             $initiator->id,
         );
 
+        // Redirect to the appropriate page based on the course
+        $redirectRoute = match($level->course->name) {
+            'Formation Musicale et Auditive', 'FMA' => 'chord.edit',
+            'Histoire de la Musique' => 'history.edit',
+            default => 'piece.edit'
+        };
+
         return redirect()
-            ->route('piece.edit')
+            ->route($redirectRoute)
             ->with('success', 'Module mis à jour avec succès.');
     }
 
@@ -178,32 +191,62 @@ class ModuleController extends Controller
         if (!$initiator->isAdmin()) {
             return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour supprimer un module.'], 403);
         }
-        if (!$accessControlService->hasCourseAccess($initiator, 'litmus_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
-            return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour supprimer un module.'], 403);
-        }
 
         $validatedData = $request->validate([
             'id' => 'required|integer|exists:modules,id',
         ]);
 
-        $module = Module::findOrFail($validatedData['id']);
+        $module = Module::with('level.course')->findOrFail($validatedData['id']);
+        $level = $module->level;
 
-        // Delete the module
+        // Check course-specific access
+        if ($level->course->name === 'Formation Musicale et Auditive' || $level->course->name === 'FMA') {
+            if (!$accessControlService->hasCourseAccess($initiator, 'fma_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
+                return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour supprimer un module pour ce cours.'], 403);
+            }
+        } elseif ($level->course->name === 'Littérature Musicale' || $level->course->name === 'LitMus') {
+            if (!$accessControlService->hasCourseAccess($initiator, 'litmus_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
+                return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour supprimer un module pour ce cours.'], 403);
+            }
+        } else {
+            if (!$accessControlService->hasCourseAccess($initiator, 'litmus_admin') && !$initiator->hasPrivilege('SuperAdmin')) {
+                return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour supprimer un module.'], 403);
+            }
+        }
+
+        $moduleTitle = $module->title;
+        $levelName = $level->name;
+        $courseName = $level->course->name;
+
+        // Check if module has associated pieces or chords
+        $hasPieces = $module->pieces()->exists();
+        $hasChords = $module->chords()->exists();
+
+        if ($hasPieces || $hasChords) {
+            $itemType = $hasChords ? 'accords/formules' : 'pièces';
+            return response()->json(['error' => "Impossible de supprimer le module car il contient des {$itemType}."], 400);
+        }
+
         $module->delete();
 
         $institutionName = Institution::findOrFail($initiator->institution_id)->name;
 
+        // Determine log action based on course
+        $logAction = match($courseName) {
+            'Formation Musicale et Auditive', 'FMA' => 'FMA',
+            'Histoire de la Musique' => 'Histoire',
+            default => 'LitMus'
+        };
+
         $this->logsController->createLog(
-            "LitMus",
-            "Le module <strong>{$module->title}</strong> (Niveau: <strong>{$module->level->name}</strong>) a été " .
-            "<span class=\"bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-semibold px-1 rounded\">supprimé</span> de l'institution <strong>{$institutionName}</strong>.",
+            $logAction,
+            "Le module <strong>{$moduleTitle}</strong> (Niveau: <strong>{$levelName}</strong>, " .
+            "Cours: <strong>{$courseName}</strong>, Institution: <strong>{$institutionName}</strong>) " .
+            "a été <span class=\"bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-semibold px-1 rounded\">supprimé</span>.",
             $initiator->id,
         );
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Module supprimé avec succès.'
-        ]);
+        return response()->json(['message' => 'Module supprimé avec succès.']);
     }
 
     public function updateOrder(Request $request): JsonResponse
@@ -255,7 +298,7 @@ class ModuleController extends Controller
 
     public function getModulesByLevel(int $levelId): JsonResponse
     {
-        $modules = Module::with('pieces')
+        $modules = Module::with(['pieces', 'chords'])
             ->where('level_id', $levelId)
             ->orderBy('order')
             ->get();

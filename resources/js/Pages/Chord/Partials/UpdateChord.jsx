@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import MessageDisplay from "@/Components/MessageDisplay.jsx";
 import {DragDropContext, Draggable, Droppable} from '@hello-pangea/dnd';
 import InputLabel from "@/Components/InputLabel.jsx";
@@ -19,12 +19,32 @@ export default function UpdateChord({ className = '', chordsList, setChordsList,
     const [errorMessage, setErrorMessage] = useState('');
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [modules, setModules] = useState([]);
+    const [selectedEditLevel, setSelectedEditLevel] = useState('');
+
     const currentChord = useRef(chordsList[0] || null);
     const { data, setData, patch, reset, errors, processing, recentlySuccessful } = useForm({
         id: '',
         level: '',
+        module: '',
         chord_name: '',
     });
+
+    // Fetch modules when edit level changes
+    useEffect(() => {
+        if (selectedEditLevel) {
+            axios.get(`/api/modules/level/${selectedEditLevel}`)
+                .then(response => {
+                    setModules(response.data);
+                })
+                .catch(error => {
+                    console.error('Error fetching modules:', error);
+                    setModules([]);
+                });
+        } else {
+            setModules([]);
+        }
+    }, [selectedEditLevel]);
 
     const openDeleteModal = (chord) => {
         currentChord.current = chord;
@@ -36,9 +56,19 @@ export default function UpdateChord({ className = '', chordsList, setChordsList,
         setData({
             id: chord.id || '',
             level: chord.level.id || '',
+            module: chord.module_id || '',
             chord_name: chord.chord_name || '',
         });
+        setSelectedEditLevel(chord.level.id || '');
         setIsEditModalOpen(true);
+    };
+
+    const handleEditLevelChange = (e) => {
+        const levelValue = e.target.value;
+        setData('level', levelValue);
+        setSelectedEditLevel(levelValue);
+        // Reset module selection when level changes
+        setData('module', '');
     };
 
     const handleOnDragEnd = (result) => {
@@ -96,7 +126,7 @@ export default function UpdateChord({ className = '', chordsList, setChordsList,
         patch(route('admin.update-chord'), {
             preserveScroll: true,
             onSuccess: () => {
-                setSuccessMessage('Accord modifié avec succès');
+                setSuccessMessage('Formule modifiée avec succès');
                 setErrorMessage('');
                 axios.get(route('allChords'))
                     .then((response) => {
@@ -114,6 +144,8 @@ export default function UpdateChord({ className = '', chordsList, setChordsList,
             },
             onFinish: () => {
                 setIsEditModalOpen(false);
+                setSelectedEditLevel('');
+                setModules([]);
                 reset();
             }
         });
@@ -259,12 +291,12 @@ export default function UpdateChord({ className = '', chordsList, setChordsList,
                     <form onSubmit={submitModifications} className={`processing ? 'opacity-50' : '' space-y-2`}>
                         <div className="max-h-96 overflow-y-auto hide-scrollbar">
                             <div>
-                                <InputLabel htmlFor="level" value="Niveau" className="dark:text-white"/>
+                                <InputLabel htmlFor="edit_level" value="Niveau" className="dark:text-white"/>
                                 <select
-                                    id="level"
+                                    id="edit_level"
                                     className="mt-1 block w-full rounded-md dark:text-white dark:bg-gray-800"
                                     value={data.level}
-                                    onChange={(e) => setData('level', e.target.value)}
+                                    onChange={handleEditLevelChange}
                                 >
                                     <option value={currentChord.current?.level?.id || ''}>
                                         {levelsList.find(level => level.id === parseInt(currentChord.current?.level?.id))?.name || 'Sélectionner un niveau'}
@@ -273,6 +305,27 @@ export default function UpdateChord({ className = '', chordsList, setChordsList,
                                         <option key={level.id} value={level.id}>{level.name}</option>
                                     ))}
                                 </select>
+                            </div>
+
+                            <div>
+                                <InputLabel htmlFor="edit_module" value="Module (optionnel)" className="dark:text-white"/>
+                                <select
+                                    id="edit_module"
+                                    className="mt-1 block w-full rounded-md dark:text-white dark:bg-gray-800"
+                                    value={data.module}
+                                    onChange={(e) => setData('module', e.target.value)}
+                                    disabled={!selectedEditLevel || modules.length === 0}
+                                >
+                                    <option value="">Aucun module</option>
+                                    {modules.map((module) => (
+                                        <option key={module.id} value={module.id}>{module.title}</option>
+                                    ))}
+                                </select>
+                                {selectedEditLevel && modules.length === 0 && (
+                                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                        Aucun module disponible pour ce niveau
+                                    </p>
+                                )}
                             </div>
 
                             <div>
@@ -347,6 +400,12 @@ export default function UpdateChord({ className = '', chordsList, setChordsList,
                                                                 <span className="truncate text-gray-800 dark:text-gray-300">
                                                                     {chord.chord_name} &nbsp;&nbsp;
                                                                 </span>
+                                                                {/* Display module if exists */}
+                                                                {chord.module && (
+                                                                    <span className="truncate text-blue-600 dark:text-blue-400 text-sm">
+                                                                        Module: {chord.module.title}
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                             {/* Actions */}
                                                             <div className="flex space-x-2">
