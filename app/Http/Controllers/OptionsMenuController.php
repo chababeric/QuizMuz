@@ -23,8 +23,53 @@ class OptionsMenuController extends Controller
         // Fetch pieces or chords based on course type
         if ($isFormationMusicale) {
             $pieces = $this->getChordsByLevel($level);
-            $modules = [];
+
+            // Build modules with chords (same shape as getModulesWithPieces, but using 'chords')
+            $modulesRaw = Module::where('level_id', $level)
+                ->orderBy('order')
+                ->get(['id', 'title', 'description', 'order']);
+
+            $groupedByModule = [];
             $nonModulePieces = [];
+
+            foreach ($pieces as $chord) {
+                // Ensure getChordsByLevel returns module_id; if missing, add it there
+                if (!empty($chord['module_id'])) {
+                    $mid = (int) $chord['module_id'];
+                    if (!isset($groupedByModule[$mid])) {
+                        $groupedByModule[$mid] = [
+                            'module' => [
+                                'id' => $mid,
+                                'title' => '',
+                                'order' => 0,
+                                'description' => ''
+                            ],
+                            // We will keep the same key name 'pieces' so the existing view logic can be reused
+                            'pieces' => []
+                        ];
+                    }
+                    $groupedByModule[$mid]['pieces'][] = $chord;
+                } else {
+                    $nonModulePieces[] = $chord;
+                }
+            }
+
+            foreach ($modulesRaw as $module) {
+                $mid = (int) $module->id;
+                if (isset($groupedByModule[$mid])) {
+                    $groupedByModule[$mid]['module'] = [
+                        'id' => $mid,
+                        'title' => $module->title,
+                        'order' => (int) $module->order,
+                        'description' => $module->description
+                    ];
+                }
+            }
+
+            $modules = array_values($groupedByModule);
+            usort($modules, function ($a, $b) {
+                return $a['module']['order'] <=> $b['module']['order'];
+            });
         } else {
             $pieces = $this->getPiecesByLevel($level);
 
@@ -60,12 +105,13 @@ class OptionsMenuController extends Controller
     {
         return Chord::where('level_id', $level)
             ->orderBy('order')
-            ->get(['id', 'chord_name', 'order'])
+            ->get(['id', 'chord_name', 'order', 'module_id'])
             ->map(function ($chord) {
                 return [
                     'id' => $chord->id,
                     'chord_name' => $chord->chord_name,
                     'order' => $chord->order,
+                    'module_id' => $chord->module_id, // needed for grouping
                 ];
             })
             ->toArray();
