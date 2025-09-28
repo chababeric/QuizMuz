@@ -217,7 +217,10 @@ export default function ModuleList({ className = '', courseName }) {
                                                                 </p>
                                                             )}
                                                             <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                                Ordre: {module.order} | {module.pieces?.length || 0} pièces
+                                                                Ordre: {module.order} | {courseName === 'Formation Musicale et Auditive'
+                                                                    ? (module.chords?.length || 0) + ' formules'
+                                                                    : (module.pieces?.length || 0) + ' pièces'
+                                                                }
                                                             </div>
                                                         </div>
                                                         <button

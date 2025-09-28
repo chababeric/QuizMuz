@@ -28,4 +28,9 @@ class Module extends Model
     {
         return $this->hasMany(Piece::class)->orderBy('order');
     }
+
+    public function chords(): HasMany
+    {
+        return $this->hasMany(Chord::class)->orderBy('order');
+    }
 }

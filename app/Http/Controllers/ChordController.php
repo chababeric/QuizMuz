@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Chord;
 use App\Models\Level;
+use App\Models\Module;
 use App\Services\AccessControlService;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -35,8 +36,30 @@ class ChordController extends Controller
 
     public function getChordsByLevel(int $level_id): JsonResponse
     {
-        $chords = Chord::with('level')->where('level_id', $level_id)->get();
-        return response()->json($chords);
+        // Get the level to check if it belongs to FMA course
+        $level = Level::with('course')->find($level_id);
+
+        if ($level && $level->course->name === 'FMA') {
+            // For FMA course, get chords grouped by modules
+            $modules = Module::with(['chords' => function ($query) {
+                $query->orderBy('order');
+            }])->where('level_id', $level_id)->orderBy('order')->get();
+
+            // Format the response to include modules and their chords
+            $result = [];
+            foreach ($modules as $module) {
+                $result[] = [
+                    'module' => $module->only(['id', 'title', 'description']),
+                    'chords' => $module->chords->toArray()
+                ];
+            }
+
+            return response()->json($result);
+        } else {
+            // For other courses, return chords directly without module grouping
+            $chords = Chord::with('level')->where('level_id', $level_id)->get();
+            return response()->json($chords);
+        }
     }
 
     public function store(Request $request): RedirectResponse
@@ -64,11 +87,13 @@ class ChordController extends Controller
 
         $request->validate([
             'level' => 'required|exists:levels,id',
+            'module' => 'nullable|exists:modules,id',
             'chord_name' => 'required|string|max:255',
             'audioFile' => 'required|file|mimes:mp3',
         ],
         [
             'level.required' => 'Le niveau est requis.',
+            'module.exists' => 'Le module sélectionné n\'existe pas.',
             'chord_name.required' => 'La formule ou l\'accord est requis.',
             'audioFile.required' => 'The audio file field is required.',
         ]);
@@ -117,7 +142,9 @@ class ChordController extends Controller
             }
 
             try {
-                $highestOrder = Chord::where('level_id', $request->level)->max('order') ?? 0;
+                $highestOrder = Chord::where('level_id', $request->level)
+                    ->where('module_id', $request->module ?? null)
+                    ->max('order') ?? 0;
                 $newOrder = $highestOrder + 1;
             } catch (Exception $e) {
                 $newOrder = time();
@@ -132,6 +159,7 @@ class ChordController extends Controller
             // Create and save chord
             $chord = new Chord([
                 'level_id' => $request->level,
+                'module_id' => $request->module,
                 'chord_name' => $request->chord_name,
                 'file_name' => $fileName,
                 'order' => $newOrder,
@@ -244,11 +272,13 @@ class ChordController extends Controller
         $request->validate([
             'id' => 'required|exists:chords,id',
             'level' => 'required|exists:levels,id',
+            'module' => 'nullable|exists:modules,id',
             'chord_name' => 'required|string|max:255',
         ],
         [
             'id.required' => 'L\'identifiant de l\'accord est requis.',
             'level.required' => 'Le niveau est requis.',
+            'module.exists' => 'Le module sélectionné n\'existe pas.',
             'chord_name.required' => 'La formule ou l\'accord est requis.',
         ]);
 
@@ -256,11 +286,14 @@ class ChordController extends Controller
             $chord = Chord::findOrFail($request->id);
             $originalChordName = $chord->chord_name;
             $originalLevel = Level::findOrFail($chord->level_id);
+            $originalModule = $chord->module;
 
             $level = Level::findOrFail($request->level);
+            $newModule = $request->module ? Module::find($request->module) : null;
 
             $chord->update([
                 'level_id' => $request->level,
+                'module_id' => $request->module,
                 'chord_name' => $request->chord_name,
             ]);
 

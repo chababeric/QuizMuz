@@ -26,14 +26,65 @@ class PracticeController extends Controller
         $lastUpdated = null;
 
         if ($courseName === "Formation Musicale et Auditive") {
-            // For FMA course, fetch chords
-            $pieces = Chord::where('level_id', $level)
+            $allChords = Chord::where('level_id', $level)
                 ->orderBy('order')
                 ->get();
 
-            // Get last updated
-            $lastUpdated = $pieces->sortByDesc('updated_at')->first()?->updated_at;
+            $lastUpdated = $allChords->sortByDesc('updated_at')->first()?->updated_at;
 
+            // Normalize module_id to int and split
+            $groupedByModule = [];
+            $nonModuleChords = [];
+            foreach ($allChords as $chord) {
+                $mid = $chord->module_id === null ? null : (int)$chord->module_id;
+                if ($mid === null) {
+                    $nonModuleChords[] = $chord->toArray();
+                    continue;
+                }
+                if (!isset($groupedByModule[$mid])) {
+                    $groupedByModule[$mid] = [
+                        'module' => [
+                            'id' => $mid,
+                            'title' => '',
+                            'order' => 0,
+                            'description' => ''
+                        ],
+                        'chords' => []
+                    ];
+                }
+                $groupedByModule[$mid]['chords'][] = $chord->toArray();
+            }
+
+            // Fetch only modules of this level and index by int id
+            $moduleData = Module::where('level_id', $level)
+                ->orderBy('order')
+                ->get();
+            foreach ($moduleData as $module) {
+                $mid = (int)$module->id;
+                if (isset($groupedByModule[$mid])) {
+                    $groupedByModule[$mid]['module'] = [
+                        'id' => $mid,
+                        'title' => $module->title,
+                        'order' => (int)$module->order,
+                        'description' => $module->description
+                    ];
+                }
+            }
+
+            // Keep only buckets that have chords (like the pieces path)
+            $modules = collect(array_values($groupedByModule))
+                ->filter(fn ($bucket) => !empty($bucket['chords']))
+                ->sortBy('module.order')
+                ->values()
+                ->toArray();
+
+            // Flat list for navigation
+            $pieces = collect(array_merge(
+                collect($modules)->flatMap(fn ($m) => $m['chords'])->toArray(),
+                $nonModuleChords
+            ))->sortBy('order')->values()->toArray();
+
+            $nonModulePieces = $nonModuleChords;
         } elseif ($courseName === "Littérature Musicale") {
             // For LitMus course, fetch pieces and organize by modules
             $allPieces = Piece::where('level_id', $level)

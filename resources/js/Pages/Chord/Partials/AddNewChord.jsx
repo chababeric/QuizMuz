@@ -3,14 +3,43 @@ import { Transition } from '@headlessui/react';
 import InputError from '@/Components/InputError.jsx';
 import InputLabel from '@/Components/InputLabel.jsx';
 import PrimaryButton from '@/Components/PrimaryButton.jsx';
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function AddNewChord({ className = '', levelsList, getAllChords }) {
+    const [modules, setModules] = useState([]);
+    const [selectedLevel, setSelectedLevel] = useState('');
+
     const { data, setData, post, reset, errors, processing, recentlySuccessful } = useForm({
         level: '',
+        module: '',
         chord_name: '',
         audioFile: null,
     });
+
+    // Fetch modules when level changes
+    useEffect(() => {
+        if (selectedLevel) {
+            axios.get(`/api/modules/level/${selectedLevel}`)
+                .then(response => {
+                    setModules(response.data);
+                })
+                .catch(error => {
+                    console.error('Error fetching modules:', error);
+                    setModules([]);
+                });
+        } else {
+            setModules([]);
+        }
+    }, [selectedLevel]);
+
+    const handleLevelChange = (e) => {
+        const levelValue = e.target.value;
+        setData('level', levelValue);
+        setSelectedLevel(levelValue);
+        // Reset module selection when level changes
+        setData('module', '');
+    };
 
     const submitNewChord = (e) => {
         e.preventDefault();
@@ -22,6 +51,14 @@ export default function AddNewChord({ className = '', levelsList, getAllChords }
             },
             onFinish: () => {
                 reset();
+                setSelectedLevel('');
+                setModules([]);
+                setData({
+                        level: '',
+                        module: '',
+                        chord_name: '',
+                        audioFile: null,
+                });
             }
         });
     }
@@ -45,7 +82,7 @@ export default function AddNewChord({ className = '', levelsList, getAllChords }
                         id="level"
                         className="mt-1 block w-full rounded-md dark:bg-gray-700 dark:text-white"
                         value={data.level}
-                        onChange={(e) => setData('level', e.target.value)}
+                        onChange={handleLevelChange}
                         required
                     >
                         <option value="">Choisir un niveau</option>
@@ -54,6 +91,28 @@ export default function AddNewChord({ className = '', levelsList, getAllChords }
                         ))}
                     </select>
                     <InputError className="mt-2" message={errors.level}/>
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="module" value="Module (optionnel)" className="dark:text-white"/>
+                    <select
+                        id="module"
+                        className="mt-1 block w-full rounded-md dark:bg-gray-700 dark:text-white"
+                        value={data.module}
+                        onChange={(e) => setData('module', e.target.value)}
+                        disabled={!selectedLevel || modules.length === 0}
+                    >
+                        <option value="">Aucun module</option>
+                        {modules.map((module) => (
+                            <option key={module.id} value={module.id}>{module.title}</option>
+                        ))}
+                    </select>
+                    <InputError className="mt-2" message={errors.module}/>
+                    {selectedLevel && modules.length === 0 && (
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Aucun module disponible pour ce niveau
+                        </p>
+                    )}
                 </div>
 
                 <div>

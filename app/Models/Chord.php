@@ -12,6 +12,7 @@ class Chord extends Model
 
     protected $fillable = [
         'level_id',
+        'module_id',
         'chord_name',
         'file_name',
         'order',
@@ -21,5 +22,10 @@ class Chord extends Model
     public function level(): BelongsTo
     {
         return $this->belongsTo(Level::class);
+    }
+
+    public function module(): BelongsTo
+    {
+        return $this->belongsTo(Module::class);
     }
 }
