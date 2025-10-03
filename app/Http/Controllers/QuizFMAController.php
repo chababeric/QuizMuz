@@ -60,7 +60,7 @@ class QuizFMAController extends BaseQuizController
         }
 
         $chordsData = $this->getChordsData(
-            $data['difficulty'],
+            (string)$data['difficulty'],
             $data['chords_list_id']
         );
 
@@ -84,6 +84,10 @@ class QuizFMAController extends BaseQuizController
     public function getChordsData(string $difficulty, array $chordsList = []): array
     {
         if ($difficulty === '1') {
+            $chordNames = Chord::whereIn('id', $chordsList)->pluck('chord_name')->toArray();
+            return array_unique($chordNames);
+        } elseif ($difficulty === '2' || $difficulty === 2) {
+            // For medium difficulty in Formation Musicale, treat it like easy difficulty
             $chordNames = Chord::whereIn('id', $chordsList)->pluck('chord_name')->toArray();
             return array_unique($chordNames);
         } elseif ($difficulty === '3') {
@@ -220,7 +224,7 @@ class QuizFMAController extends BaseQuizController
 
         // Get the updated chord data for hard difficulty
         $chordsData = [];
-        if ($fmaGame && $fmaGame->difficulty == 3) {
+        if ($fmaGame && ($fmaGame->difficulty == 3 || $fmaGame->difficulty == '3')) {
             $chord = Chord::find($fmaGame->current_chord_id);
             if ($chord) {
                 $chordParts = explode(' - ', $chord->chord_name);
