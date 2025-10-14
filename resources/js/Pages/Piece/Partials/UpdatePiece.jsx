@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import MessageDisplay from "@/Components/MessageDisplay.jsx";
 import {DragDropContext, Draggable, Droppable} from '@hello-pangea/dnd';
 import InputLabel from "@/Components/InputLabel.jsx";
@@ -40,6 +40,33 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
         module_id: '',
         courseName: courseName,
     });
+
+    const fieldConfigs = useMemo(() => {
+        const isHistoireDeLaMusique = courseName === 'Histoire de la Musique';
+
+        if (isHistoireDeLaMusique) {
+            return [
+                { key: 'title', label: 'Titre', dbField: 'title' },
+                { key: 'composer', label: 'Compositeur', dbField: 'composer' },
+                { key: 'element', label: 'Répertoire', dbField: 'element' },
+                { key: 'period', label: 'Date (siècle)', dbField: 'period' },
+                { key: 'genre', label: 'Genre', dbField: 'genre' },
+                { key: 'form', label: 'Option', dbField: 'form' }
+            ];
+        } else {
+            // Littérature Musicale
+            return [
+                { key: 'period', label: 'Période', dbField: 'period' },
+                { key: 'genre', label: 'Genre', dbField: 'genre' },
+                { key: 'composer', label: 'Compositeur', dbField: 'composer' },
+                { key: 'title', label: 'Titre', dbField: 'title' },
+                { key: 'element', label: 'Élément', dbField: 'element' },
+                { key: 'no_mvt', label: 'No. mouvement', dbField: 'no_mvt' },
+                { key: 'mvt', label: 'Mouvement / Partie', dbField: 'mvt' },
+                { key: 'form', label: 'Forme', dbField: 'form' }
+            ];
+        }
+    }, [courseName]);
 
     const openDeleteModal = (piece) => {
         currentPiece.current = piece;
@@ -377,93 +404,19 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                                 </div>
                             )}
 
-                            <div>
-                                <InputLabel htmlFor="period" value="Période" className="dark:text-white"/>
-                                <TextInput
-                                    id="period"
-                                    type="text"
-                                    className="mt-1 block border border-black w-full rounded-md dark:text-white dark:bg-gray-800"
-                                    value={data.period}
-                                    onChange={(e) => setData('period', e.target.value)}
-                                />
-                            </div>
-
-                            <div>
-                                <InputLabel htmlFor="genre" value="Genre" className="dark:text-white"/>
-                                <TextInput
-                                    id="genre"
-                                    type="text"
-                                    className="mt-1 block border border-black w-full rounded-md dark:text-white dark:bg-gray-800"
-                                    value={data.genre}
-                                    onChange={(e) => setData('genre', e.target.value)}
-                                />
-                            </div>
-
-                            <div>
-                                <InputLabel htmlFor="composer" value="Compositeur" className="dark:text-white"/>
-                                <TextInput
-                                    id="composer"
-                                    className="mt-1 block border border-black w-full rounded-md dark:text-white dark:bg-gray-800"
-                                    value={data.composer}
-                                    onChange={(e) => setData('composer', e.target.value)}
-                                    autoComplete="composer"
-                                />
-                            </div>
-
-                            <div>
-                                <InputLabel htmlFor="title" value="Titre" className="dark:text-white"/>
-                                <TextInput
-                                    id="title"
-                                    className="mt-1 block border border-black w-full rounded-md dark:text-white dark:bg-gray-800"
-                                    value={data.title}
-                                    onChange={(e) => setData('title', e.target.value)}
-                                    autoComplete="title"
-                                />
-                            </div>
-
-                            <div>
-                                <InputLabel htmlFor="element" value="Élément" className="dark:text-white"/>
-                                <TextInput
-                                    id="element"
-                                    className="mt-1 block border border-black w-full rounded-md dark:text-white dark:bg-gray-800"
-                                    value={data.element}
-                                    onChange={(e) => setData('element', e.target.value)}
-                                    autoComplete="element"
-                                />
-                            </div>
-
-                            <div>
-                                <InputLabel htmlFor="no_mvt" value="No. Mouvement" className="dark:text-white"/>
-                                <TextInput
-                                    id="no_mvt"
-                                    className="mt-1 block border border-black w-full rounded-md dark:text-white dark:bg-gray-800"
-                                    value={data.no_mvt}
-                                    onChange={(e) => setData('no_mvt', e.target.value)}
-                                    autoComplete="no_mvt"
-                                />
-                            </div>
-
-                            <div>
-                                <InputLabel htmlFor="mvt" value="Mouvement / Partie" className="dark:text-white"/>
-                                <TextInput
-                                    id="mvt"
-                                    className="mt-1 block border border-black w-full rounded-md dark:text-white dark:bg-gray-800"
-                                    value={data.mvt}
-                                    onChange={(e) => setData('mvt', e.target.value)}
-                                    autoComplete="mvt"
-                                />
-                            </div>
-
-                            <div>
-                                <InputLabel htmlFor="form" value="Forme" className="dark:text-white"/>
-                                <TextInput
-                                    id="form"
-                                    className="mt-1 block border border-black w-full rounded-md dark:text-white dark:bg-gray-800"
-                                    value={data.form}
-                                    onChange={(e) => setData('form', e.target.value)}
-                                    autoComplete="form"
-                                />
-                            </div>
+                            {/* Render fields in the order specified by fieldConfigs */}
+                            {fieldConfigs.map((field) => (
+                                <div key={field.key}>
+                                    <InputLabel htmlFor={field.key} value={field.label} className="dark:text-white"/>
+                                    <TextInput
+                                        id={field.key}
+                                        type="text"
+                                        className="mt-1 block border border-black w-full rounded-md dark:text-white dark:bg-gray-800"
+                                        value={data[field.key]}
+                                        onChange={(e) => setData(field.key, e.target.value)}
+                                    />
+                                </div>
+                            ))}
 
                             <div>
                                 <InputLabel htmlFor="file_name" value="Nom du fichier audio" className="dark:text-white"/>

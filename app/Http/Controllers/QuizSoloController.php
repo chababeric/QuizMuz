@@ -35,7 +35,8 @@ class QuizSoloController extends BaseQuizController
         $userId = Auth::id();
         $data['user_id'] = $userId;
         $gameKey = $data['game_key'];
-        $course_id = Course::where('name', $request->input('course_name'))->value('id');
+        $course = Course::where('name', $request->input('course_name'))->first();
+        $course_id = $course->id;
 
         // Check if a game exists with the provided key
         $soloGame = null;
@@ -76,6 +77,7 @@ class QuizSoloController extends BaseQuizController
             'difficulty' => $data['difficulty'],
             'level' => $data['level_id'],
             'courseId' => $data['courseId'],
+            'courseName' => $course->name,
             'selectListData' => $piecesData,
             'current_piece_mp3' => $soloGame->current_piece_id ? (Piece::find($soloGame->current_piece_id)->file_name ?? '') : '',
             'current_score' => $currentScore,

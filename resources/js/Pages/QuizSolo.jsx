@@ -11,6 +11,7 @@ export default function QuizSolo({
                                      difficulty,
                                      level,
                                      courseId,
+                                     courseName,
                                      current_piece_mp3,
                                      selectListData,
                                      current_score,
@@ -43,16 +44,32 @@ export default function QuizSolo({
     const { makeApiCall } = useQuizApi();
 
     // Constants
-    const elements = useMemo(() => [
-        { name: "Période", col: "period" },
-        { name: "Genre", col: "genre" },
-        { name: "Compositeur", col: "composer" },
-        { name: "Titre", col: "title" },
-        { name: "Élément", col: "element" },
-        { name: "No. mouvement", col: "no_mvt" },
-        { name: "Nom mouvement ou partie", col: "mvt" },
-        { name: "Forme", col: "form" }
-    ], []);
+    const elements = useMemo(() => {
+        const isHistoireDeLaMusique = courseName === 'Histoire de la Musique';
+
+        if (isHistoireDeLaMusique) {
+            return [
+                { name: "Titre", col: "title" },
+                { name: "Compositeur", col: "composer" },
+                { name: "Répertoire", col: "element" },
+                { name: "Date (siècle)", col: "period" },
+                { name: "Genre", col: "genre" },
+                { name: "Option", col: "form" }
+            ];
+        } else {
+            // Littérature Musicale or default
+            return [
+                { name: "Période", col: "period" },
+                { name: "Genre", col: "genre" },
+                { name: "Compositeur", col: "composer" },
+                { name: "Titre", col: "title" },
+                { name: "Élément", col: "element" },
+                { name: "No. mouvement", col: "no_mvt" },
+                { name: "Nom mouvement", col: "mvt" },
+                { name: "Forme", col: "form" }
+            ];
+        }
+    }, [courseName]);
 
     const actionText = grading ? 'Continuer' : 'Vérifier';
     const hasActivePiece = Boolean(pieceMp3);

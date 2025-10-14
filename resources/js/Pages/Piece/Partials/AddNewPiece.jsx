@@ -1,9 +1,10 @@
+
 import { useForm } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
 import InputError from '@/Components/InputError.jsx';
 import InputLabel from '@/Components/InputLabel.jsx';
 import PrimaryButton from '@/Components/PrimaryButton.jsx';
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import FilterableSelect from "@/Components/FilterableSelect.jsx";
 
 export default function AddNewPiece({ className = '', piecesList, getAllPieces, courseName }) {
@@ -26,6 +27,34 @@ export default function AddNewPiece({ className = '', piecesList, getAllPieces, 
         module_id: '',
         courseName: courseName,
     });
+
+    // Define field configurations based on course
+    const fieldConfigs = useMemo(() => {
+        const isHistoireDeLaMusique = courseName === 'Histoire de la Musique';
+
+        if (isHistoireDeLaMusique) {
+            return [
+                { key: 'title', label: 'Titre', dbField: 'title' },
+                { key: 'composer', label: 'Compositeur', dbField: 'composer' },
+                { key: 'element', label: 'Répertoire', dbField: 'element' },
+                { key: 'period', label: 'Date (siècle)', dbField: 'period' },
+                { key: 'genre', label: 'Genre', dbField: 'genre' },
+                { key: 'form', label: 'Option', dbField: 'form' }
+            ];
+        } else {
+            // Littérature Musicale
+            return [
+                { key: 'period', label: 'Période', dbField: 'period' },
+                { key: 'genre', label: 'Genre', dbField: 'genre' },
+                { key: 'composer', label: 'Compositeur', dbField: 'composer' },
+                { key: 'title', label: 'Titre', dbField: 'title' },
+                { key: 'element', label: 'Élément', dbField: 'element' },
+                { key: 'no_mvt', label: 'No. mouvement', dbField: 'no_mvt' },
+                { key: 'mvt', label: 'Mouvement / Partie', dbField: 'mvt' },
+                { key: 'form', label: 'Forme', dbField: 'form' }
+            ];
+        }
+    }, [courseName]);
 
     useEffect(() => {
         axios.get(route('levelsFromCourse'), {
@@ -139,85 +168,18 @@ export default function AddNewPiece({ className = '', piecesList, getAllPieces, 
                     </div>
                 )}
 
-                <div>
-                    <InputLabel htmlFor="period" value="Période" className="dark:text-white"/>
-                    <FilterableSelect
-                        value={data.period}
-                        onChange={(value) => setData('period', value)}
-                        options={piecesList.map(piece => piece.period).filter(Boolean)}
-                    />
-                    <InputError className="mt-2" message={errors.period}/>
-                </div>
-
-                <div>
-                    <InputLabel htmlFor="genre" value="Genre" className="dark:text-white"/>
-                    <FilterableSelect
-                        value={data.genre}
-                        onChange={(value) => setData('genre', value)}
-                        options={piecesList.map(piece => piece.genre).filter(Boolean)}
-                    />
-                    <InputError className="mt-2" message={errors.genre}/>
-                </div>
-
-                <div>
-                    <InputLabel htmlFor="composer" value="Compositeur" className="dark:text-white"/>
-                    <FilterableSelect
-                        value={data.composer}
-                        onChange={(value) => setData('composer', value)}
-                        options={piecesList.map(piece => piece.composer).filter(Boolean)}
-                    />
-                    <InputError className="mt-2" message={errors.composer}/>
-                </div>
-
-                <div>
-                    <InputLabel htmlFor="title" value="Titre" className="dark:text-white"/>
-                    <FilterableSelect
-                        value={data.title}
-                        onChange={(value) => setData('title', value)}
-                        options={piecesList.map(piece => piece.title).filter(Boolean)}
-                    />
-                    <InputError className="mt-2" message={errors.title}/>
-                </div>
-
-                <div>
-                    <InputLabel htmlFor="element" value="Élément" className="dark:text-white"/>
-                    <FilterableSelect
-                        value={data.element}
-                        onChange={(value) => setData('element', value)}
-                        options={piecesList.map(piece => piece.element).filter(Boolean)}
-                    />
-                    <InputError className="mt-2" message={errors.element}/>
-                </div>
-
-                <div>
-                    <InputLabel htmlFor="no_mvt" value="No. mouvement" className="dark:text-white"/>
-                    <FilterableSelect
-                        value={data.no_mvt}
-                        onChange={(value) => setData('no_mvt', value)}
-                        options={piecesList.map(piece => piece.no_mvt).filter(Boolean)}
-                    />
-                    <InputError className="mt-2" message={errors.no_mvt}/>
-                </div>
-
-                <div>
-                    <InputLabel htmlFor="mvt" value="Mouvement / Partie" className="dark:text-white"/>
-                    <FilterableSelect
-                        value={data.mvt}
-                        onChange={(value) => setData('mvt', value)}
-                        options={piecesList.map(piece => piece.mvt).filter(Boolean)}
-                    />
-                    <InputError className="mt-2" message={errors.mvt}/>
-                </div>
-
-                <div>
-                    <InputLabel htmlFor="form" value="Forme" className="dark:text-white"/>
-                    <FilterableSelect
-                        value={data.form}
-                        onChange={(value) => setData('form', value)}
-                        options={piecesList.map(piece => piece.form).filter(Boolean)}
-                    />
-                    <InputError className="mt-2" message={errors.form}/>
-                </div>
+                {/* Render fields in the order specified by fieldConfigs */}
+                {fieldConfigs.map((field) => (
+                    <div key={field.key}>
+                        <InputLabel htmlFor={field.key} value={field.label} className="dark:text-white"/>
+                        <FilterableSelect
+                            value={data[field.key]}
+                            onChange={(value) => setData(field.key, value)}
+                            options={piecesList.map(piece => piece[field.dbField]).filter(Boolean)}
+                        />
+                        <InputError className="mt-2" message={errors[field.key]}/>
+                    </div>
+                ))}
 
                 <div className="flex flex-col mb-4 w-full">
                     <InputLabel htmlFor="fileName" value="Nom du fichier audio" className="dark:text-white"/>
