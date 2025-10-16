@@ -89,6 +89,7 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
             form: piece.form || '',
             file_name: piece.file_name || '',
             module_id: piece.module_id || '',
+            courseName: courseName,
         })
         setIsLitMusCourse(courseName === 'Littérature Musicale');
 

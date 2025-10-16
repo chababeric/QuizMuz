@@ -11,6 +11,7 @@ use App\Services\AccessControlService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class PieceController extends Controller
@@ -88,6 +89,7 @@ class PieceController extends Controller
         $initiator = auth()->user();
         $accessControlService = app(AccessControlService::class);
         $access_name = $request->input('courseName') === 'Histoire de la Musique' ? 'history_admin' : 'litmus_admin';
+        Log::info("The course name is: " . $request->input('courseName') . " and access name is: " . $access_name);
 
         if (!$initiator->isAdmin()) {
             return redirect()->back()->withErrors(['error' => 'Vous n\'avez pas les privilèges nécessaires pour modifier une pièce.']);
