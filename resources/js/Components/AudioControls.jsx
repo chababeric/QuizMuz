@@ -45,9 +45,9 @@ const AudioControls = memo(({
                     <h2 className="text-xl font-bold text-white mb-2">
                         {courseName === "Formation Musicale et Auditive" ? (
                             <div className="flex items-center justify-center gap-2">
-                                <span className="bg-gradient-to-r from-purple-400 to-rose-400 text-white px-3 py-1 rounded-lg text-sm font-bold">
-                                    {getCurrentPieceIndex() + 1}
-                                </span>
+                                {/*<span className="bg-gradient-to-r from-purple-400 to-rose-400 text-white px-3 py-1 rounded-lg text-sm font-bold">*/}
+                                {/*    {getCurrentPieceIndex() + 1}*/}
+                                {/*</span>*/}
                                 <span>{currentPiece.chord_name}</span>
                             </div>
                         ) : (
@@ -147,16 +147,16 @@ const AudioControls = memo(({
             </div>
 
             {/* Track Info */}
-            {pieces.length > 1 && (
-                <div className="text-center">
-                    <div className="inline-flex items-center gap-2 bg-black/30 rounded-lg px-3 py-1 text-sm text-purple-200">
-                        <span className="text-lg">📀</span>
-                        <span>
-                            Piste {getCurrentPieceIndex() + 1} sur {pieces.length}
-                        </span>
-                    </div>
-                </div>
-            )}
+            {/*{pieces.length > 1 && (*/}
+            {/*    <div className="text-center">*/}
+            {/*        <div className="inline-flex items-center gap-2 bg-black/30 rounded-lg px-3 py-1 text-sm text-purple-200">*/}
+            {/*            <span className="text-lg">📀</span>*/}
+            {/*            <span>*/}
+            {/*                Piste {getCurrentPieceIndex() + 1} sur {pieces.length}*/}
+            {/*            </span>*/}
+            {/*        </div>*/}
+            {/*    </div>*/}
+            {/*)}*/}
         </div>
     );
 });

@@ -48,6 +48,14 @@ const PiecesList = memo(({
                                 </div>
                             </div>
 
+                            {moduleData.module.description && (
+                                <div className="px-3 py-2 sm:px-6 sm:py-3 bg-black/20 border-b border-emerald-400/10">
+                                    <p className="text-emerald-200 text-xs sm:text-sm italic leading-relaxed">
+                                        {moduleData.module.description}
+                                    </p>
+                                </div>
+                            )}
+
                             <div className="p-1 sm:p-2 space-y-0 sm:space-y-1">
                                 {items.length > 0 ? (
                                     items.map((item, index) => (
