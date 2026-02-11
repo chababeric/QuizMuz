@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import React, { useState, useMemo, useCallback } from 'react';
+import React, {useState, useMemo, useCallback, useEffect} from 'react';
 import axios from "axios";
 import { useAudioPlayer } from "@/hooks/useAudioPlayer.js";
 import PiecesList from "@/Components/PiecesList.jsx";
@@ -21,14 +21,43 @@ export default function Practice({
                                      initialLoading = false
                                  }) {
     // State management
-    const [pieces] = useState(piecesList);
     const [modules] = useState(modulesList);
     const [nonModulePieces] = useState(nonModulePiecesList);
-    const [currentPiece, setCurrentPiece] = useState(
-        piecesList.length > 0 ? piecesList[0] : null
-    );
     const [loading] = useState(initialLoading);
     const [isAudioControlsExpanded, setIsAudioControlsExpanded] = useState(false);
+
+    // Create ordered pieces list that matches the display order
+    const pieces = useMemo(() => {
+        const isFMA = courseName === "Formation Musicale et Auditive";
+        const usesModules = courseName === "Littérature Musicale" || isFMA;
+
+        if (!usesModules) {
+            return piecesList;
+        }
+
+        // Build ordered list: first all items from modules in order, then non-module items
+        const orderedPieces = [];
+
+        // Add items from each module in order
+        modules.forEach(moduleData => {
+            const items = isFMA ? (moduleData.chords || []) : (moduleData.pieces || []);
+            orderedPieces.push(...items);
+        });
+
+        // Add non-module items at the end
+        orderedPieces.push(...nonModulePieces);
+
+        return orderedPieces;
+    }, [courseName, piecesList, modules, nonModulePieces]);
+
+    const [currentPiece, setCurrentPiece] = useState(null);
+
+    // Initialize current piece when pieces are ready
+    useEffect(() => {
+        if (!currentPiece && pieces.length > 0) {
+            setCurrentPiece(pieces[0]);
+        }
+    }, [pieces, currentPiece]);
 
     // Memoized values
     const formattedLastUpdate = useMemo(() => {
