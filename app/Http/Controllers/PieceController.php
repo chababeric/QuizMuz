@@ -111,7 +111,6 @@ class PieceController extends Controller
                 'no_mvt' => 'nullable|string',
                 'mvt' => 'nullable|string',
                 'form' => 'nullable|string',
-                'file_name' => ['required', 'string', 'regex:/.*\.mp3$/'],
                 'audioFile' => 'nullable',
                 'module_id' => 'nullable|integer|exists:modules,id',
             ],
@@ -120,8 +119,6 @@ class PieceController extends Controller
                 'level.required' => 'Le niveau est requis.',
                 'composer.required' => 'Le compositeur est requis.',
                 'title.required' => 'Le titre est requis.',
-                'file_name.required' => 'Le nom du fichier audio est requis.',
-                'file_name.regex' => 'Le nom du fichier doit se terminer par .mp3.',
                 'module_id.exists' => 'Le module sélectionné n\'existe pas.'
             ]
         );
@@ -144,7 +141,7 @@ class PieceController extends Controller
             'no_mvt' => $validatedData['no_mvt'],
             'mvt' => $validatedData['mvt'],
             'form' => $validatedData['form'],
-            'file_name' => $validatedData['file_name'],
+            // file_name is intentionally not updated: it must keep matching the mp3 stored in the bucket
             'module_id' => $validatedData['module_id'] ?? null,
         ]);
 

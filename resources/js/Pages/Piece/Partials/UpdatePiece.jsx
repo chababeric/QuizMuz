@@ -425,8 +425,8 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                                     id="file_name"
                                     className="mt-1 block border border-black w-full rounded-md dark:text-white dark:bg-gray-800"
                                     value={data.file_name}
-                                    onChange={(e) => setData('file_name', e.target.value)}
-                                    autoComplete="file_name"
+                                    readOnly
+                                    disabled
                                 />
                             </div>
 
