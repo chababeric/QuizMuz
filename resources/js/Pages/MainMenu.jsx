@@ -71,13 +71,13 @@ export default function MainMenu({ auth }) {
     const unavailable = canPlay ? '' : 'opacity-50 cursor-not-allowed';
     const transition = 'transition duration-200 motion-reduce:transition-none';
     const card = 'relative overflow-hidden rounded-[24px] bg-[#0B0D18] border';
-    const featureCard = `group ${card} border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 p-6 flex flex-col gap-5 ${transition}`;
+    const featureCard = `group ${card} border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 p-4 md:p-6 flex flex-col gap-3 md:gap-5 ${transition}`;
 
     return (
-        <div className="min-h-[100dvh] bg-[#06070D] text-[#F2F3F8] font-sans">
+        <div className="min-h-[100dvh] flex flex-col bg-[#06070D] text-[#F2F3F8] font-sans">
             <Head title="Menu principal - QuizMuz"/>
 
-            <header className="border-b border-white/[0.07]">
+            <header className="shrink-0 border-b border-white/[0.07]">
                 <div className="max-w-[1240px] mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
                     <Link href={route('welcome')} className="flex-1 min-w-0 flex items-center gap-3 min-h-[44px]">
                         <span className="w-8 h-8 shrink-0 rounded-[10px] bg-[#B4283F] text-white flex items-center justify-center">
@@ -106,11 +106,11 @@ export default function MainMenu({ auth }) {
                 </div>
             </header>
 
-            <main className="max-w-[1240px] mx-auto px-4 sm:px-6 pt-8 pb-12 flex flex-col lg:flex-row gap-6">
+            <main className="flex-1 w-full max-w-[1240px] mx-auto px-4 sm:px-6 pt-4 pb-4 md:pt-6 md:pb-8 lg:pt-5 lg:pb-6 flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-5">
 
                 {/* Sidebar: levels */}
-                <aside aria-labelledby="levels-heading" className={`${card} border-white/[0.08] p-4 lg:w-[280px] lg:shrink-0 lg:self-start`}>
-                    <h2 id="levels-heading" className="px-2 mb-3 text-[13px] font-semibold uppercase tracking-[0.12em] text-[#A9AEC2]">
+                <aside aria-labelledby="levels-heading" className={`${card} border-white/[0.08] p-3 md:p-4 lg:w-[280px] lg:shrink-0 flex flex-col`}>
+                    <h2 id="levels-heading" className="px-2 mb-2 md:mb-3 text-[13px] font-semibold uppercase tracking-[0.12em] text-[#A9AEC2]">
                         Niveaux
                     </h2>
 
@@ -119,7 +119,7 @@ export default function MainMenu({ auth }) {
                             Aucun niveau n'est disponible pour ce cours pour le moment. Contactez votre établissement pour qu'il ouvre un niveau.
                         </p>
                     ) : (
-                        <div role="group" aria-labelledby="levels-heading" className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-1 gap-1">
+                        <div role="group" aria-labelledby="levels-heading" className="flex gap-1 overflow-x-auto hide-scrollbar md:grid md:grid-cols-5 lg:grid-cols-1 md:overflow-visible">
                             {levels.map(level => {
                                 const isSelected = selectedLevel === level.id;
                                 const moduleCount = (modulesByLevel[level.id] || []).length;
@@ -129,7 +129,7 @@ export default function MainMenu({ auth }) {
                                         aria-pressed={isSelected}
                                         disabled={!level.is_enabled}
                                         onClick={() => level.is_enabled && setSelectedLevel(level.id)}
-                                        className={`min-h-[44px] px-3 py-2.5 rounded-[14px] flex items-center justify-between gap-3 text-left ${transition} ${
+                                        className={`shrink-0 min-w-[64px] min-h-[44px] px-3 py-2.5 rounded-[14px] flex items-center justify-between gap-2 md:gap-3 text-left ${transition} ${
                                             isSelected
                                                 ? 'bg-white text-[#06070D]'
                                                 : level.is_enabled
@@ -154,28 +154,28 @@ export default function MainMenu({ auth }) {
                     )}
 
                     {saveError ? (
-                        <p role="status" className="mt-4 px-2 text-[13px] text-[#F07A8D]">
+                        <p role="status" className="mt-2 md:mt-4 lg:mt-auto lg:pt-4 px-2 text-[13px] text-[#F07A8D]">
                             Votre niveau n'a pas pu être enregistré. L'ancien niveau sera sélectionné à votre prochaine visite.
                         </p>
                     ) : hasEnabledLevel && hasLockedLevel && (
-                        <p className="mt-4 px-2 text-[13px] text-[#A9AEC2]">
+                        <p className="hidden md:block mt-4 lg:mt-auto lg:pt-4 px-2 text-[13px] text-[#A9AEC2]">
                             Les niveaux verrouillés n'ont pas encore été ouverts par votre établissement.
                         </p>
                     )}
                 </aside>
 
-                <div className="flex-1 min-w-0 flex flex-col gap-6">
+                <div className="flex-1 min-w-0 flex flex-col gap-4 md:gap-6 lg:gap-5">
 
                     {/* Quiz hero */}
-                    <section aria-labelledby="quiz-heading" className={`${card} border-[rgba(224,86,108,0.28)] p-6 sm:p-8`}>
+                    <section aria-labelledby="quiz-heading" className={`${card} shrink-0 border-[rgba(224,86,108,0.28)] p-5 md:p-8 lg:p-7 [@media(max-height:600px)]:p-4`}>
                         <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(224,86,108,0.18),transparent_60%)]"></div>
                         <div
                             aria-hidden="true"
                             className="hidden md:block absolute inset-y-0 right-0 w-[45%] pointer-events-none bg-[url('/images/main_background.jpg')] bg-cover bg-center [mask-image:linear-gradient(to_left,black_45%,transparent)] [-webkit-mask-image:linear-gradient(to_left,black_45%,transparent)]"
                         ></div>
 
-                        <div className="relative md:max-w-[60%] flex flex-col gap-6">
-                            <div className="flex flex-wrap gap-2">
+                        <div className="relative md:max-w-[60%] flex flex-col gap-4 md:gap-6 lg:gap-5 [@media(max-height:600px)]:gap-3">
+                            <div className="flex flex-wrap gap-2 [@media(max-height:600px)]:hidden">
                                 <span className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1 text-[13px] font-medium text-[#C9CCDA]">
                                     {canPlay ? `Niveau ${currentLevel.name}` : 'Aucun niveau sélectionné'}
                                 </span>
@@ -183,25 +183,26 @@ export default function MainMenu({ auth }) {
 
                             <div>
                                 <div className="flex items-center gap-4">
-                                    <span className="w-12 h-12 shrink-0 rounded-[14px] bg-[rgba(224,86,108,0.14)] text-[#F07A8D] flex items-center justify-center">
+                                    <span className="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-[14px] bg-[rgba(224,86,108,0.14)] text-[#F07A8D] flex items-center justify-center">
                                         <HelpIcon className="w-6 h-6"/>
                                     </span>
-                                    <h2 id="quiz-heading" className="text-[40px] sm:text-[48px] font-bold leading-none">Quiz</h2>
+                                    <h2 id="quiz-heading" className="text-[34px] md:text-[48px] font-bold leading-none">Quiz</h2>
                                 </div>
-                                <p className="mt-3 text-[17px] text-[#C9CCDA]">
+                                <p className="hidden md:block [@media(max-height:760px)]:hidden mt-3 text-[17px] text-[#C9CCDA]">
                                     {canPlay ? 'Testez vos connaissances et gagnez des points.' : 'Choisissez un niveau pour commencer.'}
                                 </p>
                             </div>
 
+                            <div className="flex flex-col gap-4 md:gap-6 lg:flex-row lg:items-end lg:gap-10 [@media(max-height:600px)]:gap-3">
                             {userStats.quizCount > 0 || userStats.score > 0 ? (
-                                <dl className="flex flex-wrap gap-x-10 gap-y-4">
+                                <dl className="flex flex-wrap gap-x-8 md:gap-x-10 gap-y-4">
                                     <div>
                                         <dt className="text-[13px] text-[#A9AEC2]">Score total</dt>
-                                        <dd className="text-[22px] font-bold">{formatNumber(userStats.score)} pts</dd>
+                                        <dd className="text-[18px] md:text-[22px] font-bold">{formatNumber(userStats.score)} pts</dd>
                                     </div>
                                     <div>
                                         <dt className="text-[13px] text-[#A9AEC2]">Quiz joués</dt>
-                                        <dd className="text-[22px] font-bold">{formatNumber(userStats.quizCount)}</dd>
+                                        <dd className="text-[18px] md:text-[22px] font-bold">{formatNumber(userStats.quizCount)}</dd>
                                     </div>
                                 </dl>
                             ) : (
@@ -211,31 +212,35 @@ export default function MainMenu({ auth }) {
                             <div>
                                 <ModeLink
                                     {...modeProps('optionsmenu')}
-                                    className={`inline-flex items-center gap-1 min-h-[48px] rounded-full bg-[#B4283F] hover:bg-[#C8304A] px-6 text-[16px] font-semibold text-white ${transition} ${unavailable}`}
+                                    className={`w-full md:w-auto justify-center inline-flex items-center gap-1 min-h-[48px] rounded-full bg-[#B4283F] hover:bg-[#C8304A] px-6 text-[16px] font-semibold text-white ${transition} ${unavailable}`}
                                 >
                                     Commencer le quiz <ChevronIcon/>
                                 </ModeLink>
                             </div>
+                            </div>
                         </div>
                     </section>
 
-                    <div className="grid gap-6 md:grid-cols-2">
+                    <div className="flex-1 grid grid-cols-2 gap-4 md:gap-6 lg:gap-5">
 
                         {/* Practice */}
                         <ModeLink {...modeProps('practice')} className={`${featureCard} ${unavailable}`}>
                             <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(162,120,224,0.16),transparent_60%)]"></div>
-                            <div className="relative flex items-start justify-between">
-                                <span className="w-11 h-11 rounded-[14px] bg-[rgba(162,120,224,0.14)] text-[#BFA0F0] flex items-center justify-center">
+                            <div className="relative flex flex-wrap items-start gap-3 md:gap-4">
+                                <span className="order-1 shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-[14px] bg-[rgba(162,120,224,0.14)] text-[#BFA0F0] flex items-center justify-center">
                                     <HeadphonesIcon/>
                                 </span>
-                                <ChevronIcon className="w-5 h-5 text-[#A9AEC2] group-hover:text-[#F2F3F8]"/>
-                            </div>
-                            <div className="relative">
-                                <h3 className="text-[22px] font-semibold">Pratique</h3>
-                                <p className="text-[15px] text-[#C9CCDA]">Entraînez-vous sans pression</p>
+                                <div className="order-3 w-full md:order-2 md:w-auto md:flex-1 min-w-0">
+                                    <h3 className="text-[17px] md:text-[22px] font-semibold">Pratique</h3>
+                                    <p className="hidden md:block text-[15px] text-[#C9CCDA]">Entraînez-vous sans pression</p>
+                                    <p className="md:hidden text-[13px] text-[#C9CCDA]">
+                                        {userStats.practiceCount > 0 ? `${formatNumber(userStats.practiceCount)} séances` : 'Entraînez-vous'}
+                                    </p>
+                                </div>
+                                <ChevronIcon className="order-2 md:order-3 ml-auto w-5 h-5 text-[#A9AEC2] group-hover:text-[#F2F3F8]"/>
                             </div>
                             {modules.length > 0 && (
-                                <ul aria-label="Modules du niveau" className="relative flex flex-wrap gap-2">
+                                <ul aria-label="Modules du niveau" className="relative hidden md:flex flex-wrap gap-2">
                                     {modules.map(title => (
                                         <li key={title} className="rounded-full border border-[rgba(191,160,240,0.35)] px-3 py-1 text-[13px] text-[#C9CCDA]">
                                             {title}
@@ -243,7 +248,7 @@ export default function MainMenu({ auth }) {
                                     ))}
                                 </ul>
                             )}
-                            <div className="relative mt-auto rounded-[14px] border border-white/[0.08] bg-white/[0.03] p-4 flex items-center justify-between">
+                            <div className="relative mt-auto rounded-[14px] border border-white/[0.08] bg-white/[0.03] px-4 py-3 hidden md:flex items-center justify-between">
                                 <span className="text-[15px] text-[#C9CCDA]">Séances de pratique</span>
                                 <span className="text-[17px] font-semibold text-[#BFA0F0]">
                                     {userStats.practiceCount > 0 ? formatNumber(userStats.practiceCount) : 'Aucune'}
@@ -254,26 +259,29 @@ export default function MainMenu({ auth }) {
                         {/* High scores */}
                         <Link href={route('highscores', {courseId: courseId})} className={featureCard}>
                             <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(242,185,75,0.14),transparent_60%)]"></div>
-                            <div className="relative flex items-start justify-between">
-                                <span className="w-11 h-11 rounded-[14px] bg-[rgba(242,185,75,0.12)] text-[#F2B94B] flex items-center justify-center">
+                            <div className="relative flex flex-wrap items-start gap-3 md:gap-4">
+                                <span className="order-1 shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-[14px] bg-[rgba(242,185,75,0.12)] text-[#F2B94B] flex items-center justify-center">
                                     <TrophyIcon/>
                                 </span>
-                                <ChevronIcon className="w-5 h-5 text-[#A9AEC2] group-hover:text-[#F2F3F8]"/>
-                            </div>
-                            <div className="relative">
-                                <h3 className="text-[22px] font-semibold">Meilleurs scores</h3>
-                                <p className="text-[15px] text-[#C9CCDA]">Classement · {courseName}</p>
+                                <div className="order-3 w-full md:order-2 md:w-auto md:flex-1 min-w-0">
+                                    <h3 className="text-[17px] md:text-[22px] font-semibold">Meilleurs scores</h3>
+                                    <p className="hidden md:block text-[15px] text-[#C9CCDA]">Classement · {courseName}</p>
+                                    <p className="md:hidden text-[13px] text-[#C9CCDA]">
+                                        {userStats.rank ? `${userStats.rank}ᵉ · ${formatNumber(userStats.score)} pts` : leaderboard.length === 0 ? 'Soyez le premier !' : 'Voir le classement'}
+                                    </p>
+                                </div>
+                                <ChevronIcon className="order-2 md:order-3 ml-auto w-5 h-5 text-[#A9AEC2] group-hover:text-[#F2F3F8]"/>
                             </div>
                             {leaderboard.length === 0 ? (
-                                <p className="relative mt-auto text-[15px] text-[#A9AEC2]">Soyez le premier !</p>
+                                <p className="relative hidden md:block mt-auto text-[15px] text-[#A9AEC2]">Soyez le premier !</p>
                             ) : (
-                                <ol className="relative mt-auto flex flex-col gap-1">
+                                <ol className="relative mt-auto hidden md:flex flex-col gap-1">
                                     {leaderboard.map((entry, index) => {
                                         const isUser = entry.userId === auth.user.id;
                                         return (
                                             <li
                                                 key={entry.userId}
-                                                className={`flex items-center gap-3 rounded-[14px] px-3 py-2 border ${isUser ? 'bg-[rgba(242,185,75,0.10)] border-[rgba(242,185,75,0.35)]' : 'border-transparent'}`}
+                                                className={`flex items-center gap-3 rounded-[14px] px-3 py-1.5 border ${isUser ? 'bg-[rgba(242,185,75,0.10)] border-[rgba(242,185,75,0.35)]' : 'border-transparent'}`}
                                             >
                                                 <span className={`w-6 text-[15px] font-bold ${rankColors[index]}`}>{index + 1}</span>
                                                 <span className="flex-1 min-w-0 truncate text-[15px]">{isUser ? 'Vous' : entry.username}</span>
@@ -282,7 +290,7 @@ export default function MainMenu({ auth }) {
                                         );
                                     })}
                                     {!userInTop && userStats.rank && (
-                                        <li className="mt-1 flex items-center gap-3 rounded-[14px] px-3 py-2 border bg-[rgba(242,185,75,0.10)] border-[rgba(242,185,75,0.35)]">
+                                        <li className="mt-1 flex items-center gap-3 rounded-[14px] px-3 py-1.5 border bg-[rgba(242,185,75,0.10)] border-[rgba(242,185,75,0.35)]">
                                             <span className="w-6 text-[15px] font-bold text-[#F2B94B]">{userStats.rank}</span>
                                             <span className="flex-1 text-[15px]">Vous</span>
                                             <span className="text-[15px] font-semibold text-[#C9CCDA]">{formatNumber(userStats.score)} pts</span>
