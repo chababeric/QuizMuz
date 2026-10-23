@@ -143,11 +143,7 @@ class QuizFMAController extends BaseQuizController
 
     public function updateLastActionTime(): JsonResponse
     {
-        if (Auth::check()) {
-            $user = Auth::user();
-            $user->last_action_time = now();
-            $user->save();
-        }
+        // The update_user_action_time middleware on the quiz routes already records the activity
         return response()->json(['status' => 'success']);
     }
 
@@ -156,8 +152,6 @@ class QuizFMAController extends BaseQuizController
         $validated = $request->validate([
             'selectedAnswer' => 'string|nullable',
         ]);
-
-        $this->updateLastActionTime();
         $selectedAnswer = $validated['selectedAnswer'];
         $userId = auth()->id();
 
@@ -200,8 +194,6 @@ class QuizFMAController extends BaseQuizController
         $validated = $request->validate([
             'playChordOnce' => 'required|boolean',
         ]);
-
-        $this->updateLastActionTime();
         $playChordOnce = $validated['playChordOnce'];
         $userId = auth()->id();
 

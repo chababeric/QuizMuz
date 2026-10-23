@@ -335,11 +335,8 @@ class QuizSoloController extends BaseQuizController
 
     public function updateLastActionTime(): JsonResponse
     {
+        // The update_user_action_time middleware on this route already records the activity
         if (Auth::check()) {
-            $user = Auth::user();
-            $user->last_action_time = now();
-            $user->save();
-
             return response()->json(['message' => 'Last action time updated successfully']);
         }
 

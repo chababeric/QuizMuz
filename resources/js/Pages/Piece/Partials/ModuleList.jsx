@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { v4 as uuidv4 } from 'uuid';
 
 export default function ModuleList({ className = '', courseName }) {
     const [levels, setLevels] = useState([]);
@@ -191,7 +190,7 @@ export default function ModuleList({ className = '', courseName }) {
                         </p>
 
                         <DragDropContext onDragEnd={onDragEnd}>
-                            <Droppable droppableId={`modules-${uuidv4()}`}>
+                            <Droppable droppableId="modules">
                                 {(provided) => (
                                     <ul
                                         {...provided.droppableProps}

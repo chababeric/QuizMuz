@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\AccessControlService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +12,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // One instance per request so the course access lookups are shared between middleware and controllers
+        $this->app->scoped(AccessControlService::class);
     }
 
     /**

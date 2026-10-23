@@ -19,7 +19,7 @@ class AddUserPermissions
     public function handle(Request $request, Closure $next)
     {
         if (auth()->check()) {
-            $user = auth()->user()->load('roles');
+            $user = auth()->user()->loadMissing('roles');
             $permissions = $this->accessControlService->getUserAccessControls($user);
 
             // Share permissions with all Inertia responses

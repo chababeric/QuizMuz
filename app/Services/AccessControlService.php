@@ -8,6 +8,11 @@ use App\Models\User;
 class AccessControlService
 {
     /**
+     * @var array<int, string[]> Course admin role system names, keyed by user id
+     */
+    protected array $courseAccessNames = [];
+
+    /**
      * Create a new class instance.
      */
     public function __construct()
@@ -67,15 +72,20 @@ class AccessControlService
 
     public function hasCourseAccess(User $user, string $access_name): bool
     {
-        // Check if user has fma_admin role for any course
-        $adminRole = AdminControl::where('system_name', $access_name)->first();
+        // Check if user has the given admin role (e.g. fma_admin) for any course
+        return in_array($access_name, $this->getCourseAccessNames($user), true);
+    }
 
-        if (!$adminRole) {
-            return false;
-        }
-
-        return $user->adminCourses()
-            ->wherePivotIn('admin_control_id', [$adminRole->id])
-            ->exists();
+    /**
+     * System names of the course admin roles the user holds, fetched once per request.
+     */
+    protected function getCourseAccessNames(User $user): array
+    {
+        return $this->courseAccessNames[$user->id] ??= AdminControl::query()
+            ->join('course_user_roles', 'course_user_roles.admin_control_id', '=', 'admin_controls.id')
+            ->where('course_user_roles.user_id', $user->id)
+            ->distinct()
+            ->pluck('admin_controls.system_name')
+            ->all();
     }
 }

@@ -267,10 +267,7 @@ class ModuleController extends Controller
             'modules.*.order' => 'required|integer',
         ]);
 
-        foreach ($validatedData['modules'] as $moduleData) {
-            $module = Module::findOrFail($moduleData['id']);
-            $module->update(['order' => $moduleData['order']]);
-        }
+        $this->updateOrders(Module::class, $validatedData['modules']);
 
         $this->logsController->createLog(
             "LitMus",
