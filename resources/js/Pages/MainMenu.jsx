@@ -3,6 +3,25 @@ import { Link, Head, usePage } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+const ChevronIcon = () => (
+    <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 shrink-0">
+        <path fillRule="evenodd" d="M7.2 14.8a.75.75 0 0 1 0-1.06L10.94 10 7.2 6.26a.75.75 0 1 1 1.06-1.06l4.27 4.27a.75.75 0 0 1 0 1.06l-4.27 4.27a.75.75 0 0 1-1.06 0Z" clipRule="evenodd"/>
+    </svg>
+);
+
+const HomeIcon = () => (
+    <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 shrink-0">
+        <path d="M10.7 2.3a1 1 0 0 0-1.4 0l-7 7A1 1 0 0 0 3 11h1v6a1 1 0 0 0 1 1h3v-4h4v4h3a1 1 0 0 0 1-1v-6h1a1 1 0 0 0 .7-1.7l-7-7Z"/>
+    </svg>
+);
+
+const LogoutIcon = () => (
+    <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 shrink-0">
+        <path fillRule="evenodd" d="M3 4.25A2.25 2.25 0 0 1 5.25 2h5.5A2.25 2.25 0 0 1 13 4.25v2a.75.75 0 0 1-1.5 0v-2a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v11.5c0 .41.34.75.75.75h5.5a.75.75 0 0 0 .75-.75v-2a.75.75 0 0 1 1.5 0v2A2.25 2.25 0 0 1 10.75 18h-5.5A2.25 2.25 0 0 1 3 15.75V4.25Z" clipRule="evenodd"/>
+        <path fillRule="evenodd" d="M6 10a.75.75 0 0 1 .75-.75h9.69l-1.72-1.72a.75.75 0 1 1 1.06-1.06l3 3a.75.75 0 0 1 0 1.06l-3 3a.75.75 0 1 1-1.06-1.06l1.72-1.72H6.75A.75.75 0 0 1 6 10Z" clipRule="evenodd"/>
+    </svg>
+);
+
 export default function MainMenu({ auth }) {
     const { levels } = usePage().props;
     const { courseId } = usePage().props;
@@ -10,12 +29,12 @@ export default function MainMenu({ auth }) {
     const [selectedLevel, setSelectedLevel] = useState(auth.user.last_level);
     const [saveError, setSaveError] = useState(false);
 
+    const currentLevel = levels.find(level => level.id === selectedLevel);
     const hasEnabledLevel = levels.some(level => level.is_enabled);
     const hasDisabledLevel = levels.some(level => !level.is_enabled);
-    const canPlay = levels.some(level => level.id === selectedLevel && level.is_enabled);
+    const canPlay = Boolean(currentLevel && currentLevel.is_enabled);
 
     useEffect(() => {
-        const currentLevel = levels.find(level => level.id === selectedLevel);
         if (!currentLevel || !currentLevel.is_enabled) {
             const firstEnabledLevel = levels.find(level => level.is_enabled);
             if (firstEnabledLevel) {
@@ -42,170 +61,140 @@ export default function MainMenu({ auth }) {
         localStorage.removeItem("game_key");
     }, []);
 
-    // Mode cards only link somewhere when an enabled level is selected
-    const ModeCard = canPlay ? Link : 'div';
-    const modeCardState = canPlay ? '' : 'opacity-50 cursor-not-allowed';
-    const motionClasses = 'transition-all duration-300 motion-reduce:transition-none motion-reduce:transform-none';
+    // Mode entries only link somewhere when an enabled level is selected
+    const ModeLink = canPlay ? Link : 'div';
+    const modeProps = (routeName) => canPlay
+        ? { href: route(routeName, {level: selectedLevel, courseId: courseId, courseName: courseName}) }
+        : { 'aria-disabled': true };
+    const unavailable = canPlay ? '' : 'opacity-50 cursor-not-allowed';
+    const transition = 'transition-colors duration-200 motion-reduce:transition-none';
+    const surface = 'bg-gray-950/80 border border-white/10';
 
     return (
-        <div className="main-app min-h-screen flex flex-col">
+        <div className="main-app min-h-[100dvh] flex flex-col !justify-start !items-stretch !pt-0">
             <div className="background-container"></div>
             <Head title="Menu principal - QuizMuz"/>
 
-            {/* Header Section */}
-            <div className="text-center py-6 sm:py-8 relative z-10 px-4">
-                <div className="inline-block bg-gray-900/80 backdrop-blur-sm rounded-xl sm:rounded-2xl px-6 sm:px-8 py-4 sm:py-6 shadow-2xl border border-white/20 max-w-[95vw] sm:max-w-none">
-                    <h1 className="text-3xl sm:text-5xl font-bold text-white">
+            {/* Top bar: context on the leading side, navigation on the trailing side */}
+            <header className="sticky top-0 z-20 bg-gray-950/70 backdrop-blur-md border-b border-white/10">
+                <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-3">
+                    <h1 className="flex-1 min-w-0 truncate text-lg sm:text-xl font-bold text-white">
                         {courseName}
                     </h1>
+                    <Link
+                        href={route('welcome')}
+                        aria-label="Retour à l'accueil"
+                        className={`min-h-[44px] min-w-[44px] px-3 flex items-center justify-center gap-2 rounded-full text-white hover:bg-white/10 ${transition}`}
+                    >
+                        <HomeIcon/>
+                        <span className="hidden sm:inline text-sm font-medium">Accueil</span>
+                    </Link>
+                    <Link
+                        href={route('logout')}
+                        method="post"
+                        as="button"
+                        aria-label="Déconnexion"
+                        className={`min-h-[44px] min-w-[44px] px-3 flex items-center justify-center gap-2 rounded-full text-red-300 hover:bg-red-500/15 ${transition}`}
+                    >
+                        <LogoutIcon/>
+                        <span className="hidden sm:inline text-sm font-medium">Déconnexion</span>
+                    </Link>
                 </div>
-            </div>
+            </header>
 
-            {/* Main Content Container */}
-            <div className="flex-1 max-w-6xl mx-auto w-full px-6 pb-8">
+            <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-4 sm:py-8 flex flex-col justify-center gap-5 sm:gap-8">
 
-                {/* Level Selection Section */}
-                <div className="mb-10">
-                    <div className="text-center mb-6">
-                        <h2 id="level-heading" className="inline-block bg-gray-900/80 backdrop-blur-sm rounded-xl px-5 py-2 text-2xl font-bold text-white">
-                            Sélectionnez votre niveau
-                        </h2>
-                    </div>
+                {/* Level picker, styled as a segmented control */}
+                <section aria-labelledby="level-heading">
+                    <h2 id="level-heading" className="mb-2 px-1 text-sm font-semibold uppercase tracking-wide text-white/90 drop-shadow">
+                        Niveau
+                    </h2>
 
-                    {levels.length === 0 || !hasEnabledLevel ? (
-                        <p className="max-w-md mx-auto text-center bg-gray-900/80 rounded-xl p-4 text-white">
+                    {!hasEnabledLevel ? (
+                        <p className={`${surface} rounded-2xl p-4 text-white text-sm`}>
                             Aucun niveau n'est disponible pour ce cours pour le moment. Contactez votre établissement pour qu'il ouvre un niveau.
                         </p>
                     ) : (
-                        <div role="group" aria-labelledby="level-heading" className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap lg:justify-center gap-3 max-w-4xl mx-auto">
+                        <div role="group" aria-labelledby="level-heading" className={`${surface} rounded-2xl p-1.5 flex flex-wrap gap-1.5`}>
                             {levels.map(level => {
                                 const isSelected = selectedLevel === level.id;
                                 return (
                                     <button
                                         key={level.id}
                                         aria-pressed={isSelected}
-                                        className={`relative rounded-2xl p-4 text-center w-full lg:w-40 border-2 transition-colors duration-200 motion-reduce:transition-none ${
-                                            level.is_enabled
-                                                ? isSelected
-                                                    ? 'bg-rose-600 border-white shadow-xl'
-                                                    : 'bg-gray-900/80 backdrop-blur-sm border-white/20 hover:border-rose-300'
-                                                : 'bg-gray-900/60 backdrop-blur-sm border-white/10 opacity-70 cursor-not-allowed'
-                                        }`}
-                                        onClick={() => level.is_enabled && setSelectedLevel(level.id)}
                                         disabled={!level.is_enabled}
+                                        onClick={() => level.is_enabled && setSelectedLevel(level.id)}
+                                        className={`flex-1 min-w-[4.5rem] min-h-[44px] px-3 rounded-xl flex items-center justify-center gap-1.5 text-base font-semibold ${transition} ${
+                                            isSelected
+                                                ? 'bg-white text-gray-950 shadow'
+                                                : level.is_enabled
+                                                    ? 'text-white hover:bg-white/10'
+                                                    : 'text-white/40 line-through cursor-not-allowed'
+                                        }`}
                                     >
-                                        {isSelected && (
-                                            <span aria-hidden="true" className="absolute top-2 right-3 text-white font-bold">✓</span>
-                                        )}
-                                        <span className="block text-lg font-bold text-white">
-                                            {level.name}
-                                        </span>
-                                        {!level.is_enabled && (
-                                            <span className="block text-sm text-gray-200">Désactivé</span>
-                                        )}
+                                        {isSelected && <span aria-hidden="true">✓</span>}
+                                        {level.name}
+                                        {!level.is_enabled && <span className="sr-only">(désactivé)</span>}
                                     </button>
                                 );
                             })}
                         </div>
                     )}
 
-                    {hasEnabledLevel && hasDisabledLevel && (
-                        <p className="mt-4 text-center text-sm text-white">
-                            <span className="bg-gray-900/80 rounded-lg px-3 py-1 inline-block">
-                                Les niveaux désactivés n'ont pas encore été ouverts par votre établissement.
-                            </span>
+                    {saveError ? (
+                        <p role="status" className="mt-2 px-1 text-xs text-red-200 drop-shadow">
+                            Votre niveau n'a pas pu être enregistré. L'ancien niveau sera sélectionné à votre prochaine visite.
+                        </p>
+                    ) : hasEnabledLevel && hasDisabledLevel && (
+                        <p className="mt-2 px-1 text-xs text-white/80 drop-shadow">
+                            Les niveaux barrés n'ont pas encore été ouverts par votre établissement.
                         </p>
                     )}
+                </section>
 
-                    {saveError && (
-                        <p role="status" className="mt-4 text-center text-sm text-white">
-                            <span className="bg-red-800/90 rounded-lg px-3 py-1 inline-block">
-                                Votre niveau n'a pas pu être enregistré. Il sera de nouveau sélectionné par défaut à votre prochaine visite.
+                {/* Primary action first, secondary destinations grouped beside it */}
+                <section aria-label="Modes de jeu" className="grid gap-3 sm:gap-4 md:grid-cols-2">
+                    <ModeLink
+                        {...modeProps('optionsmenu')}
+                        className={`group flex md:flex-col items-center md:justify-center gap-4 rounded-2xl bg-rose-600 hover:bg-rose-500 p-5 md:p-8 text-white shadow-xl md:text-center ${transition} ${unavailable}`}
+                    >
+                        <span aria-hidden="true" className="text-4xl md:text-6xl">🏆</span>
+                        <span className="flex-1 min-w-0">
+                            <span className="block text-2xl md:text-3xl font-bold">Quiz</span>
+                            <span className="block text-sm text-rose-50">
+                                {canPlay ? `Testez vos connaissances · Niveau ${currentLevel.name}` : 'Choisissez un niveau pour commencer'}
                             </span>
-                        </p>
-                    )}
-                </div>
+                        </span>
+                        <span className="md:hidden"><ChevronIcon/></span>
+                    </ModeLink>
 
-                {/* Game Modes Section */}
-                <div className="mb-10">
-                    <div className="text-center mb-6">
-                        <h2 className="inline-block bg-gray-900/80 backdrop-blur-sm rounded-xl px-5 py-2 text-2xl font-bold text-white">
-                            Modes de jeu
-                        </h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-                        <ModeCard
-                            {...(canPlay
-                                ? { href: route('optionsmenu', {level: selectedLevel, courseId: courseId, courseName: courseName}) }
-                                : { 'aria-disabled': true })}
-                            className={`block bg-rose-600 rounded-2xl p-8 text-center border-2 border-rose-300 shadow-xl hover:bg-rose-500 ${motionClasses} ${modeCardState}`}
+                    <div className={`${surface} rounded-2xl overflow-hidden flex flex-col divide-y divide-white/10`}>
+                        <ModeLink
+                            {...modeProps('practice')}
+                            className={`flex-1 flex items-center gap-4 px-5 py-4 text-white hover:bg-white/5 ${transition} ${unavailable}`}
                         >
-                            <div aria-hidden="true" className="text-5xl mb-4">🏆</div>
-                            <h3 className="text-2xl font-bold text-white mb-2">Quiz</h3>
-                            <p className="text-white text-sm">Testez vos connaissances</p>
-                        </ModeCard>
+                            <span aria-hidden="true" className="text-3xl">🎯</span>
+                            <span className="flex-1 min-w-0">
+                                <span className="block text-lg font-semibold">Pratique</span>
+                                <span className="block text-sm text-gray-300">Entraînez-vous sans pression</span>
+                            </span>
+                            <span className="text-gray-400"><ChevronIcon/></span>
+                        </ModeLink>
 
-                        <ModeCard
-                            {...(canPlay
-                                ? { href: route('practice', {level: selectedLevel, courseId: courseId, courseName: courseName}) }
-                                : { 'aria-disabled': true })}
-                            className={`block bg-gray-900/80 backdrop-blur-sm rounded-2xl p-8 text-center border-2 border-white/20 hover:border-white/50 ${motionClasses} ${modeCardState}`}
-                        >
-                            <div aria-hidden="true" className="text-5xl mb-4">🎯</div>
-                            <h3 className="text-2xl font-bold text-white mb-2">Pratique</h3>
-                            <p className="text-gray-200 text-sm">Entraînez-vous sans pression</p>
-                        </ModeCard>
-                    </div>
-                </div>
-
-                {/* Scores Section */}
-                <div className="mb-10">
-                    <div className="text-center mb-6">
-                        <h2 className="inline-block bg-gray-900/80 backdrop-blur-sm rounded-xl px-5 py-2 text-2xl font-bold text-white">
-                            Statistiques
-                        </h2>
-                    </div>
-
-                    <div className="max-w-md mx-auto">
                         <Link
                             href={route('highscores', {courseId: courseId})}
-                            className={`block bg-gray-900/80 backdrop-blur-sm rounded-2xl p-8 text-center border-2 border-white/20 hover:border-white/50 ${motionClasses}`}
+                            className={`flex-1 flex items-center gap-4 px-5 py-4 text-white hover:bg-white/5 ${transition}`}
                         >
-                            <div aria-hidden="true" className="text-5xl mb-4">🏅</div>
-                            <h3 className="text-2xl font-bold text-white mb-2">Meilleurs scores</h3>
-                            <p className="text-gray-200 text-sm">Consultez le classement</p>
+                            <span aria-hidden="true" className="text-3xl">🏅</span>
+                            <span className="flex-1 min-w-0">
+                                <span className="block text-lg font-semibold">Meilleurs scores</span>
+                                <span className="block text-sm text-gray-300">Consultez le classement</span>
+                            </span>
+                            <span className="text-gray-400"><ChevronIcon/></span>
                         </Link>
                     </div>
-                </div>
-
-                {/* Navigation Footer */}
-                <div className="text-center pt-8 border-t border-white/20">
-                    <div className="flex flex-col sm:flex-row justify-center gap-4">
-                        <Link
-                            href={route('welcome')}
-                            className={`bg-gray-800 text-white py-3 px-8 rounded-xl border-2 border-gray-500/50 hover:border-gray-300 ${motionClasses}`}
-                        >
-                            <span className="flex items-center justify-center gap-2">
-                                <span aria-hidden="true">🏠</span>
-                                Retour à l'accueil
-                            </span>
-                        </Link>
-
-                        <Link
-                            href={route('logout')}
-                            method="post"
-                            as="button"
-                            className={`bg-red-700 text-white py-3 px-8 rounded-xl border-2 border-red-500/50 hover:border-red-300 ${motionClasses}`}
-                        >
-                            <span className="flex items-center justify-center gap-2">
-                                <span aria-hidden="true">🚪</span>
-                                Déconnexion
-                            </span>
-                        </Link>
-                    </div>
-                </div>
-            </div>
+                </section>
+            </main>
         </div>
     );
 }
