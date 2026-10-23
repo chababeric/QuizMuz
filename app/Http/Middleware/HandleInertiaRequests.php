@@ -35,7 +35,9 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
-            'ziggy' => fn () => [
+            // Only needed for server-side rendering of the first page load; the browser
+            // gets the routes from @routes and never reads this prop on later visits
+            'ziggy' => fn () => $request->header('X-Inertia') ? null : [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],

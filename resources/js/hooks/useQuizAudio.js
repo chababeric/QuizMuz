@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback } from 'react';
+import { AUDIO_BASE_URL } from './audioBaseUrl.js';
 
 export const useQuizAudio = (audioFile, audioType = 'piece') => {
     const audioRef = useRef(null);
@@ -7,8 +8,8 @@ export const useQuizAudio = (audioFile, audioType = 'piece') => {
 
     const getAudioUrl = useCallback((filename) => {
         const baseUrl = audioType === 'chord'
-            ? 'https://www.quizmuz.com/storage/fma_chords/'
-            : 'https://www.quizmuz.com/storage/litmus_pieces/';
+            ? `${AUDIO_BASE_URL}/storage/fma_chords/`
+            : `${AUDIO_BASE_URL}/storage/litmus_pieces/`;
         return `${baseUrl}${filename}`;
     }, [audioType]);
 
