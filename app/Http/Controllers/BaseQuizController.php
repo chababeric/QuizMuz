@@ -91,18 +91,10 @@ abstract class BaseQuizController extends Controller
 
     protected function ensureSingleGame($userId, $gameType): void
     {
-        $existingGame = null;
-
         if ($gameType === 'solo') {
-            $existingGame = SoloGame::where('user_id', $userId)->get();
+            SoloGame::where('user_id', $userId)->delete();
         } elseif ($gameType === 'fma') {
-            $existingGame = FmaGame::where('user_id', $userId)->get();
-        }
-
-        if ($existingGame->count() > 0) {
-            $existingGame->each(function ($game) {
-                $game->delete();
-            });
+            FmaGame::where('user_id', $userId)->delete();
         }
     }
 

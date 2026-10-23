@@ -78,12 +78,7 @@ class PracticeController extends Controller
                 ->values()
                 ->toArray();
 
-            // Flat list for navigation
-            $pieces = collect(array_merge(
-                collect($modules)->flatMap(fn ($m) => $m['chords'])->toArray(),
-                $nonModuleChords
-            ))->sortBy('order')->values()->toArray();
-
+            // No flat list here: the page rebuilds it from modulesList and nonModulePiecesList
             $nonModulePieces = $nonModuleChords;
         } elseif ($courseName === "Littérature Musicale") {
             // For LitMus course, fetch pieces and organize by modules
@@ -143,14 +138,7 @@ class PracticeController extends Controller
                 ->values()
                 ->toArray();
 
-            // Combine all pieces for general use
-            $pieces = collect(array_merge(
-                collect($modules)->flatMap(function ($module) {
-                    return $module['pieces'];
-                })->toArray(),
-                $nonModulePieces
-            ))->sortBy('order')->values()->toArray();
-
+            // No flat list here: the page rebuilds it from modulesList and nonModulePiecesList
         } else {
             // For other courses, fetch pieces
             $pieces = Piece::where('level_id', $level)

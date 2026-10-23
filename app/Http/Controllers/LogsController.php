@@ -11,10 +11,10 @@ class LogsController extends Controller
 {
     public function index(): Response
     {
-        // Fetch all the logs and sort them by created_at in descending order
-        $logs = Log::with('user')
+        // Fetch the logs page by page, newest first
+        $logs = Log::with('user:id,first_name,last_name')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(50);
 
         return Inertia::render('Logs/Edit', [
             'logs' => $logs

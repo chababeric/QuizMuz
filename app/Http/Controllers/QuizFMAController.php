@@ -37,6 +37,7 @@ class QuizFMAController extends BaseQuizController
         $course_id = Course::where('name', $request->input('course_name'))->value('id');
 
         $fmaGame = null;
+        $currentChordMp3 = null;
         if ($gameKey) {
             $fmaGame = FmaGame::where('user_id', $userId)
                 ->where('game_key', $gameKey)
@@ -56,12 +57,14 @@ class QuizFMAController extends BaseQuizController
                 $fmaGame->current_chord_id = $randomChord['current_chord_id'];
                 $fmaGame->correct_answer = $randomChord['correct_answer'];
                 $fmaGame->save();
+                $currentChordMp3 = $randomChord['current_chord_mp3'];
             }
         }
 
         $chordsData = $this->getChordsData(
             (string)$data['difficulty'],
-            $data['chords_list_id']
+            $data['chords_list_id'],
+            $fmaGame->current_chord_id
         );
 
         $userStats = new UserStats();
@@ -69,19 +72,25 @@ class QuizFMAController extends BaseQuizController
 
         $currentScore = Score::where('user_id', $userId)
             ->where('course_id', $course_id)
-            ->first()->score ?? 0;
+            ->value('score') ?? 0;
+
+        if ($currentChordMp3 === null) {
+            $currentChordMp3 = $fmaGame->current_chord_id
+                ? (Chord::whereKey($fmaGame->current_chord_id)->value('file_name') ?? '')
+                : '';
+        }
 
         return Inertia::render('QuizFMA', [
             'difficulty' => $data['difficulty'],
             'level_id' => $data['level_id'],
             'courseId' => $data['courseId'],
             'selectListData' => $chordsData,
-            'current_chord_mp3' => $fmaGame && $fmaGame->current_chord_id ? (Chord::find($fmaGame->current_chord_id)->file_name ?? '') : '',
+            'current_chord_mp3' => $currentChordMp3,
             'current_score' => $currentScore,
         ]);
     }
 
-    public function getChordsData(string $difficulty, array $chordsList = []): array
+    public function getChordsData(string $difficulty, array $chordsList = [], ?int $currentChordId = null): array
     {
         if (empty($chordsList)) {
             return [];
@@ -107,7 +116,8 @@ class QuizFMAController extends BaseQuizController
 
             return $chordNames;
         } elseif ($difficulty === '3' || $difficulty === 3) {
-            $chord = Chord::find(FmaGame::where('user_id', Auth::id())->first()->current_chord_id ?? 0);
+            $currentChordId ??= FmaGame::where('user_id', Auth::id())->value('current_chord_id');
+            $chord = Chord::find($currentChordId ?? 0);
             if ($chord) {
                 $chordParts = explode(' - ', $chord->chord_name);
                 return [

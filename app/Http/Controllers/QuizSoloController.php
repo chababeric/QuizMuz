@@ -15,6 +15,11 @@ use Inertia\Response;
 
 class QuizSoloController extends BaseQuizController
 {
+    /**
+     * Piece columns the user is quizzed on.
+     */
+    private const ANSWER_FIELDS = ['period', 'genre', 'composer', 'title', 'element', 'no_mvt', 'mvt', 'form'];
+
     public function index(): Response
     {
         return Inertia::render('QuizSolo');
@@ -40,6 +45,7 @@ class QuizSoloController extends BaseQuizController
 
         // Check if a game exists with the provided key
         $soloGame = null;
+        $currentPieceMp3 = null;
         if ($gameKey) {
             $soloGame = SoloGame::where('user_id', $userId)
                 ->where('game_key', $gameKey)
@@ -60,6 +66,7 @@ class QuizSoloController extends BaseQuizController
                 $soloGame->current_piece_id = $randomPiece['current_piece_id'];
                 $soloGame->correct_answers = $randomPiece['correct_answers'];
                 $soloGame->save();
+                $currentPieceMp3 = $randomPiece['current_piece_mp3'];
             }
         }
 
@@ -71,7 +78,13 @@ class QuizSoloController extends BaseQuizController
 
         $currentScore = Score::where('user_id', $userId)
             ->where('course_id', $course_id)
-            ->first()->score ?? 0;
+            ->value('score') ?? 0;
+
+        if ($currentPieceMp3 === null) {
+            $currentPieceMp3 = $soloGame->current_piece_id
+                ? (Piece::whereKey($soloGame->current_piece_id)->value('file_name') ?? '')
+                : '';
+        }
 
         return Inertia::render('QuizSolo', [
             'difficulty' => $data['difficulty'],
@@ -79,7 +92,7 @@ class QuizSoloController extends BaseQuizController
             'courseId' => $data['courseId'],
             'courseName' => $course->name,
             'selectListData' => $piecesData,
-            'current_piece_mp3' => $soloGame->current_piece_id ? (Piece::find($soloGame->current_piece_id)->file_name ?? '') : '',
+            'current_piece_mp3' => $currentPieceMp3,
             'current_score' => $currentScore,
             'parameters_to_display' => $parameters_to_display,
         ]);
@@ -90,7 +103,7 @@ class QuizSoloController extends BaseQuizController
         if ($difficulty === '1') {
             return array_keys(array_filter($soloGame->correct_answers ?? [], fn($value) => $value !== null));
         } elseif ($difficulty === '2' || $difficulty === '3') {
-            return ['period', 'genre', 'composer', 'title', 'element', 'no_mvt', 'mvt', 'form'];
+            return self::ANSWER_FIELDS;
         }
         return [];
     }
@@ -119,7 +132,7 @@ class QuizSoloController extends BaseQuizController
                 return [
                     'current_piece_id' => $currentPieceId,
                     'current_piece_mp3' => $piece->file_name,
-                    'correct_answers' => $this->getCorrectAnswers($currentPieceId),
+                    'correct_answers' => $piece->only(self::ANSWER_FIELDS),
                     'shuffled_pieces' => $shuffledPieces,
                 ];
             }
@@ -130,62 +143,23 @@ class QuizSoloController extends BaseQuizController
 
     public function getEasyPiecesData(array $pieces_id): array
     {
-        $pieces = Piece::whereIn('id', $pieces_id)->get();
-        $piecesData = [];
-        foreach ($pieces as $piece) {
-            $piecesData[] = [
-                'period' => $piece->period,
-                'genre' => $piece->genre,
-                'composer' => $piece->composer,
-                'title' => $piece->title,
-                'element' => $piece->element,
-                'no_mvt' => $piece->no_mvt,
-                'mvt' => $piece->mvt,
-                'form' => $piece->form,
-            ];
-        }
-
-        return $piecesData;
+        return Piece::whereIn('id', $pieces_id)
+            ->get(self::ANSWER_FIELDS)
+            ->toArray();
     }
 
     public function getMediumPiecesData(int $levelId): array
     {
-        $pieces = Piece::where('level_id', $levelId)->get();
-        $piecesData = [];
-        foreach ($pieces as $piece) {
-            $piecesData[] = [
-                'period' => $piece->period,
-                'genre' => $piece->genre,
-                'composer' => $piece->composer,
-                'title' => $piece->title,
-                'element' => $piece->element,
-                'no_mvt' => $piece->no_mvt,
-                'mvt' => $piece->mvt,
-                'form' => $piece->form,
-            ];
-        }
-
-        return $piecesData;
+        return Piece::where('level_id', $levelId)
+            ->get(self::ANSWER_FIELDS)
+            ->toArray();
     }
 
     public function getCorrectAnswers(int $pieceId): array
     {
-        $correctAnswers = [];
-        $piece = Piece::find($pieceId);
-        if ($piece) {
-            $correctAnswers = [
-                'period' => $piece->period,
-                'genre' => $piece->genre,
-                'composer' => $piece->composer,
-                'title' => $piece->title,
-                'element' => $piece->element,
-                'no_mvt' => $piece->no_mvt,
-                'mvt' => $piece->mvt,
-                'form' => $piece->form,
-            ];
-        }
+        $piece = Piece::find($pieceId, self::ANSWER_FIELDS);
 
-        return $correctAnswers;
+        return $piece ? $piece->only(self::ANSWER_FIELDS) : [];
     }
 
     /**

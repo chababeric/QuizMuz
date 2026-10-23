@@ -43,7 +43,9 @@ class AdminController extends Controller
             'institution_id' => 'required|exists:institutions,id',
         ]);
 
-        $users = User::where('institution_id', $request->institution_id)->get();
+        $users = User::with(['institution', 'roles'])
+            ->where('institution_id', $request->institution_id)
+            ->get();
 
         foreach ($users as $user) {
             $user->is_admin = $user->isAdmin();
