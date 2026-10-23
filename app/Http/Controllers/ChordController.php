@@ -239,11 +239,7 @@ class ChordController extends Controller
             return response()->json(['error' => 'Vous n\'avez pas les privilèges nécessaires pour modifier l\'ordre des formules ou accords.'], 403);
         }
 
-        foreach ($chords as $chordData) {
-            $chord = Chord::findOrFail($chordData['id']);
-            $chord->order = $chordData['order'];
-            $chord->save();
-        }
+        $this->updateOrders(Chord::class, $chords);
         return response()->json(['message' => 'L\'ordre a été mis à jour avec succès.']);
     }
 

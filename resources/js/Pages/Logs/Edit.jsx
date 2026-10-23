@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.jsx';
-import { Head } from "@inertiajs/react";
+import { Head, Link } from "@inertiajs/react";
 import { format } from 'date-fns';
 
 export default function Edit({ auth, logs }) {
@@ -77,9 +77,9 @@ export default function Edit({ auth, logs }) {
 
             <div className="py-12 dark:bg-gray-900">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                    {logs && logs.length > 0 ? (
+                    {logs?.data?.length > 0 ? (
                         <div className="grid gap-6 mt-6">
-                            {logs.map((log) => {
+                            {logs.data.map((log) => {
                                 const colorClasses = getColorClasses(log.action);
 
                                 return (
@@ -114,6 +114,24 @@ export default function Edit({ auth, logs }) {
                                     </div>
                                 );
                             })}
+
+                            {logs.last_page > 1 && (
+                                <div className="flex items-center justify-between">
+                                    {logs.prev_page_url ? (
+                                        <Link href={logs.prev_page_url} className="px-4 py-2 bg-white rounded-lg shadow text-sm text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                                            Précédent
+                                        </Link>
+                                    ) : <span />}
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                                        Page {logs.current_page} sur {logs.last_page}
+                                    </span>
+                                    {logs.next_page_url ? (
+                                        <Link href={logs.next_page_url} className="px-4 py-2 bg-white rounded-lg shadow text-sm text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                                            Suivant
+                                        </Link>
+                                    ) : <span />}
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div className="bg-white p-6 rounded-lg shadow text-center dark:bg-gray-800">

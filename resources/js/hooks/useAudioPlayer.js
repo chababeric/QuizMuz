@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { AUDIO_BASE_URL } from './audioBaseUrl.js';
 
 export const useAudioPlayer = (currentPiece, courseName, onNext) => {
     const audioRef = useRef(new Audio());
@@ -64,8 +65,8 @@ export const useAudioPlayer = (currentPiece, courseName, onNext) => {
                 safelyPauseAudio();
 
                 const audioSrc = courseName === "Formation Musicale et Auditive"
-                    ? `https://www.quizmuz.com/storage/fma_chords/${currentPiece.file_name}`
-                    : `https://www.quizmuz.com/storage/litmus_pieces/${currentPiece.file_name}`;
+                    ? `${AUDIO_BASE_URL}/storage/fma_chords/${currentPiece.file_name}`
+                    : `${AUDIO_BASE_URL}/storage/litmus_pieces/${currentPiece.file_name}`;
 
                 // Only reset states when changing to a new piece
                 setProgress(0);

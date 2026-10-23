@@ -533,11 +533,7 @@ class PieceController extends Controller
 
         $pieces = $request->input('pieces');
 
-        foreach ($pieces as $pieceData) {
-            $piece = Piece::findOrFail($pieceData['id']);
-            $piece->order = $pieceData['order'];
-            $piece->save();
-        }
+        $this->updateOrders(Piece::class, $pieces);
 
         return response()->json(['message' => 'L\'ordre des pièces a été mis à jour avec succès.']);
     }

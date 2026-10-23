@@ -19,3 +19,16 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Browser caching for static files
+<IfModule mod_headers.c>
+    # Vite build output has content hashes in file names, so it never changes
+    <If "%{REQUEST_URI} =~ m#^/build/assets/#">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </If>
+
+    # Audio files can be replaced under the same name, so keep them for a week only
+    <FilesMatch "\.mp3$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
+</IfModule>

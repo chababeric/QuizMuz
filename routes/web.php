@@ -166,13 +166,15 @@ Route::get('dashboard', function () {
     ];
 
     // Fetch all users with their institution name and stats from the user_course_modes table
-    $users = User::with('institution:id,name') // Eager load institution
+    $users = User::with([
+        'institution:id,name',
+        'courseModes:id,user_id,course_id,practice_count,quiz_count',
+        'courseModes.course:id,name',
+    ])
     ->get(['id', 'username', 'first_name', 'last_name', 'institution_id', 'last_action_time']) // User fields
     ->map(function ($user) {
         // Get all course stats for the user
-        $courses = UserCourseMode::where('user_id', $user->id)
-            ->with('course:id,name') // Eager load course
-            ->get(['course_id', 'practice_count', 'quiz_count']) // Stats fields
+        $courses = $user->courseModes
             ->map(function ($courseStat) {
                 $totalParticipation = $courseStat->practice_count + $courseStat->quiz_count; // Participation per course
                 return [

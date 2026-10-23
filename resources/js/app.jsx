@@ -10,7 +10,8 @@ createInertiaApp({
     title: (title) => `${title}`,
     resolve: (name) => resolvePageComponent(`./Pages/${name}.jsx`, import.meta.glob('./Pages/**/*.jsx')),
     setup({ el, App, props }) {
-        if (import.meta.env.DEV) {
+        // Only hydrate when the SSR server actually rendered the page; otherwise render from scratch
+        if (import.meta.env.DEV || !el.hasChildNodes()) {
             createRoot(el).render(<App {...props} />);
             return
         }

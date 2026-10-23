@@ -10,10 +10,9 @@ export const useQuizApi = () => {
         }
     }, []);
 
+    // The quiz routes record the user's activity server-side, so no separate keep-alive call is needed here
     const makeApiCall = useCallback(async (url, payload = {}, options = {}) => {
         try {
-            await updateLastActionTime();
-
             const response = await axios.post(url, payload, {
                 headers: {
                     'Content-Type': 'application/json',
@@ -29,7 +28,7 @@ export const useQuizApi = () => {
                 error: error.response?.data || error.message
             };
         }
-    }, [updateLastActionTime]);
+    }, []);
 
     return {
         updateLastActionTime,

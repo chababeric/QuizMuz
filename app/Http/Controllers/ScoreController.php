@@ -21,7 +21,7 @@ class ScoreController extends Controller
             'institution_id' => 'required|exists:institutions,id',
         ]);
 
-        $scores = Score::with('user')
+        $scores = Score::with('user:id,username,first_name,last_name')
             ->join('users', 'scores.user_id', '=', 'users.id')
             ->where('users.institution_id', $request->institution_id)
             ->orderBy('score', 'desc')
@@ -35,7 +35,7 @@ class ScoreController extends Controller
     {
         $course_id = $request->input('course_id');
 
-        $scores = Score::with('user')
+        $scores = Score::with('user:id,username,first_name,last_name')
             ->where('course_id', $course_id)
             ->orderBy('score', 'desc')
             ->take(10)

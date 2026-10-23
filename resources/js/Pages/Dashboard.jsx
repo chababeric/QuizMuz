@@ -1,19 +1,22 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Modal from '@/Components/Modal';
 import { Head } from '@inertiajs/react';
-import { useEffect, useState } from "react";
-import moment from 'moment';
+import { useEffect, useMemo, useState } from "react";
+import { differenceInMinutes, parseISO } from 'date-fns';
 
 export default function Dashboard({ auth, totalStats, users }) {
-    const [sortedUsers, setSortedUsers] = useState([]);
     const [nbConnectedUsers, setNbConnectedUsers] = useState(0);
     const [modalOpen, setModalOpen] = useState(false); // Modal state
     const [selectedUser, setSelectedUser] = useState(null); // Currently selected user
     const isClient = typeof window !== 'undefined';
 
+    const sortedUsers = useMemo(
+        () => [...users].sort((a, b) => a.last_name.localeCompare(b.last_name)),
+        [users]
+    );
+
+    // Counted after mount: the online status depends on the client's clock
     useEffect(() => {
-        const sorted = [...users].sort((a, b) => a.last_name.localeCompare(b.last_name));
-        setSortedUsers(sorted);
         updateNbConnectedUsers();
     }, [users]);
 
@@ -29,9 +32,8 @@ export default function Dashboard({ auth, totalStats, users }) {
 
     const getStatus = (lastActionTime) => {
         if (!isClient) return '';
-        const now = moment();
-        const lastAction = moment(lastActionTime);
-        const diff = now.diff(lastAction, 'minutes');
+        if (!lastActionTime) return 'Hors ligne';
+        const diff = differenceInMinutes(new Date(), parseISO(lastActionTime));
         return diff < 20 ? 'En ligne' : 'Hors ligne';
     }
 
