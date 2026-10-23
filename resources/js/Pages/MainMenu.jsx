@@ -77,7 +77,7 @@ export default function MainMenu({ auth }) {
 
             {/* Top bar: context on the leading side, navigation on the trailing side */}
             <header className="sticky top-0 z-20 bg-gray-950/70 backdrop-blur-md border-b border-white/10">
-                <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-3">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
                     <h1 className="flex-1 min-w-0 truncate text-lg sm:text-xl font-bold text-white">
                         {courseName}
                     </h1>
@@ -102,20 +102,21 @@ export default function MainMenu({ auth }) {
                 </div>
             </header>
 
-            <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-4 sm:py-8 flex flex-col justify-center gap-5 sm:gap-8">
+            {/* Compact width: levels on top, modes fill the rest. Wide: levels become a sidebar. */}
+            <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 flex flex-col lg:flex-row gap-4 sm:gap-6">
 
-                {/* Level picker, styled as a segmented control */}
-                <section aria-labelledby="level-heading">
-                    <h2 id="level-heading" className="mb-2 px-1 text-sm font-semibold uppercase tracking-wide text-white/90 drop-shadow">
+                {/* Level picker: segmented bar when compact, sidebar list when wide */}
+                <section aria-labelledby="level-heading" className="lg:w-64 lg:shrink-0 lg:bg-gray-950/80 lg:border lg:border-white/10 lg:rounded-3xl lg:p-4 flex flex-col">
+                    <h2 id="level-heading" className="mb-2 lg:mb-3 px-1 text-sm font-semibold uppercase tracking-wide text-white/90 drop-shadow">
                         Niveau
                     </h2>
 
                     {!hasEnabledLevel ? (
-                        <p className={`${surface} rounded-2xl p-4 text-white text-sm`}>
+                        <p className={`${surface} lg:bg-transparent lg:border-0 rounded-2xl p-4 lg:p-1 text-white text-sm`}>
                             Aucun niveau n'est disponible pour ce cours pour le moment. Contactez votre établissement pour qu'il ouvre un niveau.
                         </p>
                     ) : (
-                        <div role="group" aria-labelledby="level-heading" className={`${surface} rounded-2xl p-1.5 flex flex-wrap gap-1.5`}>
+                        <div role="group" aria-labelledby="level-heading" className={`${surface} lg:bg-transparent lg:border-0 rounded-2xl p-1.5 lg:p-0 flex flex-wrap lg:flex-col lg:flex-nowrap gap-1.5`}>
                             {levels.map(level => {
                                 const isSelected = selectedLevel === level.id;
                                 return (
@@ -124,7 +125,7 @@ export default function MainMenu({ auth }) {
                                         aria-pressed={isSelected}
                                         disabled={!level.is_enabled}
                                         onClick={() => level.is_enabled && setSelectedLevel(level.id)}
-                                        className={`flex-1 min-w-[4.5rem] min-h-[44px] px-3 rounded-xl flex items-center justify-center gap-1.5 text-base font-semibold ${transition} ${
+                                        className={`flex-1 lg:flex-none min-w-[4.5rem] min-h-[44px] px-3 lg:px-4 lg:py-3 rounded-xl flex items-center justify-center lg:justify-start gap-1.5 lg:gap-3 text-base font-semibold ${transition} ${
                                             isSelected
                                                 ? 'bg-white text-gray-950 shadow'
                                                 : level.is_enabled
@@ -133,7 +134,7 @@ export default function MainMenu({ auth }) {
                                         }`}
                                     >
                                         {isSelected && <span aria-hidden="true">✓</span>}
-                                        {level.name}
+                                        <span><span className="hidden lg:inline">Niveau </span>{level.name}</span>
                                         {!level.is_enabled && <span className="sr-only">(désactivé)</span>}
                                     </button>
                                 );
@@ -142,57 +143,64 @@ export default function MainMenu({ auth }) {
                     )}
 
                     {saveError ? (
-                        <p role="status" className="mt-2 px-1 text-xs text-red-200 drop-shadow">
+                        <p role="status" className="mt-2 lg:mt-auto lg:pt-4 px-1 text-xs text-red-200 drop-shadow">
                             Votre niveau n'a pas pu être enregistré. L'ancien niveau sera sélectionné à votre prochaine visite.
                         </p>
                     ) : hasEnabledLevel && hasDisabledLevel && (
-                        <p className="mt-2 px-1 text-xs text-white/80 drop-shadow">
+                        <p className="mt-2 lg:mt-auto lg:pt-4 px-1 text-xs text-white/80 drop-shadow">
                             Les niveaux barrés n'ont pas encore été ouverts par votre établissement.
                         </p>
                     )}
                 </section>
 
-                {/* Primary action first, secondary destinations grouped beside it */}
-                <section aria-label="Modes de jeu" className="grid gap-3 sm:gap-4 md:grid-cols-2">
+                {/* Modes: Quiz is the primary action and takes the most space */}
+                <section aria-label="Modes de jeu" className="flex-1 min-h-0 grid grid-cols-2 lg:grid-cols-3 grid-rows-[1fr_auto] lg:grid-rows-2 gap-4 sm:gap-6">
                     <ModeLink
                         {...modeProps('optionsmenu')}
-                        className={`group flex md:flex-col items-center md:justify-center gap-4 rounded-2xl bg-rose-600 hover:bg-rose-500 p-5 md:p-8 text-white shadow-xl md:text-center ${transition} ${unavailable}`}
+                        className={`col-span-2 lg:row-span-2 min-h-[10rem] relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-500 to-rose-700 hover:from-rose-400 hover:to-rose-600 p-6 sm:p-10 [@media(max-height:680px)]:p-5 text-white shadow-2xl flex flex-col justify-between gap-6 [@media(max-height:680px)]:gap-3 ${transition} ${unavailable}`}
                     >
-                        <span aria-hidden="true" className="text-4xl md:text-6xl">🏆</span>
-                        <span className="flex-1 min-w-0">
-                            <span className="block text-2xl md:text-3xl font-bold">Quiz</span>
-                            <span className="block text-sm text-rose-50">
-                                {canPlay ? `Testez vos connaissances · Niveau ${currentLevel.name}` : 'Choisissez un niveau pour commencer'}
+                        <span aria-hidden="true" className="absolute -right-6 -bottom-8 text-[10rem] sm:text-[14rem] leading-none opacity-20 select-none">🏆</span>
+                        <span className="relative">
+                            <span className="inline-block rounded-full bg-white/20 px-3 py-1 text-sm font-semibold">
+                                {canPlay ? `Niveau ${currentLevel.name}` : 'Aucun niveau'}
                             </span>
                         </span>
-                        <span className="md:hidden"><ChevronIcon/></span>
+                        <span className="relative">
+                            <span className="block text-4xl sm:text-6xl font-bold">Quiz</span>
+                            <span className="block mt-1 text-base sm:text-lg text-rose-50">
+                                {canPlay ? 'Testez vos connaissances' : 'Choisissez un niveau pour commencer'}
+                            </span>
+                            <span className="mt-5 [@media(max-height:680px)]:mt-3 inline-flex items-center gap-1 rounded-full bg-white text-rose-700 px-5 py-2.5 text-base font-semibold">
+                                Commencer <ChevronIcon/>
+                            </span>
+                        </span>
                     </ModeLink>
 
-                    <div className={`${surface} rounded-2xl overflow-hidden flex flex-col divide-y divide-white/10`}>
-                        <ModeLink
-                            {...modeProps('practice')}
-                            className={`flex-1 flex items-center gap-4 px-5 py-4 text-white hover:bg-white/5 ${transition} ${unavailable}`}
-                        >
-                            <span aria-hidden="true" className="text-3xl">🎯</span>
-                            <span className="flex-1 min-w-0">
-                                <span className="block text-lg font-semibold">Pratique</span>
-                                <span className="block text-sm text-gray-300">Entraînez-vous sans pression</span>
+                    <ModeLink
+                        {...modeProps('practice')}
+                        className={`rounded-3xl ${surface} hover:bg-gray-900/90 p-5 sm:p-6 [@media(max-height:680px)]:p-4 text-white flex flex-col justify-between gap-4 [@media(max-height:680px)]:gap-2 ${transition} ${unavailable}`}
+                    >
+                        <span aria-hidden="true" className="text-4xl sm:text-5xl [@media(max-height:680px)]:text-3xl">🎯</span>
+                        <span>
+                            <span className="flex items-center justify-between gap-2 text-lg sm:text-2xl font-semibold">
+                                Pratique <span className="text-gray-400"><ChevronIcon/></span>
                             </span>
-                            <span className="text-gray-400"><ChevronIcon/></span>
-                        </ModeLink>
+                            <span className="block text-sm text-gray-300 [@media(max-height:680px)]:hidden">Entraînez-vous sans pression</span>
+                        </span>
+                    </ModeLink>
 
-                        <Link
-                            href={route('highscores', {courseId: courseId})}
-                            className={`flex-1 flex items-center gap-4 px-5 py-4 text-white hover:bg-white/5 ${transition}`}
-                        >
-                            <span aria-hidden="true" className="text-3xl">🏅</span>
-                            <span className="flex-1 min-w-0">
-                                <span className="block text-lg font-semibold">Meilleurs scores</span>
-                                <span className="block text-sm text-gray-300">Consultez le classement</span>
+                    <Link
+                        href={route('highscores', {courseId: courseId})}
+                        className={`rounded-3xl ${surface} hover:bg-gray-900/90 p-5 sm:p-6 [@media(max-height:680px)]:p-4 text-white flex flex-col justify-between gap-4 [@media(max-height:680px)]:gap-2 ${transition}`}
+                    >
+                        <span aria-hidden="true" className="text-4xl sm:text-5xl [@media(max-height:680px)]:text-3xl">🏅</span>
+                        <span>
+                            <span className="flex items-center justify-between gap-2 text-lg sm:text-2xl font-semibold">
+                                Meilleurs scores <span className="text-gray-400"><ChevronIcon/></span>
                             </span>
-                            <span className="text-gray-400"><ChevronIcon/></span>
-                        </Link>
-                    </div>
+                            <span className="block text-sm text-gray-300 [@media(max-height:680px)]:hidden">Consultez le classement</span>
+                        </span>
+                    </Link>
                 </section>
             </main>
         </div>
