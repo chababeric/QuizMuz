@@ -221,7 +221,7 @@ export default function MainMenu({ auth }) {
                         </div>
                     </section>
 
-                    <div className="grid grid-cols-2 items-start gap-4 md:gap-6 lg:gap-5">
+                    <div className="grid grid-cols-2 gap-4 md:gap-6 lg:gap-5">
 
                         {/* Practice */}
                         <ModeLink {...modeProps('practice')} className={`${featureCard} ${unavailable}`}>
