@@ -3,36 +3,38 @@ import { Link, Head, usePage } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const ChevronIcon = () => (
-    <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 shrink-0">
-        <path fillRule="evenodd" d="M7.2 14.8a.75.75 0 0 1 0-1.06L10.94 10 7.2 6.26a.75.75 0 1 1 1.06-1.06l4.27 4.27a.75.75 0 0 1 0 1.06l-4.27 4.27a.75.75 0 0 1-1.06 0Z" clipRule="evenodd"/>
+// Outlined 2px stroke icons (paths from Lucide, ISC license)
+const Icon = ({ className = 'w-5 h-5', children }) => (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 ${className}`}>
+        {children}
     </svg>
 );
+const ChevronIcon = (props) => <Icon {...props}><path d="m9 18 6-6-6-6"/></Icon>;
+const HomeIcon = (props) => <Icon {...props}><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></Icon>;
+const LogoutIcon = (props) => <Icon {...props}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></Icon>;
+const MusicIcon = (props) => <Icon {...props}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></Icon>;
+const LockIcon = (props) => <Icon {...props}><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></Icon>;
+const HelpIcon = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></Icon>;
+const HeadphonesIcon = (props) => <Icon {...props}><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></Icon>;
+const TrophyIcon = (props) => <Icon {...props}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></Icon>;
 
-const HomeIcon = () => (
-    <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 shrink-0">
-        <path d="M10.7 2.3a1 1 0 0 0-1.4 0l-7 7A1 1 0 0 0 3 11h1v6a1 1 0 0 0 1 1h3v-4h4v4h3a1 1 0 0 0 1-1v-6h1a1 1 0 0 0 .7-1.7l-7-7Z"/>
-    </svg>
-);
-
-const LogoutIcon = () => (
-    <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 shrink-0">
-        <path fillRule="evenodd" d="M3 4.25A2.25 2.25 0 0 1 5.25 2h5.5A2.25 2.25 0 0 1 13 4.25v2a.75.75 0 0 1-1.5 0v-2a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v11.5c0 .41.34.75.75.75h5.5a.75.75 0 0 0 .75-.75v-2a.75.75 0 0 1 1.5 0v2A2.25 2.25 0 0 1 10.75 18h-5.5A2.25 2.25 0 0 1 3 15.75V4.25Z" clipRule="evenodd"/>
-        <path fillRule="evenodd" d="M6 10a.75.75 0 0 1 .75-.75h9.69l-1.72-1.72a.75.75 0 1 1 1.06-1.06l3 3a.75.75 0 0 1 0 1.06l-3 3a.75.75 0 1 1-1.06-1.06l1.72-1.72H6.75A.75.75 0 0 1 6 10Z" clipRule="evenodd"/>
-    </svg>
-);
+const formatNumber = (value) => value.toLocaleString('fr-FR');
+const rankColors = ['text-[#F2B94B]', 'text-[#C9CCDA]', 'text-[#D9A27A]'];
 
 export default function MainMenu({ auth }) {
     const { levels } = usePage().props;
     const { courseId } = usePage().props;
     const { courseName } = usePage().props;
+    const { modulesByLevel, leaderboard, userStats } = usePage().props;
     const [selectedLevel, setSelectedLevel] = useState(auth.user.last_level);
     const [saveError, setSaveError] = useState(false);
 
     const currentLevel = levels.find(level => level.id === selectedLevel);
     const hasEnabledLevel = levels.some(level => level.is_enabled);
-    const hasDisabledLevel = levels.some(level => !level.is_enabled);
+    const hasLockedLevel = levels.some(level => !level.is_enabled);
     const canPlay = Boolean(currentLevel && currentLevel.is_enabled);
+    const modules = (canPlay && modulesByLevel[currentLevel.id]) || [];
+    const userInTop = leaderboard.some(entry => entry.userId === auth.user.id);
 
     useEffect(() => {
         if (!currentLevel || !currentLevel.is_enabled) {
@@ -67,75 +69,84 @@ export default function MainMenu({ auth }) {
         ? { href: route(routeName, {level: selectedLevel, courseId: courseId, courseName: courseName}) }
         : { 'aria-disabled': true };
     const unavailable = canPlay ? '' : 'opacity-50 cursor-not-allowed';
-    const transition = 'transition-colors duration-200 motion-reduce:transition-none';
-    const surface = 'bg-gray-950/80 border border-white/10';
+    const transition = 'transition duration-200 motion-reduce:transition-none';
+    const card = 'relative overflow-hidden rounded-[24px] bg-[#0B0D18] border';
+    const featureCard = `group ${card} border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 p-6 flex flex-col gap-5 ${transition}`;
 
     return (
-        <div className="main-app min-h-[100dvh] flex flex-col !justify-start !items-stretch !pt-0">
-            <div className="background-container"></div>
+        <div className="min-h-[100dvh] bg-[#06070D] text-[#F2F3F8] font-sans">
             <Head title="Menu principal - QuizMuz"/>
 
-            {/* Top bar: context on the leading side, navigation on the trailing side */}
-            <header className="sticky top-0 z-20 bg-gray-950/70 backdrop-blur-md border-b border-white/10">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
-                    <h1 className="flex-1 min-w-0 truncate text-lg sm:text-xl font-bold text-white">
-                        {courseName}
-                    </h1>
+            <header className="border-b border-white/[0.07]">
+                <div className="max-w-[1240px] mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
+                    <Link href={route('welcome')} className="flex-1 min-w-0 flex items-center gap-3 min-h-[44px]">
+                        <span className="w-8 h-8 shrink-0 rounded-[10px] bg-[#B4283F] text-white flex items-center justify-center">
+                            <MusicIcon className="w-[18px] h-[18px]"/>
+                        </span>
+                        <span className="truncate text-[20px] font-semibold">{courseName}</span>
+                    </Link>
                     <Link
                         href={route('welcome')}
-                        aria-label="Retour à l'accueil"
-                        className={`min-h-[44px] min-w-[44px] px-3 flex items-center justify-center gap-2 rounded-full text-white hover:bg-white/10 ${transition}`}
+                        aria-label="Accueil"
+                        className={`min-h-[44px] min-w-[44px] px-3 sm:px-4 flex items-center justify-center gap-2 rounded-full bg-white/[0.06] text-[#F2F3F8] hover:bg-white/10 ${transition}`}
                     >
                         <HomeIcon/>
-                        <span className="hidden sm:inline text-sm font-medium">Accueil</span>
+                        <span className="hidden sm:inline text-[15px] font-medium">Accueil</span>
                     </Link>
                     <Link
                         href={route('logout')}
                         method="post"
                         as="button"
                         aria-label="Déconnexion"
-                        className={`min-h-[44px] min-w-[44px] px-3 flex items-center justify-center gap-2 rounded-full text-red-300 hover:bg-red-500/10 ${transition}`}
+                        className={`min-h-[44px] min-w-[44px] px-3 sm:px-4 flex items-center justify-center gap-2 rounded-full text-[#A9AEC2] hover:text-[#F2F3F8] hover:bg-white/[0.05] ${transition}`}
                     >
                         <LogoutIcon/>
-                        <span className="hidden sm:inline text-sm font-medium">Déconnexion</span>
+                        <span className="hidden sm:inline text-[15px] font-medium">Déconnexion</span>
                     </Link>
                 </div>
             </header>
 
-            {/* Compact width: levels on top, modes fill the rest. Wide: levels become a sidebar. */}
-            <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 flex flex-col lg:flex-row gap-4 sm:gap-6">
+            <main className="max-w-[1240px] mx-auto px-4 sm:px-6 pt-8 pb-12 flex flex-col lg:flex-row gap-6">
 
-                {/* Level picker: segmented bar when compact, sidebar list when wide */}
-                <section aria-labelledby="level-heading" className="lg:w-64 lg:shrink-0 lg:bg-gray-950/80 lg:border lg:border-white/10 lg:rounded-3xl lg:p-4 flex flex-col">
-                    <h2 id="level-heading" className="mb-2 lg:mb-3 px-1 text-sm font-semibold uppercase tracking-wide text-white/90 drop-shadow">
-                        Niveau
+                {/* Sidebar: levels */}
+                <aside aria-labelledby="levels-heading" className={`${card} border-white/[0.08] p-4 lg:w-[280px] lg:shrink-0 lg:self-start`}>
+                    <h2 id="levels-heading" className="px-2 mb-3 text-[13px] font-semibold uppercase tracking-[0.12em] text-[#A9AEC2]">
+                        Niveaux
                     </h2>
 
                     {!hasEnabledLevel ? (
-                        <p className={`${surface} lg:bg-transparent lg:border-0 rounded-2xl p-4 lg:p-1 text-white text-sm`}>
+                        <p className="px-2 text-[15px] text-[#C9CCDA]">
                             Aucun niveau n'est disponible pour ce cours pour le moment. Contactez votre établissement pour qu'il ouvre un niveau.
                         </p>
                     ) : (
-                        <div role="group" aria-labelledby="level-heading" className={`${surface} lg:bg-transparent lg:border-0 rounded-2xl p-1.5 lg:p-0 flex flex-wrap lg:flex-col lg:flex-nowrap gap-1.5`}>
+                        <div role="group" aria-labelledby="levels-heading" className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-1 gap-1">
                             {levels.map(level => {
                                 const isSelected = selectedLevel === level.id;
+                                const moduleCount = (modulesByLevel[level.id] || []).length;
                                 return (
                                     <button
                                         key={level.id}
                                         aria-pressed={isSelected}
                                         disabled={!level.is_enabled}
                                         onClick={() => level.is_enabled && setSelectedLevel(level.id)}
-                                        className={`flex-1 lg:flex-none min-w-[4.5rem] min-h-[44px] px-3 lg:px-4 lg:py-3 rounded-xl flex items-center justify-center lg:justify-start gap-1.5 lg:gap-3 text-base font-semibold ${transition} ${
+                                        className={`min-h-[44px] px-3 py-2.5 rounded-[14px] flex items-center justify-between gap-3 text-left ${transition} ${
                                             isSelected
-                                                ? 'bg-white text-gray-950 shadow'
+                                                ? 'bg-white text-[#06070D]'
                                                 : level.is_enabled
-                                                    ? 'text-white hover:bg-white/10'
-                                                    : 'text-white/40 line-through cursor-not-allowed'
+                                                    ? 'text-[#F2F3F8] hover:bg-white/[0.05]'
+                                                    : 'text-[#7D8297] cursor-not-allowed'
                                         }`}
                                     >
-                                        {isSelected && <span aria-hidden="true">✓</span>}
-                                        <span><span className="hidden lg:inline">Niveau </span>{level.name}</span>
-                                        {!level.is_enabled && <span className="sr-only">(désactivé)</span>}
+                                        <span className="text-[16px] font-semibold">{level.name}</span>
+                                        {level.is_enabled ? (
+                                            moduleCount > 0 && (
+                                                <span className={`hidden lg:inline text-[13px] ${isSelected ? 'text-[#3A3F52]' : 'text-[#A9AEC2]'}`}>
+                                                    {moduleCount} {moduleCount > 1 ? 'modules' : 'module'}
+                                                </span>
+                                            )
+                                        ) : (
+                                            <span role="img" aria-label="Verrouillé"><LockIcon className="w-4 h-4"/></span>
+                                        )}
                                     </button>
                                 );
                             })}
@@ -143,56 +154,145 @@ export default function MainMenu({ auth }) {
                     )}
 
                     {saveError ? (
-                        <p role="status" className="mt-2 lg:mt-auto lg:pt-4 px-1 text-xs text-red-200 drop-shadow">
+                        <p role="status" className="mt-4 px-2 text-[13px] text-[#F07A8D]">
                             Votre niveau n'a pas pu être enregistré. L'ancien niveau sera sélectionné à votre prochaine visite.
                         </p>
-                    ) : hasEnabledLevel && hasDisabledLevel && (
-                        <p className="mt-2 lg:mt-auto lg:pt-4 px-1 text-xs text-white/80 drop-shadow">
-                            Les niveaux barrés n'ont pas encore été ouverts par votre établissement.
+                    ) : hasEnabledLevel && hasLockedLevel && (
+                        <p className="mt-4 px-2 text-[13px] text-[#A9AEC2]">
+                            Les niveaux verrouillés n'ont pas encore été ouverts par votre établissement.
                         </p>
                     )}
-                </section>
+                </aside>
 
-                {/* Modes: same dark surfaces, color reserved for the one primary button */}
-                <section aria-label="Modes de jeu" className="flex-1 min-h-0 grid grid-cols-2 grid-rows-[1fr_auto] lg:grid-rows-[3fr_2fr] gap-4 sm:gap-6">
-                    <ModeLink
-                        {...modeProps('optionsmenu')}
-                        className={`col-span-2 min-h-[10rem] rounded-3xl bg-gray-950/80 border border-rose-400/30 hover:border-rose-400/60 p-6 sm:p-8 [@media(max-height:680px)]:p-5 text-white flex flex-col justify-between gap-6 [@media(max-height:680px)]:gap-3 ${transition} ${unavailable}`}
-                    >
-                        <span className="self-start rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-gray-200">
-                            {canPlay ? `Niveau ${currentLevel.name}` : 'Aucun niveau'}
-                        </span>
-                        <span>
-                            <span className="block text-3xl sm:text-4xl font-bold">Quiz</span>
-                            <span className="block mt-1 text-base text-gray-300">
-                                {canPlay ? 'Testez vos connaissances' : 'Choisissez un niveau pour commencer'}
-                            </span>
-                            <span className="mt-5 [@media(max-height:680px)]:mt-3 inline-flex items-center gap-1 rounded-full bg-rose-700 px-5 py-2.5 text-base font-semibold">
-                                Commencer <ChevronIcon/>
-                            </span>
-                        </span>
-                    </ModeLink>
+                <div className="flex-1 min-w-0 flex flex-col gap-6">
 
-                    <ModeLink
-                        {...modeProps('practice')}
-                        className={`rounded-3xl ${surface} hover:bg-gray-900/90 p-5 sm:p-6 [@media(max-height:680px)]:p-4 text-white flex flex-col justify-end ${transition} ${unavailable}`}
-                    >
-                        <span className="flex items-center justify-between gap-2 text-lg sm:text-2xl font-semibold">
-                            Pratique <span className="text-gray-400"><ChevronIcon/></span>
-                        </span>
-                        <span className="block text-sm text-gray-300 [@media(max-height:680px)]:hidden">Entraînez-vous sans pression</span>
-                    </ModeLink>
+                    {/* Quiz hero */}
+                    <section aria-labelledby="quiz-heading" className={`${card} border-[rgba(224,86,108,0.28)] p-6 sm:p-8`}>
+                        <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(224,86,108,0.18),transparent_60%)]"></div>
+                        <div
+                            aria-hidden="true"
+                            className="hidden md:block absolute inset-y-0 right-0 w-[45%] pointer-events-none bg-[url('/images/main_background.jpg')] bg-cover bg-center [mask-image:linear-gradient(to_left,black_45%,transparent)] [-webkit-mask-image:linear-gradient(to_left,black_45%,transparent)]"
+                        ></div>
 
-                    <Link
-                        href={route('highscores', {courseId: courseId})}
-                        className={`rounded-3xl ${surface} hover:bg-gray-900/90 p-5 sm:p-6 [@media(max-height:680px)]:p-4 text-white flex flex-col justify-end ${transition}`}
-                    >
-                        <span className="flex items-center justify-between gap-2 text-lg sm:text-2xl font-semibold">
-                            Meilleurs scores <span className="text-gray-400"><ChevronIcon/></span>
-                        </span>
-                        <span className="block text-sm text-gray-300 [@media(max-height:680px)]:hidden">Consultez le classement</span>
-                    </Link>
-                </section>
+                        <div className="relative md:max-w-[60%] flex flex-col gap-6">
+                            <div className="flex flex-wrap gap-2">
+                                <span className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1 text-[13px] font-medium text-[#C9CCDA]">
+                                    {canPlay ? `Niveau ${currentLevel.name}` : 'Aucun niveau sélectionné'}
+                                </span>
+                            </div>
+
+                            <div>
+                                <div className="flex items-center gap-4">
+                                    <span className="w-12 h-12 shrink-0 rounded-[14px] bg-[rgba(224,86,108,0.14)] text-[#F07A8D] flex items-center justify-center">
+                                        <HelpIcon className="w-6 h-6"/>
+                                    </span>
+                                    <h2 id="quiz-heading" className="text-[40px] sm:text-[48px] font-bold leading-none">Quiz</h2>
+                                </div>
+                                <p className="mt-3 text-[17px] text-[#C9CCDA]">
+                                    {canPlay ? 'Testez vos connaissances et gagnez des points.' : 'Choisissez un niveau pour commencer.'}
+                                </p>
+                            </div>
+
+                            {userStats.quizCount > 0 || userStats.score > 0 ? (
+                                <dl className="flex flex-wrap gap-x-10 gap-y-4">
+                                    <div>
+                                        <dt className="text-[13px] text-[#A9AEC2]">Score total</dt>
+                                        <dd className="text-[22px] font-bold">{formatNumber(userStats.score)} pts</dd>
+                                    </div>
+                                    <div>
+                                        <dt className="text-[13px] text-[#A9AEC2]">Quiz joués</dt>
+                                        <dd className="text-[22px] font-bold">{formatNumber(userStats.quizCount)}</dd>
+                                    </div>
+                                </dl>
+                            ) : (
+                                <p className="text-[15px] text-[#A9AEC2]">Pas encore de tentative</p>
+                            )}
+
+                            <div>
+                                <ModeLink
+                                    {...modeProps('optionsmenu')}
+                                    className={`inline-flex items-center gap-1 min-h-[48px] rounded-full bg-[#B4283F] hover:bg-[#C8304A] px-6 text-[16px] font-semibold text-white ${transition} ${unavailable}`}
+                                >
+                                    Commencer le quiz <ChevronIcon/>
+                                </ModeLink>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div className="grid gap-6 md:grid-cols-2">
+
+                        {/* Practice */}
+                        <ModeLink {...modeProps('practice')} className={`${featureCard} ${unavailable}`}>
+                            <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(162,120,224,0.16),transparent_60%)]"></div>
+                            <div className="relative flex items-start justify-between">
+                                <span className="w-11 h-11 rounded-[14px] bg-[rgba(162,120,224,0.14)] text-[#BFA0F0] flex items-center justify-center">
+                                    <HeadphonesIcon/>
+                                </span>
+                                <ChevronIcon className="w-5 h-5 text-[#A9AEC2] group-hover:text-[#F2F3F8]"/>
+                            </div>
+                            <div className="relative">
+                                <h3 className="text-[22px] font-semibold">Pratique</h3>
+                                <p className="text-[15px] text-[#C9CCDA]">Entraînez-vous sans pression</p>
+                            </div>
+                            {modules.length > 0 && (
+                                <ul aria-label="Modules du niveau" className="relative flex flex-wrap gap-2">
+                                    {modules.map(title => (
+                                        <li key={title} className="rounded-full border border-[rgba(191,160,240,0.35)] px-3 py-1 text-[13px] text-[#C9CCDA]">
+                                            {title}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                            <div className="relative mt-auto rounded-[14px] border border-white/[0.08] bg-white/[0.03] p-4 flex items-center justify-between">
+                                <span className="text-[15px] text-[#C9CCDA]">Séances de pratique</span>
+                                <span className="text-[17px] font-semibold text-[#BFA0F0]">
+                                    {userStats.practiceCount > 0 ? formatNumber(userStats.practiceCount) : 'Aucune'}
+                                </span>
+                            </div>
+                        </ModeLink>
+
+                        {/* High scores */}
+                        <Link href={route('highscores', {courseId: courseId})} className={featureCard}>
+                            <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(242,185,75,0.14),transparent_60%)]"></div>
+                            <div className="relative flex items-start justify-between">
+                                <span className="w-11 h-11 rounded-[14px] bg-[rgba(242,185,75,0.12)] text-[#F2B94B] flex items-center justify-center">
+                                    <TrophyIcon/>
+                                </span>
+                                <ChevronIcon className="w-5 h-5 text-[#A9AEC2] group-hover:text-[#F2F3F8]"/>
+                            </div>
+                            <div className="relative">
+                                <h3 className="text-[22px] font-semibold">Meilleurs scores</h3>
+                                <p className="text-[15px] text-[#C9CCDA]">Classement · {courseName}</p>
+                            </div>
+                            {leaderboard.length === 0 ? (
+                                <p className="relative mt-auto text-[15px] text-[#A9AEC2]">Soyez le premier !</p>
+                            ) : (
+                                <ol className="relative mt-auto flex flex-col gap-1">
+                                    {leaderboard.map((entry, index) => {
+                                        const isUser = entry.userId === auth.user.id;
+                                        return (
+                                            <li
+                                                key={entry.userId}
+                                                className={`flex items-center gap-3 rounded-[14px] px-3 py-2 border ${isUser ? 'bg-[rgba(242,185,75,0.10)] border-[rgba(242,185,75,0.35)]' : 'border-transparent'}`}
+                                            >
+                                                <span className={`w-6 text-[15px] font-bold ${rankColors[index]}`}>{index + 1}</span>
+                                                <span className="flex-1 min-w-0 truncate text-[15px]">{isUser ? 'Vous' : entry.username}</span>
+                                                <span className="text-[15px] font-semibold text-[#C9CCDA]">{formatNumber(entry.score)} pts</span>
+                                            </li>
+                                        );
+                                    })}
+                                    {!userInTop && userStats.rank && (
+                                        <li className="mt-1 flex items-center gap-3 rounded-[14px] px-3 py-2 border bg-[rgba(242,185,75,0.10)] border-[rgba(242,185,75,0.35)]">
+                                            <span className="w-6 text-[15px] font-bold text-[#F2B94B]">{userStats.rank}</span>
+                                            <span className="flex-1 text-[15px]">Vous</span>
+                                            <span className="text-[15px] font-semibold text-[#C9CCDA]">{formatNumber(userStats.score)} pts</span>
+                                        </li>
+                                    )}
+                                </ol>
+                            )}
+                        </Link>
+                    </div>
+                </div>
             </main>
         </div>
     );
