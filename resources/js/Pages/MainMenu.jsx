@@ -106,7 +106,7 @@ export default function MainMenu({ auth }) {
                 </div>
             </header>
 
-            <main className="flex-1 w-full max-w-[1240px] mx-auto px-4 sm:px-6 pt-4 pb-4 md:pt-6 md:pb-8 lg:pt-5 lg:pb-6 flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-5">
+            <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 pt-4 pb-4 md:pt-6 md:pb-8 lg:pt-5 lg:pb-6 flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-5">
 
                 {/* Sidebar: levels */}
                 <aside aria-labelledby="levels-heading" className={`${card} border-white/[0.08] p-3 md:p-4 lg:w-[280px] lg:shrink-0 flex flex-col`}>
@@ -221,7 +221,7 @@ export default function MainMenu({ auth }) {
                         </div>
                     </section>
 
-                    <div className="lg:flex-1 grid grid-cols-2 gap-4 md:gap-6 lg:gap-5">
+                    <div className="grid grid-cols-2 items-start gap-4 md:gap-6 lg:gap-5">
 
                         {/* Practice */}
                         <ModeLink {...modeProps('practice')} className={`${featureCard} ${unavailable}`}>
@@ -248,7 +248,7 @@ export default function MainMenu({ auth }) {
                                     ))}
                                 </ul>
                             )}
-                            <div className="relative mt-auto rounded-[14px] border border-white/[0.08] bg-white/[0.03] px-4 py-3 hidden md:flex items-center justify-between">
+                            <div className="relative rounded-[14px] border border-white/[0.08] bg-white/[0.03] px-4 py-3 hidden md:flex items-center justify-between">
                                 <span className="text-[15px] text-[#C9CCDA]">Séances de pratique</span>
                                 <span className="text-[17px] font-semibold text-[#BFA0F0]">
                                     {userStats.practiceCount > 0 ? formatNumber(userStats.practiceCount) : 'Aucune'}
@@ -273,9 +273,9 @@ export default function MainMenu({ auth }) {
                                 <ChevronIcon className="order-2 md:order-3 ml-auto w-5 h-5 text-[#A9AEC2] group-hover:text-[#F2F3F8]"/>
                             </div>
                             {leaderboard.length === 0 ? (
-                                <p className="relative hidden md:block mt-auto text-[15px] text-[#A9AEC2]">Soyez le premier !</p>
+                                <p className="relative hidden md:block text-[15px] text-[#A9AEC2]">Soyez le premier !</p>
                             ) : (
-                                <ol className="relative mt-auto hidden md:flex flex-col gap-1">
+                                <ol className="relative hidden md:flex flex-col gap-1">
                                     {leaderboard.map((entry, index) => {
                                         const isUser = entry.userId === auth.user.id;
                                         return (
