@@ -94,7 +94,7 @@ export default function MainMenu({ auth }) {
                         method="post"
                         as="button"
                         aria-label="Déconnexion"
-                        className={`min-h-[44px] min-w-[44px] px-3 flex items-center justify-center gap-2 rounded-full text-red-300 hover:bg-red-500/15 ${transition}`}
+                        className={`min-h-[44px] min-w-[44px] px-3 flex items-center justify-center gap-2 rounded-full text-red-300 hover:bg-red-500/10 ${transition}`}
                     >
                         <LogoutIcon/>
                         <span className="hidden sm:inline text-sm font-medium">Déconnexion</span>
@@ -153,24 +153,21 @@ export default function MainMenu({ auth }) {
                     )}
                 </section>
 
-                {/* Modes: Quiz is the primary action and takes the most space */}
-                <section aria-label="Modes de jeu" className="flex-1 min-h-0 grid grid-cols-2 lg:grid-cols-3 grid-rows-[1fr_auto] lg:grid-rows-2 gap-4 sm:gap-6">
+                {/* Modes: same dark surfaces, color reserved for the one primary button */}
+                <section aria-label="Modes de jeu" className="flex-1 min-h-0 grid grid-cols-2 grid-rows-[1fr_auto] lg:grid-rows-[3fr_2fr] gap-4 sm:gap-6">
                     <ModeLink
                         {...modeProps('optionsmenu')}
-                        className={`col-span-2 lg:row-span-2 min-h-[10rem] relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-500 to-rose-700 hover:from-rose-400 hover:to-rose-600 p-6 sm:p-10 [@media(max-height:680px)]:p-5 text-white shadow-2xl flex flex-col justify-between gap-6 [@media(max-height:680px)]:gap-3 ${transition} ${unavailable}`}
+                        className={`col-span-2 min-h-[10rem] rounded-3xl bg-gray-950/80 border border-rose-400/30 hover:border-rose-400/60 p-6 sm:p-8 [@media(max-height:680px)]:p-5 text-white flex flex-col justify-between gap-6 [@media(max-height:680px)]:gap-3 ${transition} ${unavailable}`}
                     >
-                        <span aria-hidden="true" className="absolute -right-6 -bottom-8 text-[10rem] sm:text-[14rem] leading-none opacity-20 select-none">🏆</span>
-                        <span className="relative">
-                            <span className="inline-block rounded-full bg-white/20 px-3 py-1 text-sm font-semibold">
-                                {canPlay ? `Niveau ${currentLevel.name}` : 'Aucun niveau'}
-                            </span>
+                        <span className="self-start rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-gray-200">
+                            {canPlay ? `Niveau ${currentLevel.name}` : 'Aucun niveau'}
                         </span>
-                        <span className="relative">
-                            <span className="block text-4xl sm:text-6xl font-bold">Quiz</span>
-                            <span className="block mt-1 text-base sm:text-lg text-rose-50">
+                        <span>
+                            <span className="block text-3xl sm:text-4xl font-bold">Quiz</span>
+                            <span className="block mt-1 text-base text-gray-300">
                                 {canPlay ? 'Testez vos connaissances' : 'Choisissez un niveau pour commencer'}
                             </span>
-                            <span className="mt-5 [@media(max-height:680px)]:mt-3 inline-flex items-center gap-1 rounded-full bg-white text-rose-700 px-5 py-2.5 text-base font-semibold">
+                            <span className="mt-5 [@media(max-height:680px)]:mt-3 inline-flex items-center gap-1 rounded-full bg-rose-700 px-5 py-2.5 text-base font-semibold">
                                 Commencer <ChevronIcon/>
                             </span>
                         </span>
@@ -178,28 +175,22 @@ export default function MainMenu({ auth }) {
 
                     <ModeLink
                         {...modeProps('practice')}
-                        className={`rounded-3xl ${surface} hover:bg-gray-900/90 p-5 sm:p-6 [@media(max-height:680px)]:p-4 text-white flex flex-col justify-between gap-4 [@media(max-height:680px)]:gap-2 ${transition} ${unavailable}`}
+                        className={`rounded-3xl ${surface} hover:bg-gray-900/90 p-5 sm:p-6 [@media(max-height:680px)]:p-4 text-white flex flex-col justify-end ${transition} ${unavailable}`}
                     >
-                        <span aria-hidden="true" className="text-4xl sm:text-5xl [@media(max-height:680px)]:text-3xl">🎯</span>
-                        <span>
-                            <span className="flex items-center justify-between gap-2 text-lg sm:text-2xl font-semibold">
-                                Pratique <span className="text-gray-400"><ChevronIcon/></span>
-                            </span>
-                            <span className="block text-sm text-gray-300 [@media(max-height:680px)]:hidden">Entraînez-vous sans pression</span>
+                        <span className="flex items-center justify-between gap-2 text-lg sm:text-2xl font-semibold">
+                            Pratique <span className="text-gray-400"><ChevronIcon/></span>
                         </span>
+                        <span className="block text-sm text-gray-300 [@media(max-height:680px)]:hidden">Entraînez-vous sans pression</span>
                     </ModeLink>
 
                     <Link
                         href={route('highscores', {courseId: courseId})}
-                        className={`rounded-3xl ${surface} hover:bg-gray-900/90 p-5 sm:p-6 [@media(max-height:680px)]:p-4 text-white flex flex-col justify-between gap-4 [@media(max-height:680px)]:gap-2 ${transition}`}
+                        className={`rounded-3xl ${surface} hover:bg-gray-900/90 p-5 sm:p-6 [@media(max-height:680px)]:p-4 text-white flex flex-col justify-end ${transition}`}
                     >
-                        <span aria-hidden="true" className="text-4xl sm:text-5xl [@media(max-height:680px)]:text-3xl">🏅</span>
-                        <span>
-                            <span className="flex items-center justify-between gap-2 text-lg sm:text-2xl font-semibold">
-                                Meilleurs scores <span className="text-gray-400"><ChevronIcon/></span>
-                            </span>
-                            <span className="block text-sm text-gray-300 [@media(max-height:680px)]:hidden">Consultez le classement</span>
+                        <span className="flex items-center justify-between gap-2 text-lg sm:text-2xl font-semibold">
+                            Meilleurs scores <span className="text-gray-400"><ChevronIcon/></span>
                         </span>
+                        <span className="block text-sm text-gray-300 [@media(max-height:680px)]:hidden">Consultez le classement</span>
                     </Link>
                 </section>
             </main>
