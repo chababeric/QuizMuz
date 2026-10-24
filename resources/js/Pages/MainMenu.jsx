@@ -2,21 +2,8 @@
 import { Link, Head, usePage } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-
-// Outlined 2px stroke icons (paths from Lucide, ISC license)
-const Icon = ({ className = 'w-5 h-5', children }) => (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 ${className}`}>
-        {children}
-    </svg>
-);
-const ChevronIcon = (props) => <Icon {...props}><path d="m9 18 6-6-6-6"/></Icon>;
-const HomeIcon = (props) => <Icon {...props}><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></Icon>;
-const LogoutIcon = (props) => <Icon {...props}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></Icon>;
-const MusicIcon = (props) => <Icon {...props}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></Icon>;
-const LockIcon = (props) => <Icon {...props}><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></Icon>;
-const HelpIcon = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></Icon>;
-const HeadphonesIcon = (props) => <Icon {...props}><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></Icon>;
-const TrophyIcon = (props) => <Icon {...props}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></Icon>;
+import AppHeader from '@/Components/AppHeader';
+import { ChevronIcon, LockIcon, HelpIcon, HeadphonesIcon, TrophyIcon } from '@/Components/AppIcons';
 
 const formatNumber = (value) => value.toLocaleString('fr-FR');
 const rankColors = ['text-[#F2B94B]', 'text-[#C9CCDA]', 'text-[#D9A27A]'];
@@ -77,34 +64,7 @@ export default function MainMenu({ auth }) {
         <div className="min-h-[100dvh] flex flex-col bg-[#06070D] text-[#F2F3F8] font-sans">
             <Head title="Menu principal - QuizMuz"/>
 
-            <header className="shrink-0 border-b border-white/[0.07]">
-                <div className="max-w-[1240px] mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
-                    <Link href={route('welcome')} className="flex-1 min-w-0 flex items-center gap-3 min-h-[44px]">
-                        <span className="w-8 h-8 shrink-0 rounded-[10px] bg-[#B4283F] text-white flex items-center justify-center">
-                            <MusicIcon className="w-[18px] h-[18px]"/>
-                        </span>
-                        <span className="truncate text-[20px] font-semibold">{courseName}</span>
-                    </Link>
-                    <Link
-                        href={route('welcome')}
-                        aria-label="Accueil"
-                        className={`min-h-[44px] min-w-[44px] px-3 sm:px-4 flex items-center justify-center gap-2 rounded-full bg-white/[0.06] text-[#F2F3F8] hover:bg-white/10 ${transition}`}
-                    >
-                        <HomeIcon/>
-                        <span className="hidden sm:inline text-[15px] font-medium">Accueil</span>
-                    </Link>
-                    <Link
-                        href={route('logout')}
-                        method="post"
-                        as="button"
-                        aria-label="Déconnexion"
-                        className={`min-h-[44px] min-w-[44px] px-3 sm:px-4 flex items-center justify-center gap-2 rounded-full text-[#A9AEC2] hover:text-[#F2F3F8] hover:bg-white/[0.05] ${transition}`}
-                    >
-                        <LogoutIcon/>
-                        <span className="hidden sm:inline text-[15px] font-medium">Déconnexion</span>
-                    </Link>
-                </div>
-            </header>
+            <AppHeader title={courseName}/>
 
             <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 pt-4 pb-4 md:pt-6 md:pb-8 lg:pt-5 lg:pb-6 flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-5">
 
