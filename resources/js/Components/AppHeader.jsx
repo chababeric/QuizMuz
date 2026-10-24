@@ -41,12 +41,12 @@ export default function AppHeader({ title, subtitle, backHref, backLabel, childr
                     <MusicIcon className="w-[18px] h-[18px]"/>
                 </span>
                 <div className="flex-1 min-w-0 flex items-baseline gap-2">
-                    <h1 className="shrink-0 text-[20px] font-semibold">{title}</h1>
+                    <h1 className="truncate text-[20px] font-semibold">{title}</h1>
                     {subtitle && (
                         <span className="truncate text-[15px] text-[#A9AEC2]">{subtitle}</span>
                     )}
                 </div>
-                <nav aria-label="Navigation principale" className="flex items-center gap-1 sm:gap-3">
+                <nav aria-label="Navigation principale" className="shrink-0 flex items-center gap-1 sm:gap-3">
                     {children ?? (
                         <>
                             <HeaderLink href={route('welcome')} icon={HomeIcon} label="Accueil" active/>
