@@ -26,7 +26,7 @@ export function HeaderLink({ icon: LinkIcon, label, active = false, muted = fals
 // Trailing edge: children, or Accueil + Déconnexion by default.
 export default function AppHeader({ title, subtitle, backHref, backLabel, children }) {
     return (
-        <header className="shrink-0 border-b border-white/[0.07]">
+        <header className="sticky top-0 z-30 shrink-0 border-b border-white/[0.07] bg-[#06070D]/90 backdrop-blur-md">
             <div className="max-w-[1240px] mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
                 {backHref && (
                     <Link

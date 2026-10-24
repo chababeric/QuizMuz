@@ -103,7 +103,7 @@ export function QuizLayout({ headTitle, courseId, isLoading, completed, sidebar,
             ) : (
                 <>
                     <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 pt-5 md:pt-6 pb-32 lg:pb-12 flex flex-col lg:flex-row lg:items-start gap-4 md:gap-5">
-                        <div className="lg:w-[340px] lg:shrink-0 lg:sticky lg:top-6 flex flex-col gap-4 md:gap-5">
+                        <div className="lg:w-[340px] lg:shrink-0 lg:sticky lg:top-[88px] flex flex-col gap-4 md:gap-5">
                             {sidebar}
                             <div className="hidden lg:block">{action}</div>
                         </div>

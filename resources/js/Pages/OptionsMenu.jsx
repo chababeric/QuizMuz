@@ -339,7 +339,7 @@ export default function OptionsMenu({
             <main className={`w-full max-w-[1240px] mx-auto px-4 sm:px-6 pt-5 md:pt-6 ${noPiecesAvailable ? 'pb-8' : 'pb-32 lg:pb-12'} flex flex-col lg:flex-row lg:items-start gap-4 md:gap-5`}>
 
                 {/* Left column: context, difficulty and start */}
-                <div className="lg:w-[340px] lg:shrink-0 lg:sticky lg:top-6 flex flex-col gap-4 md:gap-5">
+                <div className="lg:w-[340px] lg:shrink-0 lg:sticky lg:top-[88px] flex flex-col gap-4 md:gap-5">
                     <section aria-labelledby="options-course" className={`${card} p-3 md:p-4 flex items-center gap-3`}>
                         <div aria-hidden="true" className={`absolute inset-0 pointer-events-none ${courseLook.glow}`}></div>
                         <span className={`relative w-10 h-10 md:w-11 md:h-11 shrink-0 rounded-[14px] flex items-center justify-center ${courseLook.tile}`}>
