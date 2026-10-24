@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AppHeader from '@/Components/AppHeader';
 import { ChevronIcon, LockIcon, HelpIcon, HeadphonesIcon, TrophyIcon } from '@/Components/AppIcons';
+import { courseStyle } from '@/Components/courseStyles';
 
 const formatNumber = (value) => value.toLocaleString('fr-FR');
 const rankColors = ['text-[#F2B94B]', 'text-[#C9CCDA]', 'text-[#D9A27A]'];
@@ -58,71 +59,86 @@ export default function MainMenu({ auth }) {
     const unavailable = canPlay ? '' : 'opacity-50 cursor-not-allowed';
     const transition = 'transition duration-200 motion-reduce:transition-none';
     const card = 'relative overflow-hidden rounded-[24px] bg-[#0B0D18] border';
+    const courseLook = courseStyle(courseName, courseId);
     const featureCard = `group ${card} border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 p-4 md:p-6 flex flex-col gap-3 md:gap-5 ${transition}`;
 
     return (
         <div className="min-h-[100dvh] flex flex-col bg-[#06070D] text-[#F2F3F8] font-sans">
             <Head title="Menu - QuizMuz"/>
 
-            <AppHeader title="Menu" subtitle={courseName} backHref={route('course')} backLabel="Retour aux cours"/>
+            <AppHeader title="Menu" backHref={route('course')} backLabel="Retour aux cours"/>
 
             <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 pt-4 pb-4 md:pt-6 md:pb-8 lg:pt-5 lg:pb-6 flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-5">
 
-                {/* Sidebar: levels */}
-                <aside aria-labelledby="levels-heading" className={`${card} border-white/[0.08] p-3 md:p-4 lg:w-[280px] lg:shrink-0 flex flex-col`}>
-                    <h2 id="levels-heading" className="px-2 mb-2 md:mb-3 text-[13px] font-semibold uppercase tracking-[0.12em] text-[#A9AEC2]">
-                        Niveaux
-                    </h2>
-
-                    {!hasEnabledLevel ? (
-                        <p className="px-2 text-[15px] text-[#C9CCDA]">
-                            Aucun niveau n'est disponible pour ce cours pour le moment. Contactez votre établissement pour qu'il ouvre un niveau.
-                        </p>
-                    ) : (
-                        <div role="group" aria-labelledby="levels-heading" className="flex gap-1 overflow-x-auto hide-scrollbar md:grid md:grid-cols-5 lg:grid-cols-1 md:overflow-visible">
-                            {levels.map(level => {
-                                const isSelected = selectedLevel === level.id;
-                                const moduleCount = (modulesByLevel[level.id] || []).length;
-                                return (
-                                    <button
-                                        key={level.id}
-                                        aria-pressed={isSelected}
-                                        disabled={!level.is_enabled}
-                                        onClick={() => level.is_enabled && setSelectedLevel(level.id)}
-                                        className={`shrink-0 min-w-[64px] min-h-[44px] px-3 py-2.5 rounded-[14px] flex items-center justify-between gap-2 md:gap-3 text-left ${transition} ${
-                                            isSelected
-                                                ? 'bg-white text-[#06070D]'
-                                                : level.is_enabled
-                                                    ? 'text-[#F2F3F8] hover:bg-white/[0.05]'
-                                                    : 'text-[#7D8297] cursor-not-allowed'
-                                        }`}
-                                    >
-                                        <span className="text-[16px] font-semibold">{level.name}</span>
-                                        {level.is_enabled ? (
-                                            moduleCount > 0 && (
-                                                <span className={`hidden lg:inline text-[13px] ${isSelected ? 'text-[#3A3F52]' : 'text-[#A9AEC2]'}`}>
-                                                    {moduleCount} {moduleCount > 1 ? 'modules' : 'module'}
-                                                </span>
-                                            )
-                                        ) : (
-                                            <span role="img" aria-label="Verrouillé"><LockIcon className="w-4 h-4"/></span>
-                                        )}
-                                    </button>
-                                );
-                            })}
+                {/* Left column: current course, then levels */}
+                <div className="lg:w-[280px] lg:shrink-0 flex flex-col gap-4 md:gap-6 lg:gap-5">
+                    <section aria-labelledby="course-heading" className={`${card} border-white/[0.08] p-3 md:p-4 flex items-center gap-3`}>
+                        <div aria-hidden="true" className={`absolute inset-0 pointer-events-none ${courseLook.glow}`}></div>
+                        <span className={`relative w-10 h-10 md:w-11 md:h-11 shrink-0 rounded-[14px] flex items-center justify-center ${courseLook.tile}`}>
+                            <courseLook.Icon/>
+                        </span>
+                        <div className="relative min-w-0">
+                            <div className="text-[13px] font-semibold uppercase tracking-[0.12em] text-[#A9AEC2]">Cours</div>
+                            <h2 id="course-heading" className="text-[17px] font-semibold leading-snug">{courseName}</h2>
                         </div>
-                    )}
+                    </section>
 
-                    {saveError ? (
-                        <p role="status" className="mt-2 md:mt-4 lg:mt-auto lg:pt-4 px-2 text-[13px] text-[#F07A8D]">
-                            Votre niveau n'a pas pu être enregistré. L'ancien niveau sera sélectionné à votre prochaine visite.
-                        </p>
-                    ) : hasEnabledLevel && hasLockedLevel && (
-                        <p className="hidden md:block mt-4 lg:mt-auto lg:pt-4 px-2 text-[13px] text-[#A9AEC2]">
-                            Les niveaux verrouillés n'ont pas encore été ouverts par votre établissement.
-                        </p>
-                    )}
-                </aside>
+                    {/* Sidebar: levels */}
+                    <aside aria-labelledby="levels-heading" className={`${card} border-white/[0.08] p-3 md:p-4 lg:flex-1 flex flex-col`}>
+                        <h2 id="levels-heading" className="px-2 mb-2 md:mb-3 text-[13px] font-semibold uppercase tracking-[0.12em] text-[#A9AEC2]">
+                            Niveaux
+                        </h2>
+
+                        {!hasEnabledLevel ? (
+                            <p className="px-2 text-[15px] text-[#C9CCDA]">
+                                Aucun niveau n'est disponible pour ce cours pour le moment. Contactez votre établissement pour qu'il ouvre un niveau.
+                            </p>
+                        ) : (
+                            <div role="group" aria-labelledby="levels-heading" className="flex gap-1 overflow-x-auto hide-scrollbar md:grid md:grid-cols-5 lg:grid-cols-1 md:overflow-visible">
+                                {levels.map(level => {
+                                    const isSelected = selectedLevel === level.id;
+                                    const moduleCount = (modulesByLevel[level.id] || []).length;
+                                    return (
+                                        <button
+                                            key={level.id}
+                                            aria-pressed={isSelected}
+                                            disabled={!level.is_enabled}
+                                            onClick={() => level.is_enabled && setSelectedLevel(level.id)}
+                                            className={`shrink-0 min-w-[64px] min-h-[44px] px-3 py-2.5 rounded-[14px] flex items-center justify-between gap-2 md:gap-3 text-left ${transition} ${
+                                                isSelected
+                                                    ? 'bg-white text-[#06070D]'
+                                                    : level.is_enabled
+                                                        ? 'text-[#F2F3F8] hover:bg-white/[0.05]'
+                                                        : 'text-[#7D8297] cursor-not-allowed'
+                                            }`}
+                                        >
+                                            <span className="text-[16px] font-semibold">{level.name}</span>
+                                            {level.is_enabled ? (
+                                                moduleCount > 0 && (
+                                                    <span className={`hidden lg:inline text-[13px] ${isSelected ? 'text-[#3A3F52]' : 'text-[#A9AEC2]'}`}>
+                                                        {moduleCount} {moduleCount > 1 ? 'modules' : 'module'}
+                                                    </span>
+                                                )
+                                            ) : (
+                                                <span role="img" aria-label="Verrouillé"><LockIcon className="w-4 h-4"/></span>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {saveError ? (
+                            <p role="status" className="mt-2 md:mt-4 lg:mt-auto lg:pt-4 px-2 text-[13px] text-[#F07A8D]">
+                                Votre niveau n'a pas pu être enregistré. L'ancien niveau sera sélectionné à votre prochaine visite.
+                            </p>
+                        ) : hasEnabledLevel && hasLockedLevel && (
+                            <p className="hidden md:block mt-4 lg:mt-auto lg:pt-4 px-2 text-[13px] text-[#A9AEC2]">
+                                Les niveaux verrouillés n'ont pas encore été ouverts par votre établissement.
+                            </p>
+                        )}
+                    </aside>
+                </div>
 
                 <div className="flex-1 min-w-0 flex flex-col gap-4 md:gap-6 lg:gap-5">
 

@@ -1,40 +1,10 @@
 import { Link, Head } from '@inertiajs/react';
 import React from "react";
 import AppHeader from '@/Components/AppHeader';
-import { BookOpenIcon, ChevronIcon, ClockIcon, ListMusicIcon, MusicIcon } from '@/Components/AppIcons';
+import { ChevronIcon, ClockIcon } from '@/Components/AppIcons';
+import { courseStyle } from '@/Components/courseStyles';
 
 const formatNumber = (value) => value.toLocaleString('fr-FR');
-
-const accents = {
-    crimson: {
-        border: 'border-[rgba(224,86,108,0.28)]',
-        glow: 'bg-[radial-gradient(circle_at_top_right,rgba(224,86,108,0.16),transparent_60%)]',
-        tile: 'bg-[rgba(224,86,108,0.14)] text-[#F07A8D]',
-    },
-    plum: {
-        border: 'border-[rgba(162,120,224,0.28)]',
-        glow: 'bg-[radial-gradient(circle_at_top_right,rgba(162,120,224,0.16),transparent_60%)]',
-        tile: 'bg-[rgba(162,120,224,0.14)] text-[#BFA0F0]',
-    },
-    amber: {
-        border: 'border-[rgba(242,185,75,0.28)]',
-        glow: 'bg-[radial-gradient(circle_at_top_right,rgba(242,185,75,0.14),transparent_60%)]',
-        tile: 'bg-[rgba(242,185,75,0.12)] text-[#F2B94B]',
-    },
-};
-
-// Accent and icon per course; courses not listed here cycle through the accents
-const courseStyles = {
-    'Formation Musicale et Auditive': { accent: 'crimson', Icon: MusicIcon },
-    'Histoire de la Musique': { accent: 'plum', Icon: ListMusicIcon },
-    'Littérature Musicale': { accent: 'amber', Icon: BookOpenIcon },
-};
-const fallbackAccents = ['crimson', 'plum', 'amber'];
-
-const courseStyle = (course, index) => {
-    const style = courseStyles[course.name] ?? { accent: fallbackAccents[index % fallbackAccents.length], Icon: MusicIcon };
-    return { ...accents[style.accent], Icon: style.Icon };
-};
 
 const Stat = ({ label, value, large = false }) => (
     <div>
@@ -49,7 +19,7 @@ export default function Course({ auth, courses, lastLevel }) {
 
     const lastIndex = lastLevel ? courses.findIndex(course => course.id === lastLevel.courseId) : -1;
     const lastCourse = lastIndex >= 0 && courses[lastIndex].played ? courses[lastIndex] : null;
-    const lastStyle = lastCourse && courseStyle(lastCourse, lastIndex);
+    const lastStyle = lastCourse && courseStyle(lastCourse.name, lastCourse.id);
 
     return (
         <div className="min-h-[100dvh] flex flex-col bg-[#06070D] text-[#F2F3F8] font-sans">
@@ -123,7 +93,7 @@ export default function Course({ auth, courses, lastLevel }) {
                     ) : (
                         <div className="grid gap-3 md:gap-6 [grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr))]">
                             {courses.map((course, index) => {
-                                const style = courseStyle(course, index);
+                                const style = courseStyle(course.name, course.id);
                                 const isLast = Boolean(lastCourse && course.id === lastCourse.id);
                                 return (
                                     <Link
