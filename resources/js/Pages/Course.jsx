@@ -121,39 +121,39 @@ export default function Course({ auth, courses, lastLevel }) {
                             </p>
                         </div>
                     ) : (
-                        <div className="grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr))]">
+                        <div className="grid gap-3 md:gap-6 [grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr))]">
                             {courses.map((course, index) => {
                                 const style = courseStyle(course, index);
+                                const isLast = Boolean(lastCourse && course.id === lastCourse.id);
                                 return (
                                     <Link
                                         key={course.id}
                                         href={route('mainmenu', {courseId: course.id})}
-                                        className={`group ${card} border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 p-6 flex flex-col gap-5 ${transition}`}
+                                        className={`group ${card} border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 p-4 md:p-6 flex flex-col gap-5 ${transition}`}
                                     >
                                         <div aria-hidden="true" className={`absolute inset-0 pointer-events-none ${style.glow}`}></div>
-                                        <div className="relative flex items-center gap-3">
-                                            <span className={`w-11 h-11 shrink-0 rounded-[14px] flex items-center justify-center ${style.tile}`}>
+                                        {/* Phones: one row (icon, name, chevron). Wider: icon row, then name below */}
+                                        <div className="relative flex flex-wrap items-center gap-x-3 gap-y-5">
+                                            <span className={`order-1 w-11 h-11 shrink-0 rounded-[14px] flex items-center justify-center ${style.tile}`}>
                                                 <style.Icon/>
                                             </span>
-                                            <span className="flex-1"></span>
-                                            {lastCourse && course.id === lastCourse.id && (
-                                                <span className="rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-0.5 text-[13px] font-medium text-[#C9CCDA]">
+                                            <div className="order-2 flex-1 min-w-0 md:order-4 md:flex-none md:w-full">
+                                                <h3 className="text-[18px] md:text-[24px] font-bold leading-tight">{course.name}</h3>
+                                                <p className="mt-0.5 md:mt-1 text-[14px] md:text-[16px] text-[#C9CCDA]">
+                                                    {course.levelCount > 0
+                                                        ? `${course.levelCount} ${course.levelCount > 1 ? 'niveaux' : 'niveau'}`
+                                                        : 'Aucun niveau ouvert'}
+                                                </p>
+                                            </div>
+                                            {isLast && (
+                                                <span className="hidden md:inline order-2 ml-auto rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-0.5 text-[13px] font-medium text-[#C9CCDA]">
                                                     Dernier cours
                                                 </span>
                                             )}
-                                            <ChevronIcon className="w-5 h-5 text-[#A9AEC2] group-hover:text-[#F2F3F8]"/>
+                                            <ChevronIcon className={`order-3 ${isLast ? '' : 'md:ml-auto'} w-5 h-5 text-[#A9AEC2] group-hover:text-[#F2F3F8]`}/>
                                         </div>
 
-                                        <div className="relative">
-                                            <h3 className="text-[24px] font-bold leading-tight">{course.name}</h3>
-                                            <p className="mt-1 text-[16px] text-[#C9CCDA]">
-                                                {course.levelCount > 0
-                                                    ? `${course.levelCount} ${course.levelCount > 1 ? 'niveaux' : 'niveau'}`
-                                                    : 'Aucun niveau ouvert'}
-                                            </p>
-                                        </div>
-
-                                        <div className="relative mt-auto border-t border-white/[0.08] pt-4 grid grid-cols-2 gap-4">
+                                        <div className="relative mt-auto border-t border-white/[0.08] pt-4 hidden md:grid grid-cols-2 gap-4">
                                             {course.score > 0 ? (
                                                 <>
                                                     <Stat label="Classement" value={course.rank ? `${course.rank}ᵉ` : '—'}/>
