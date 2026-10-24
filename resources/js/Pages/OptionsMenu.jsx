@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import AppHeader from '@/Components/AppHeader';
-import { PlayIcon } from '@/Components/AppIcons';
+import { ChevronIcon, PlayIcon } from '@/Components/AppIcons';
 import { courseStyle } from '@/Components/courseStyles';
 
 const transition = 'transition duration-200 motion-reduce:transition-none';
@@ -18,9 +18,9 @@ const OptionCheckbox = (props) => (
     />
 );
 
-const CountPill = ({ count }) => (
-    <span className="shrink-0 rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-0.5 text-[13px] font-medium text-[#C9CCDA]">
-        {count} pièce{count > 1 ? 's' : ''}
+const CountPill = ({ count, selected = 0 }) => (
+    <span className="shrink-0 whitespace-nowrap rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-0.5 text-[13px] font-medium text-[#C9CCDA]">
+        {selected > 0 && `${selected} / `}{count} pièce{count > 1 ? 's' : ''}
     </span>
 );
 
@@ -54,6 +54,7 @@ export default function OptionsMenu({
                                     }) {
     const [checkedPieces, setCheckedPieces] = useState([]);
     const [difficulty, setDifficulty] = useState(auth.user.last_difficulty || 1);
+    const [openGroups, setOpenGroups] = useState({});
 
     // Memoized values
     const canPlay = useMemo(() => checkedPieces.length >= 2, [checkedPieces.length]);
@@ -136,6 +137,10 @@ export default function OptionsMenu({
         updateDifficulty(newDifficulty).then(r => {});
     }, [updateDifficulty]);
 
+    const toggleGroup = useCallback((key) => {
+        setOpenGroups(current => ({ ...current, [key]: !current[key] }));
+    }, []);
+
     // Module helpers
     const isModuleFullyChecked = useCallback((moduleData) => {
         const arr = moduleData.pieces || [];
@@ -198,35 +203,56 @@ export default function OptionsMenu({
         </div>
     );
 
-    const renderGroup = ({ key, title, description, groupPieces, groupCheckbox }) => (
-        <section key={key} aria-labelledby={`group-${key}`} className={`${card} p-2 md:p-3`}>
-            <div className="flex items-start gap-3 px-3 pt-3 pb-2">
-                {groupCheckbox ? (
-                    <label className="flex-1 min-w-0 flex items-start gap-3 cursor-pointer">
-                        {groupCheckbox}
-                        <span id={`group-${key}`} className="text-[17px] font-semibold leading-snug">{title}</span>
-                    </label>
-                ) : (
-                    <h3 id={`group-${key}`} className="flex-1 min-w-0 text-[17px] font-semibold leading-snug">{title}</h3>
-                )}
-                <CountPill count={groupPieces.length}/>
-            </div>
-            {description && (
-                <p className="px-3 pb-2 text-[14px] leading-relaxed text-[#A9AEC2]">{description}</p>
-            )}
-            <div className="mt-1 border-t border-white/[0.06] pt-1">
-                {groupPieces.map((piece, index) => (
-                    <PieceRow
-                        key={piece.id}
-                        piece={piece}
-                        index={index}
-                        checked={checkedPieces.includes(piece.id)}
-                        onToggle={() => handleCheckItem(piece.id)}
-                    />
-                ))}
-            </div>
-        </section>
-    );
+    // Module groups fold open and closed; the plain list for other courses is always open
+    const renderGroup = ({ key, title, description, groupPieces, groupCheckbox, collapsible = false }) => {
+        const isOpen = !collapsible || Boolean(openGroups[key]);
+        const selectedCount = groupPieces.filter(piece => checkedPieces.includes(piece.id)).length;
+        const panelId = `group-panel-${key}`;
+
+        return (
+            <section key={key} aria-labelledby={`group-${key}`} className={`${card} p-2 md:p-3`}>
+                <div className={`flex items-start gap-3 px-3 pt-3 ${isOpen ? 'pb-2' : 'pb-3'}`}>
+                    {groupCheckbox}
+                    {collapsible ? (
+                        <h3 id={`group-${key}`} className="flex-1 min-w-0">
+                            <button
+                                type="button"
+                                aria-expanded={isOpen}
+                                aria-controls={panelId}
+                                onClick={() => toggleGroup(key)}
+                                className="w-full -my-2.5 py-2.5 flex items-start gap-3 text-left"
+                            >
+                                <span className="flex-1 min-w-0 text-[17px] font-semibold leading-snug">{title}</span>
+                                <CountPill count={groupPieces.length} selected={selectedCount}/>
+                                <ChevronIcon className={`w-5 h-5 text-[#A9AEC2] ${isOpen ? '-rotate-90' : 'rotate-90'} ${transition}`}/>
+                            </button>
+                        </h3>
+                    ) : (
+                        <>
+                            <h3 id={`group-${key}`} className="flex-1 min-w-0 text-[17px] font-semibold leading-snug">{title}</h3>
+                            <CountPill count={groupPieces.length} selected={selectedCount}/>
+                        </>
+                    )}
+                </div>
+                <div id={panelId} hidden={!isOpen}>
+                    {description && (
+                        <p className="px-3 pb-2 text-[14px] leading-relaxed text-[#A9AEC2]">{description}</p>
+                    )}
+                    <div className="mt-1 border-t border-white/[0.06] pt-1">
+                        {groupPieces.map((piece, index) => (
+                            <PieceRow
+                                key={piece.id}
+                                piece={piece}
+                                index={index}
+                                checked={checkedPieces.includes(piece.id)}
+                                onToggle={() => handleCheckItem(piece.id)}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+    };
 
     const renderModulesPieces = () => (
         <>
@@ -235,8 +261,10 @@ export default function OptionsMenu({
                 title: `Module ${moduleData.module.order}: ${moduleData.module.title}`,
                 description: moduleData.module.description,
                 groupPieces: moduleData.pieces,
+                collapsible: true,
                 groupCheckbox: (
                     <OptionCheckbox
+                        aria-label={`Sélectionner le module ${moduleData.module.order}: ${moduleData.module.title}`}
                         checked={isModuleFullyChecked(moduleData)}
                         onChange={(e) => handleCheckModule(moduleData, e.target.checked)}
                     />
@@ -247,6 +275,7 @@ export default function OptionsMenu({
                 key: 'non-module',
                 title: 'Pièces sans module',
                 groupPieces: nonModulePieces,
+                collapsible: true,
             })}
         </>
     );
