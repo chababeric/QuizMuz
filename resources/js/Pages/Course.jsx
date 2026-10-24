@@ -24,7 +24,7 @@ export default function Course({ auth, courses, lastLevel }) {
     return (
         <div className="min-h-[100dvh] flex flex-col bg-[#06070D] text-[#F2F3F8] font-sans">
             <Head title="Cours - QuizMuz"/>
-            <AppHeader title="Cours"/>
+            <AppHeader title="Cours" backHref={route('welcome')} backLabel="Retour à l'accueil"/>
 
             <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 pt-6 pb-10 md:pt-10 md:pb-14 flex flex-col gap-6 md:gap-8">
                 <div>
