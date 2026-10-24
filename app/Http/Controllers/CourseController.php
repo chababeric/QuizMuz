@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\Institution;
 use App\Models\Level;
 use App\Models\Score;
+use App\Models\UserCourseMode;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -27,6 +28,7 @@ class CourseController extends Controller
         $courses = Course::where('institution_id', $user->institution_id)->get()
             ->map(function ($course) use ($user) {
                 $score = Score::where('user_id', $user->id)->where('course_id', $course->id)->value('score') ?? 0;
+                $modes = UserCourseMode::where('user_id', $user->id)->where('course_id', $course->id)->first();
 
                 return [
                     'id' => $course->id,
@@ -39,12 +41,18 @@ class CourseController extends Controller
                     'rank' => $score > 0
                         ? Score::where('course_id', $course->id)->where('score', '>', $score)->count() + 1
                         : null,
+                    'played' => $score > 0 || ($modes && ($modes->quiz_count + $modes->practice_count) > 0),
                 ];
             });
 
+        $lastLevel = Level::find($user->last_level);
+
         return Inertia::render('Course', [
             'courses' => $courses,
-            'lastCourseId' => Level::find($user->last_level)?->course_id,
+            'lastLevel' => $lastLevel ? [
+                'name' => $lastLevel->name,
+                'courseId' => $lastLevel->course_id,
+            ] : null,
         ]);
     }
 
