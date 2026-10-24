@@ -153,7 +153,7 @@ export default function Course({ auth, courses, lastLevel }) {
                                             </p>
                                         </div>
 
-                                        <div className="relative border-t border-white/[0.08] pt-4 grid grid-cols-2 gap-4">
+                                        <div className="relative mt-auto border-t border-white/[0.08] pt-4 grid grid-cols-2 gap-4">
                                             {course.score > 0 ? (
                                                 <>
                                                     <Stat label="Classement" value={course.rank ? `${course.rank}ᵉ` : '—'}/>
