@@ -143,7 +143,7 @@ export default function Welcome({ auth }) {
 
             <footer className="border-t border-white/[0.07]">
                 <p className="max-w-[1240px] mx-auto px-4 sm:px-6 py-5 text-center text-[13px] text-[#A9AEC2]">
-                    QuizMuz v3.1.0 © 2025 - Tous droits réservés
+                    QuizMuz v3.1.0 © 2026 - Tous droits réservés
                 </p>
             </footer>
         </div>
