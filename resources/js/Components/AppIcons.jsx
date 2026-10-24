@@ -15,3 +15,4 @@ export const TrophyIcon = (props) => <Icon {...props}><path d="M6 9H4.5a2.5 2.5 
 export const BookOpenIcon = (props) => <Icon {...props}><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></Icon>;
 export const ListMusicIcon = (props) => <Icon {...props}><path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/></Icon>;
 export const ClockIcon = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></Icon>;
+export const ChevronLeftIcon = (props) => <Icon {...props}><path d="m15 18-6-6 6-6"/></Icon>;

@@ -62,9 +62,9 @@ export default function MainMenu({ auth }) {
 
     return (
         <div className="min-h-[100dvh] flex flex-col bg-[#06070D] text-[#F2F3F8] font-sans">
-            <Head title="Menu principal - QuizMuz"/>
+            <Head title="Menu - QuizMuz"/>
 
-            <AppHeader title={courseName}/>
+            <AppHeader title="Menu" subtitle={courseName} backHref={route('course')} backLabel="Retour aux cours"/>
 
             <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 pt-4 pb-4 md:pt-6 md:pb-8 lg:pt-5 lg:pb-6 flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-5">
 

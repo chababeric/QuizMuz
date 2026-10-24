@@ -54,13 +54,13 @@ export default function Course({ auth, courses, lastLevel }) {
     return (
         <div className="min-h-[100dvh] flex flex-col bg-[#06070D] text-[#F2F3F8] font-sans">
             <Head title="Cours - QuizMuz"/>
-            <AppHeader title="QuizMuz"/>
+            <AppHeader title="Cours"/>
 
             <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 pt-6 pb-10 md:pt-10 md:pb-14 flex flex-col gap-6 md:gap-8">
                 <div>
-                    <h1 className="text-[32px] md:text-[44px] font-bold leading-tight">
+                    <h2 className="text-[32px] md:text-[44px] font-bold leading-tight">
                         Bonjour, {auth.user.first_name || auth.user.username}
-                    </h1>
+                    </h2>
                     <p className="mt-1 text-[16px] md:text-[18px] text-[#C9CCDA]">Choisissez un cours pour continuer.</p>
                 </div>
 
