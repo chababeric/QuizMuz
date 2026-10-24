@@ -1,13 +1,51 @@
 import { Head, Link } from '@inertiajs/react';
-import Checkbox from '@/Components/Checkbox';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
-import playIcon from "../../icons/play.svg";
+import AppHeader from '@/Components/AppHeader';
+import { PlayIcon } from '@/Components/AppIcons';
+import { courseStyle } from '@/Components/courseStyles';
+
+const transition = 'transition duration-200 motion-reduce:transition-none';
+const card = 'relative overflow-hidden rounded-[24px] bg-[#0B0D18] border border-white/[0.08]';
+const sectionLabel = 'text-[13px] font-semibold uppercase tracking-[0.12em] text-[#A9AEC2]';
+
+const OptionCheckbox = (props) => (
+    <input
+        type="checkbox"
+        className="mt-0.5 w-5 h-5 shrink-0 rounded-md border-white/30 bg-transparent text-[#B4283F] cursor-pointer focus:ring-2 focus:ring-[#E0566C] focus:ring-offset-0"
+        {...props}
+    />
+);
+
+const CountPill = ({ count }) => (
+    <span className="shrink-0 rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-0.5 text-[13px] font-medium text-[#C9CCDA]">
+        {count} pièce{count > 1 ? 's' : ''}
+    </span>
+);
+
+const PieceRow = ({ piece, index, checked, onToggle }) => (
+    <label className={`flex items-start gap-3 min-h-[44px] px-3 py-2.5 rounded-[14px] cursor-pointer hover:bg-white/[0.04] ${transition}`}>
+        <OptionCheckbox checked={checked} onChange={onToggle}/>
+        <span className="text-[15px] font-medium text-[#F2F3F8]">
+            {index + 1}. {piece.title || piece.chord_name}
+            {(piece.no_mvt || piece.mvt) && (
+                <span className="font-normal text-[#C9CCDA]">
+                    {piece.no_mvt && ` - Mvt ${piece.no_mvt}`}
+                    {piece.mvt && `: ${piece.mvt}`}
+                </span>
+            )}
+            {piece.composer && (
+                <span className="font-normal text-[#A9AEC2]"> - {piece.composer}</span>
+            )}
+        </span>
+    </label>
+);
 
 export default function OptionsMenu({
                                         auth,
                                         level,
+                                        levelName,
                                         courseId,
                                         courseName,
                                         pieces = [],
@@ -93,8 +131,7 @@ export default function OptionsMenu({
         }
     }, []);
 
-    const handleDifficultyChange = useCallback((event) => {
-        const newDifficulty = parseInt(event.target.value, 10);
+    const handleDifficultyChange = useCallback((newDifficulty) => {
         setDifficulty(newDifficulty);
         updateDifficulty(newDifficulty).then(r => {});
     }, [updateDifficulty]);
@@ -144,310 +181,180 @@ export default function OptionsMenu({
         }
     }, [isFormationMusicale, difficulty, updateDifficulty]);
 
+    const difficulties = [
+        { value: 1, label: 'Facile' },
+        ...(!isFormationMusicale ? [{ value: 2, label: 'Moyen' }] : []),
+        { value: 3, label: 'Difficile' },
+    ];
+    const courseLook = courseStyle(courseName, courseId);
+
     // Render helpers
     const renderNoPiecesMessage = () => (
-        <div className="text-center">
-            <div className="inline-block bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl px-8 py-8 border border-white/10 shadow-2xl">
-                <div className="text-6xl mb-6">🎵</div>
-                <h2 className="text-2xl font-bold text-white mb-4">
-                    Aucune pièce trouvée pour ce niveau
-                </h2>
-                <p className="text-gray-300 text-lg">
-                    Il n'y a actuellement aucune pièce disponible pour ce niveau.
-                </p>
-                <div className="h-1 bg-gradient-to-r from-transparent via-gray-400 to-transparent rounded-full mt-6"></div>
-            </div>
+        <div className={`${card} p-6 md:p-8`}>
+            <h2 className="text-[22px] font-semibold">Aucune pièce trouvée pour ce niveau</h2>
+            <p className="mt-1 text-[15px] text-[#C9CCDA]">
+                Il n'y a actuellement aucune pièce disponible pour ce niveau.
+            </p>
         </div>
+    );
+
+    const renderGroup = ({ key, title, description, groupPieces, groupCheckbox }) => (
+        <section key={key} aria-labelledby={`group-${key}`} className={`${card} p-2 md:p-3`}>
+            <div className="flex items-start gap-3 px-3 pt-3 pb-2">
+                {groupCheckbox ? (
+                    <label className="flex-1 min-w-0 flex items-start gap-3 cursor-pointer">
+                        {groupCheckbox}
+                        <span id={`group-${key}`} className="text-[17px] font-semibold leading-snug">{title}</span>
+                    </label>
+                ) : (
+                    <h3 id={`group-${key}`} className="flex-1 min-w-0 text-[17px] font-semibold leading-snug">{title}</h3>
+                )}
+                <CountPill count={groupPieces.length}/>
+            </div>
+            {description && (
+                <p className="px-3 pb-2 text-[14px] leading-relaxed text-[#A9AEC2]">{description}</p>
+            )}
+            <div className="mt-1 border-t border-white/[0.06] pt-1">
+                {groupPieces.map((piece, index) => (
+                    <PieceRow
+                        key={piece.id}
+                        piece={piece}
+                        index={index}
+                        checked={checkedPieces.includes(piece.id)}
+                        onToggle={() => handleCheckItem(piece.id)}
+                    />
+                ))}
+            </div>
+        </section>
     );
 
     const renderModulesPieces = () => (
-        <div className="space-y-2 sm:space-y-6">
-            {modules.map((moduleData) => (
-                <div key={moduleData.module.id} className="bg-gradient-to-r from-rose-900/20 to-pink-900/20 backdrop-blur-sm rounded-lg sm:rounded-2xl border border-rose-400/20 overflow-hidden shadow-2xl">
-                    <div className="bg-gradient-to-r from-rose-600/30 to-pink-600/30 px-3 py-2 sm:px-6 sm:py-4 border-b border-rose-400/20">
-                        <label className="flex items-center cursor-pointer group">
-                            <div className="relative">
-                                <Checkbox
-                                    checked={isModuleFullyChecked(moduleData)}
-                                    onChange={(e) => handleCheckModule(moduleData, e.target.checked)}
-                                />
-                            </div>
-                            <div className="ml-3 sm:ml-4 flex-1">
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                    <span className="text-lg sm:text-2xl">📚</span>
-                                    <span className="text-sm sm:text-xl font-bold text-white group-hover:text-rose-200 transition-colors duration-300 truncate">
-                                        Module {moduleData.module.order}: {moduleData.module.title}
-                                    </span>
-                                </div>
-                            </div>
-                        </label>
-                    </div>
+        <>
+            {modules.map((moduleData) => renderGroup({
+                key: moduleData.module.id,
+                title: `Module ${moduleData.module.order}: ${moduleData.module.title}`,
+                description: moduleData.module.description,
+                groupPieces: moduleData.pieces,
+                groupCheckbox: (
+                    <OptionCheckbox
+                        checked={isModuleFullyChecked(moduleData)}
+                        onChange={(e) => handleCheckModule(moduleData, e.target.checked)}
+                    />
+                ),
+            }))}
 
-                    {moduleData.module.description && (
-                        <div className="px-3 py-2 sm:px-6 sm:py-3 bg-black/20 border-b border-rose-400/10">
-                            <p className="text-rose-200 text-xs sm:text-sm italic leading-relaxed">
-                                {moduleData.module.description}
-                            </p>
-                        </div>
-                    )}
-
-                    <div className="p-1 sm:p-2">
-                        {moduleData.pieces.map((piece, index) => (
-                            <label key={piece.id} className="flex items-center p-2 sm:p-3 hover:bg-rose-500/10 cursor-pointer rounded-none sm:rounded-xl transition-all duration-300 group border-b border-gray-600 sm:border-0 sm:mb-0">
-                                <div className="relative">
-                                    <Checkbox
-                                        checked={checkedPieces.includes(piece.id)}
-                                        onChange={() => handleCheckItem(piece.id)}
-                                    />
-                                </div>
-                                <div className="ml-3 sm:ml-4 flex-1">
-                                    <span className="text-sm sm:text-base text-white group-hover:text-rose-200 transition-colors duration-300 font-medium">
-                                        {index + 1}. {piece.title || piece.chord_name}
-                                        {(piece.no_mvt || piece.mvt) && (
-                                            <span className="text-rose-200 font-normal">
-                                                {piece.no_mvt && ` - Mvt ${piece.no_mvt}`}
-                                                {piece.mvt && `: ${piece.mvt}`}
-                                            </span>
-                                        )}
-                                        {piece.composer && (
-                                            <span className="text-rose-300 font-normal"> - {piece.composer}</span>
-                                        )}
-                                    </span>
-                                </div>
-                            </label>
-                        ))}
-                    </div>
-                </div>
-            ))}
-
-            {nonModulePieces && nonModulePieces.length > 0 && (
-                <div className="bg-gradient-to-r from-amber-900/20 to-orange-900/20 backdrop-blur-sm rounded-lg sm:rounded-2xl border border-amber-400/20 overflow-hidden shadow-2xl">
-                    <div className="bg-gradient-to-r from-amber-600/30 to-orange-600/30 px-3 py-2 sm:px-6 sm:py-4 border-b border-amber-400/20">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                            <span className="text-lg sm:text-2xl">🎼</span>
-                            <h3 className="text-sm sm:text-xl font-bold text-white truncate">Pièces sans module</h3>
-                            <div className="ml-auto bg-amber-500/20 rounded-lg px-2 py-1 sm:px-3">
-                                <span className="text-xs sm:text-sm text-amber-200 font-medium">
-                                    {nonModulePieces.length} pièce{nonModulePieces.length > 1 ? 's' : ''}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="p-1 sm:p-2">
-                        {nonModulePieces.map((piece, index) => (
-                            <label key={piece.id} className="flex items-center p-2 sm:p-3 hover:bg-amber-500/10 cursor-pointer rounded-none sm:rounded-xl transition-all duration-300 group border-b border-gray-600 sm:border-0">
-                                <div className="relative">
-                                    <Checkbox
-                                        checked={checkedPieces.includes(piece.id)}
-                                        onChange={() => handleCheckItem(piece.id)}
-                                    />
-                                </div>
-                                <div className="ml-3 sm:ml-4 flex-1">
-                                    <span className="text-sm sm:text-base text-white group-hover:text-amber-200 transition-colors duration-300 font-medium">
-                                        {index + 1}. {piece.title || piece.chord_name}
-                                        {(piece.no_mvt || piece.mvt) && (
-                                            <span className="text-amber-200 font-normal">
-                                                {piece.no_mvt && ` - Mvt ${piece.no_mvt}`}
-                                                {piece.mvt && `: ${piece.mvt}`}
-                                            </span>
-                                        )}
-                                        {piece.composer && (
-                                            <span className="text-amber-300 font-normal"> - {piece.composer}</span>
-                                        )}
-                                    </span>
-                                </div>
-                            </label>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
+            {nonModulePieces && nonModulePieces.length > 0 && renderGroup({
+                key: 'non-module',
+                title: 'Pièces sans module',
+                groupPieces: nonModulePieces,
+            })}
+        </>
     );
 
-    const renderRegularPieces = () => (
-        <div className="bg-gradient-to-r from-emerald-900/20 to-teal-900/20 backdrop-blur-sm rounded-lg sm:rounded-2xl border border-emerald-400/20 overflow-hidden shadow-2xl">
-            <div className="bg-gradient-to-r from-emerald-600/30 to-teal-600/30 px-3 py-2 sm:px-6 sm:py-4 border-b border-emerald-400/20">
-                <div className="flex items-center gap-2 sm:gap-3">
-                    <span className="text-lg sm:text-2xl">🎼</span>
-                    <h3 className="text-sm sm:text-xl font-bold text-white truncate">{courseName}</h3>
-                    <div className="ml-auto bg-emerald-500/20 rounded-lg px-2 py-1 sm:px-3">
-                        <span className="text-xs sm:text-sm text-emerald-200 font-medium">
-                            {pieces.length} pièce{pieces.length > 1 ? 's' : ''}
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div className="p-1 sm:p-2">
-                {pieces.map((piece, index) => (
-                    <label key={piece.id} className="flex items-center p-2 sm:p-3 hover:bg-emerald-500/10 cursor-pointer rounded-none sm:rounded-xl transition-all duration-300 group border-b border-gray-600 sm:border-0">
-                        <div className="relative">
-                            <Checkbox
-                                checked={checkedPieces.includes(piece.id)}
-                                onChange={() => handleCheckItem(piece.id)}
-                            />
-                        </div>
-                        <div className="ml-3 sm:ml-4 flex-1">
-                            <span className="text-sm sm:text-base text-white group-hover:text-emerald-200 transition-colors duration-300 font-medium">
-                                {index + 1}. {piece.title || piece.chord_name}
-                                {(piece.no_mvt || piece.mvt) && (
-                                    <span className="text-emerald-200 font-normal">
-                                        {piece.no_mvt && ` - Mvt ${piece.no_mvt}`}
-                                        {piece.mvt && `: ${piece.mvt}`}
-                                    </span>
-                                )}
-                                {piece.composer && (
-                                    <span className="text-emerald-300 font-normal"> - {piece.composer}</span>
-                                )}
-                            </span>
-                        </div>
-                    </label>
-                ))}
-            </div>
-        </div>
-    );
+    const renderRegularPieces = () => renderGroup({
+        key: 'all',
+        title: courseName,
+        groupPieces: pieces,
+    });
 
     const renderDifficultyOptions = () => (
-        <div className="bg-gradient-to-r from-purple-900/20 to-indigo-900/20 backdrop-blur-sm rounded-lg sm:rounded-2xl border border-purple-400/20 overflow-hidden shadow-2xl mb-3 sm:mb-6">
-            <div className="bg-gradient-to-r from-purple-600/30 to-indigo-600/30 px-3 py-2 sm:px-6 sm:py-4 border-b border-purple-400/20">
-                <div className="flex items-center gap-2 sm:gap-3">
-                    <span className="text-lg sm:text-2xl">⚙️</span>
-                    <h3 className="text-sm sm:text-xl font-bold text-white">Niveau de difficulté</h3>
-                </div>
+        <section aria-labelledby="difficulty-heading" className={`${card} p-4 md:p-5`}>
+            <h2 id="difficulty-heading" className={`${sectionLabel} mb-3`}>Niveau de difficulté</h2>
+            <div role="radiogroup" aria-labelledby="difficulty-heading" className="flex gap-1 rounded-[16px] border border-white/[0.08] bg-white/[0.03] p-1">
+                {difficulties.map(option => {
+                    const isSelected = difficulty === option.value;
+                    return (
+                        <button
+                            key={option.value}
+                            type="button"
+                            role="radio"
+                            aria-checked={isSelected}
+                            onClick={() => handleDifficultyChange(option.value)}
+                            className={`flex-1 min-h-[44px] rounded-[12px] text-[15px] font-semibold ${transition} ${
+                                isSelected ? 'bg-white text-[#06070D]' : 'text-[#F2F3F8] hover:bg-white/[0.05]'
+                            }`}
+                        >
+                            {option.label}
+                        </button>
+                    );
+                })}
             </div>
-            <div className="p-3 sm:p-6">
-                <select
-                    value={difficulty}
-                    onChange={handleDifficultyChange}
-                    className="w-full p-3 sm:p-4 bg-black/30 backdrop-blur-sm text-white border border-purple-400/30 rounded-xl
-                             focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none
-                             transition-all duration-300 font-medium text-base sm:text-lg"
-                >
-                    <option value={1} className="bg-black/90 text-white">🟢 Facile</option>
-                    {!isFormationMusicale && <option value={2} className="bg-black/90 text-white">🟡 Moyen</option>}
-                    <option value={3} className="bg-black/90 text-white">🔴 Difficile</option>
-                </select>
-            </div>
+        </section>
+    );
+
+    const renderStartAction = () => canPlay ? (
+        <Link
+            href={startQuiz()}
+            className={`w-full inline-flex items-center justify-center gap-2 min-h-[52px] rounded-full bg-[#B4283F] hover:bg-[#C8304A] px-6 text-[16px] font-semibold text-white ${transition}`}
+        >
+            <PlayIcon className="w-5 h-5"/>
+            Commencer le quiz
+            <span className="ml-1 shrink-0 whitespace-nowrap rounded-full bg-white/15 px-2.5 py-0.5 text-[13px] font-medium">
+                {checkedPieces.length} sélectionné{checkedPieces.length > 1 ? 's' : ''}
+            </span>
+        </Link>
+    ) : (
+        <div aria-disabled="true" className="w-full flex items-center justify-center gap-2 min-h-[52px] rounded-full border border-white/[0.1] bg-white/[0.04] px-4 text-[14px] font-semibold text-[#A9AEC2] cursor-not-allowed">
+            Sélectionnez au moins 2 éléments
+            <span className="ml-1 shrink-0 whitespace-nowrap rounded-full bg-white/[0.06] px-2.5 py-0.5 text-[13px] font-medium">
+                {checkedPieces.length}/2 min.
+            </span>
         </div>
     );
 
     return (
-        <div className="main-app min-h-screen flex flex-col bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-            <div className="background-container"></div>
+        <div className="min-h-[100dvh] flex flex-col bg-[#06070D] text-[#F2F3F8] font-sans">
             <Head title="Options - QuizMuz"/>
+            <AppHeader title="Options" backHref={route('mainmenu', { courseId })} backLabel="Retour au menu"/>
 
-            {/* Header Section */}
-            <div className="relative w-full mt-2 mb-4 px-2 sm:px-4">
-                {/* Back Button - Above title on mobile, beside on desktop */}
-                <div className="flex justify-start mb-4 sm:mb-0 sm:absolute sm:left-3 sm:top-1/2 sm:-translate-y-1/2 sm:z-10">
-                    <Link
-                        href={route('mainmenu', { courseId })}
-                        className="group"
-                    >
-                        <div className="bg-gradient-to-r from-slate-800/90 to-slate-700/90 backdrop-blur-sm rounded-xl px-3 py-2 sm:px-4 border border-white/20 hover:border-violet-300 transition-all duration-300 shadow-lg hover:shadow-violet-500/30">
-                            <div className="flex items-center gap-2 text-white group-hover:text-violet-200">
-                                <svg className="h-3 w-3 sm:h-4 sm:w-4 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                                </svg>
-                                <span className="text-xs sm:text-sm font-medium">Retour</span>
-                            </div>
+            <main className={`w-full max-w-[1240px] mx-auto px-4 sm:px-6 pt-5 md:pt-6 ${noPiecesAvailable ? 'pb-8' : 'pb-32 lg:pb-12'} flex flex-col lg:flex-row lg:items-start gap-4 md:gap-5`}>
+
+                {/* Left column: context, difficulty and start */}
+                <div className="lg:w-[340px] lg:shrink-0 lg:sticky lg:top-6 flex flex-col gap-4 md:gap-5">
+                    <section aria-labelledby="options-course" className={`${card} p-3 md:p-4 flex items-center gap-3`}>
+                        <div aria-hidden="true" className={`absolute inset-0 pointer-events-none ${courseLook.glow}`}></div>
+                        <span className={`relative w-10 h-10 md:w-11 md:h-11 shrink-0 rounded-[14px] flex items-center justify-center ${courseLook.tile}`}>
+                            <courseLook.Icon/>
+                        </span>
+                        <div className="relative min-w-0">
+                            <h2 id="options-course" className="text-[17px] font-semibold leading-snug">{courseName}</h2>
+                            {levelName && <p className="text-[14px] text-[#C9CCDA]">Niveau {levelName}</p>}
                         </div>
-                    </Link>
+                    </section>
+
+                    {renderDifficultyOptions()}
+
+                    {!noPiecesAvailable && (
+                        <div className="hidden lg:block">{renderStartAction()}</div>
+                    )}
                 </div>
 
-                {/* Title - Centered */}
-                <div className="flex justify-center">
-                    <div className="text-center">
-                        <div className="inline-block bg-gradient-to-r from-violet-900/90 via-purple-900/90 to-violet-900/90 backdrop-blur-sm rounded-xl sm:rounded-2xl px-4 py-2 sm:px-8 sm:py-4 shadow-2xl border border-white/20">
-                            <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-                                <span className="text-2xl sm:text-4xl">⚙️</span>
-                                <h1 className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-white via-violet-200 to-white bg-clip-text text-transparent">
-                                    Options
-                                </h1>
-                            </div>
-                            <div className="h-1 bg-gradient-to-r from-transparent via-violet-400 to-transparent rounded-full"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 flex flex-col px-0 sm:px-6 w-full">
-                {/* Difficulty Options */}
-                {renderDifficultyOptions()}
-
-                {/* Show message if no pieces available */}
-                {noPiecesAvailable ? (
-                    <div className="flex-1 flex items-center justify-center">
-                        {renderNoPiecesMessage()}
-                    </div>
-                ) : (
-                    <div className="flex-1 flex flex-col space-y-3 sm:space-y-6 mb-6 pb-32">
-                        {/* Select All Checkbox */}
-                        {pieces.length > 0 && (
-                            <div className="bg-gradient-to-r from-cyan-900/20 to-blue-900/20 backdrop-blur-sm rounded-lg sm:rounded-2xl border border-cyan-400/20 overflow-hidden shadow-2xl mx-1 sm:mx-0">
-                                <div className="bg-gradient-to-r from-cyan-600/30 to-blue-600/30 px-3 py-2 sm:px-6 sm:py-4">
-                                    <label className="flex items-center cursor-pointer group">
-                                        <div className="relative">
-                                            <Checkbox
-                                                checked={pieces.length > 0 && pieces.every(piece => checkedPieces.includes(piece.id))}
-                                                onChange={handleCheckAll}
-                                            />
-                                        </div>
-                                        <div className="ml-3 sm:ml-4 flex items-center gap-2 sm:gap-3">
-                                            <span className="text-lg sm:text-2xl">✅</span>
-                                            <span className="text-white text-sm sm:text-lg font-semibold group-hover:text-cyan-200 transition-colors duration-300">
-                                                {checkText}
-                                            </span>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Pieces List */}
-                        <div className="flex-1 mx-1 sm:mx-0">
-                            {(isLiteratureMusicale || isFormationMusicale) ? renderModulesPieces() : renderRegularPieces()}
-                        </div>
-
-                        {/* Start Quiz Button - Fixed at bottom */}
-                        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent pt-6 pb-6 px-4 sm:px-6">
-                            {canPlay ? (
-                                <Link
-                                    href={startQuiz()}
-                                    className="group relative overflow-hidden bg-gradient-to-r from-rose-600 to-pink-600 rounded-xl sm:rounded-2xl border border-rose-400/50 hover:border-rose-300 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-2xl block"
-                                >
-                                    <div className="absolute inset-0 bg-gradient-to-r from-rose-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                    <div className="relative z-10 flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 px-4 sm:px-6">
-                                        <img src={playIcon} alt="Play" className="h-5 w-5 sm:h-6 sm:w-6 filter brightness-0 invert"/>
-                                        <span className="text-white text-lg sm:text-xl font-bold">
-                                            Commencer le quiz
-                                        </span>
-                                        <div className="ml-auto bg-rose-500/20 rounded-lg px-2 py-1 sm:px-3">
-                                            <span className="text-xs sm:text-sm text-rose-200 font-medium">
-                                                {checkedPieces.length} sélectionné{checkedPieces.length > 1 ? 's' : ''}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </Link>
-                            ) : (
-                                <div className="relative overflow-hidden bg-gradient-to-r from-gray-600 to-gray-700 rounded-xl sm:rounded-2xl border border-gray-500/50 cursor-not-allowed opacity-75">
-                                    <div className="flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 px-4 sm:px-6">
-                                        <span className="text-xl sm:text-2xl">🚫</span>
-                                        <span className="text-gray-300 text-lg sm:text-xl font-bold">
-                                            Sélectionnez au moins 2 éléments
-                                        </span>
-                                        <div className="ml-auto bg-gray-500/20 rounded-lg px-2 py-1 sm:px-3">
-                                            <span className="text-xs sm:text-sm text-gray-300 font-medium">
-                                                {checkedPieces.length}/2 min.
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
+                {/* Right column: pieces */}
+                <div className="flex-1 min-w-0 flex flex-col gap-4 md:gap-5">
+                    {noPiecesAvailable ? renderNoPiecesMessage() : (
+                        <>
+                            {pieces.length > 0 && (
+                                <label className={`${card} flex items-center gap-3 min-h-[56px] px-5 py-3 cursor-pointer hover:border-white/[0.18] ${transition}`}>
+                                    <OptionCheckbox
+                                        checked={pieces.length > 0 && pieces.every(piece => checkedPieces.includes(piece.id))}
+                                        onChange={handleCheckAll}
+                                    />
+                                    <span className="text-[16px] font-semibold">{checkText}</span>
+                                </label>
                             )}
-                        </div>
-                    </div>
-                )}
-            </div>
+
+                            {(isLiteratureMusicale || isFormationMusicale) ? renderModulesPieces() : renderRegularPieces()}
+                        </>
+                    )}
+                </div>
+            </main>
+
+            {/* Phones and tablets: start button pinned to the bottom */}
+            {!noPiecesAvailable && (
+                <div className="lg:hidden fixed inset-x-0 bottom-0 z-20 border-t border-white/[0.07] bg-[#06070D]/95 backdrop-blur-md px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+                    {renderStartAction()}
+                </div>
+            )}
         </div>
     );
 }
