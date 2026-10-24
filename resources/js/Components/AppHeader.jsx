@@ -3,8 +3,28 @@ import { ChevronLeftIcon, HomeIcon, LogoutIcon, MusicIcon } from '@/Components/A
 
 const transition = 'transition duration-200 motion-reduce:transition-none';
 
-// Leading edge: back button (when there is a parent page), then the page title
-export default function AppHeader({ title, subtitle, backHref, backLabel }) {
+// Trailing header link: icon always, label from sm up
+export function HeaderLink({ icon: LinkIcon, label, active = false, muted = false, ...props }) {
+    const tone = active
+        ? 'bg-white/[0.06] text-[#F2F3F8] hover:bg-white/10'
+        : muted
+            ? 'text-[#A9AEC2] hover:text-[#F2F3F8] hover:bg-white/[0.05]'
+            : 'text-[#F2F3F8] hover:bg-white/[0.05]';
+    return (
+        <Link
+            aria-label={label}
+            className={`min-h-[44px] min-w-[44px] px-3 sm:px-4 flex items-center justify-center gap-2 rounded-full ${tone} ${transition}`}
+            {...props}
+        >
+            <LinkIcon/>
+            <span className="hidden sm:inline text-[15px] font-medium">{label}</span>
+        </Link>
+    );
+}
+
+// Leading edge: back button (when there is a parent page), then the page title.
+// Trailing edge: children, or Accueil + Déconnexion by default.
+export default function AppHeader({ title, subtitle, backHref, backLabel, children }) {
     return (
         <header className="shrink-0 border-b border-white/[0.07]">
             <div className="max-w-[1240px] mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
@@ -26,24 +46,14 @@ export default function AppHeader({ title, subtitle, backHref, backLabel }) {
                         <span className="truncate text-[15px] text-[#A9AEC2]">{subtitle}</span>
                     )}
                 </div>
-                <Link
-                    href={route('welcome')}
-                    aria-label="Accueil"
-                    className={`min-h-[44px] min-w-[44px] px-3 sm:px-4 flex items-center justify-center gap-2 rounded-full bg-white/[0.06] text-[#F2F3F8] hover:bg-white/10 ${transition}`}
-                >
-                    <HomeIcon/>
-                    <span className="hidden sm:inline text-[15px] font-medium">Accueil</span>
-                </Link>
-                <Link
-                    href={route('logout')}
-                    method="post"
-                    as="button"
-                    aria-label="Déconnexion"
-                    className={`min-h-[44px] min-w-[44px] px-3 sm:px-4 flex items-center justify-center gap-2 rounded-full text-[#A9AEC2] hover:text-[#F2F3F8] hover:bg-white/[0.05] ${transition}`}
-                >
-                    <LogoutIcon/>
-                    <span className="hidden sm:inline text-[15px] font-medium">Déconnexion</span>
-                </Link>
+                <nav aria-label="Navigation principale" className="flex items-center gap-1 sm:gap-3">
+                    {children ?? (
+                        <>
+                            <HeaderLink href={route('welcome')} icon={HomeIcon} label="Accueil" active/>
+                            <HeaderLink href={route('logout')} method="post" as="button" icon={LogoutIcon} label="Déconnexion" muted/>
+                        </>
+                    )}
+                </nav>
             </div>
         </header>
     );
