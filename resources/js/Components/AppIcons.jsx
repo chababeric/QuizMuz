@@ -29,3 +29,6 @@ export const CircleAlertIcon = (props) => <Icon {...props}><circle cx="12" cy="1
 export const SettingsIcon = (props) => <Icon {...props}><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></Icon>;
 export const StopIcon = (props) => <Icon {...props}><rect width="14" height="14" x="5" y="5" rx="2"/></Icon>;
 export const VolumeIcon = (props) => <Icon {...props}><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/></Icon>;
+export const MailIcon = (props) => <Icon {...props}><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></Icon>;
+export const CopyIcon = (props) => <Icon {...props}><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></Icon>;
+export const MessageIcon = (props) => <Icon {...props}><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></Icon>;
