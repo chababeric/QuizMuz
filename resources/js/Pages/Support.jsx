@@ -75,7 +75,7 @@ export default function Support() {
                         tile="bg-[rgba(242,185,75,0.12)] text-[#F2B94B]"
                         glow="bg-[radial-gradient(circle_at_top_right,rgba(242,185,75,0.14),transparent_60%)]"
                     >
-                        <p>Si le lien ci-dessus ne fonctionne pas, vous pouvez copier l'adresse e-mail suivante:</p>
+                        <p>Si le lien ne fonctionne pas, vous pouvez copier l'adresse e-mail suivante:</p>
                         <div className="flex items-center gap-2 rounded-[14px] border border-white/[0.08] bg-white/[0.03] pl-4 pr-1.5 py-1.5">
                             <span className="flex-1 min-w-0 break-all font-mono text-[14px] sm:text-[15px] font-medium text-[#F2B94B]">{SUPPORT_EMAIL}</span>
                             <button
