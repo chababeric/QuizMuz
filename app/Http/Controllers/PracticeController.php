@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Middleware\UserStats;
 use App\Models\Chord;
+use App\Models\Level;
 use App\Models\Module;
 use App\Models\Piece;
 use Illuminate\Http\Request;
@@ -158,6 +159,7 @@ class PracticeController extends Controller
 
         return Inertia::render('Practice', [
             'level' => $level,
+            'levelName' => Level::find($level)?->name,
             'courseId' => $courseId,
             'courseName' => $courseName,
             'lastUpdated' => $lastUpdated ? $lastUpdated->toISOString() : null,

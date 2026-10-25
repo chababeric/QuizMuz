@@ -15,6 +15,7 @@ const iconButton = `inline-flex items-center justify-center rounded-full disable
 export default function Practice({
                                      auth,
                                      level,
+                                     levelName,
                                      courseId,
                                      courseName,
                                      lastUpdated,
@@ -200,7 +201,7 @@ export default function Practice({
 
                         <div className="flex-1 min-w-0 flex flex-col gap-4 md:gap-5">
                             <div>
-                                <h2 className="text-[20px] md:text-[24px] font-bold leading-tight">Liste des Pièces - {courseName}</h2>
+                                <h2 className="text-[20px] md:text-[24px] font-bold leading-tight">Liste des Pièces - {levelName ?? courseName}</h2>
                                 <p className="mt-1 inline-flex items-center gap-2 text-[14px] text-[#A9AEC2]">
                                     <CalendarIcon className="w-4 h-4"/>
                                     Dernière mise à jour: {formattedLastUpdate}
