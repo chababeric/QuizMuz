@@ -1,8 +1,6 @@
-import MessageDisplay from "@/Components/MessageDisplay.jsx";
-import Modal from "@/Components/Modal.jsx";
 import { useState } from "react";
-import deleteIcon from "../../../../icons/delete.svg";
-import addIcon from "../../../../icons/add.svg";
+import { AdminDialog, EmptyState, SectionCard, buttonDanger, buttonPrimary, buttonSecondary, control, iconButtonDanger, label } from "@/Components/AdminUi";
+import { BookOpenIcon, PlusIcon, TrashIcon } from "@/Components/AppIcons";
 
 export default function CourseManagement({ authInstitution, courses, getCourses, successMessage, errorMessage, setSuccessMessage, setErrorMessage, selectedInstitution }) {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -61,98 +59,86 @@ export default function CourseManagement({ authInstitution, courses, getCourses,
         }
     }
 
-    return (
-        <section>
-            <Modal show={isAddModalOpen} close={closeAddModal}>
-                <div className="p-4">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4 dark:text-white">Ajouter un nouveau cours à l'institution: {selectedInstitution}</h2>
+    // Courses can only be changed for the admin's own institution
+    const canEdit = authInstitution === selectedInstitution;
 
-                    <label className="block mb-2 dark:text-white">Nom du cours:</label>
+    const submitAdd = (e) => {
+        e.preventDefault();
+        addCourse();
+    };
+
+    return (
+        <SectionCard
+            id="courses-title"
+            title={`Cours · ${selectedInstitution}`}
+            description={`${courses.length} cours`}
+            action={canEdit && (
+                <button type="button" onClick={openAddModal} className={buttonPrimary}>
+                    <PlusIcon className="h-4 w-4"/> Ajouter
+                </button>
+            )}
+        >
+            <AdminDialog
+                show={isAddModalOpen}
+                onClose={closeAddModal}
+                title="Ajouter un cours"
+                actions={<>
+                    <button type="button" onClick={closeAddModal} className={buttonSecondary}>Annuler</button>
+                    <button type="submit" form="add-course-form" className={buttonPrimary}>Ajouter</button>
+                </>}
+            >
+                <form id="add-course-form" onSubmit={submitAdd}>
+                    <p className="mb-4">Institution : <strong className="text-gray-900 dark:text-white">{selectedInstitution}</strong></p>
+                    <label htmlFor="new-course-name" className={label}>Nom du cours</label>
                     <input
+                        id="new-course-name"
                         type="text"
-                        className="mb-4 p-2 border rounded w-full dark:text-white dark:bg-gray-800"
+                        className={`${control} mt-1.5 w-full`}
                         value={newCourseName}
                         onChange={(e) => setNewCourseName(e.target.value)}
+                        required
+                        autoFocus
                     />
-                    {/* Buttons */}
-                    <div className="flex justify-end">
-                        <button
-                            onClick={addCourse}
-                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                        >
-                            Ajouter
-                        </button>
-                        <button
-                            onClick={closeAddModal}
-                            className="ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-                        >
-                            Annuler
-                        </button>
-                    </div>
-                </div>
-            </Modal>
+                </form>
+            </AdminDialog>
 
-            <Modal show={isDeleteModalOpen} close={closeDeleteModal}>
-                <div className="p-4">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4 dark:text-white">Confirmer la suppression</h2>
-                    <p className="dark:text-white">Êtes-vous sûr de vouloir supprimer le cours <strong>{currentCourseToDelete.name}</strong> de l'institution: <strong>{selectedInstitution}</strong>?</p>
+            <AdminDialog
+                show={isDeleteModalOpen}
+                onClose={closeDeleteModal}
+                title="Supprimer le cours ?"
+                actions={<>
+                    <button type="button" onClick={closeDeleteModal} className={buttonSecondary}>Annuler</button>
+                    <button type="button" onClick={() => deleteCourse(currentCourseToDelete)} className={buttonDanger}>Supprimer</button>
+                </>}
+            >
+                <p>Êtes-vous sûr de vouloir supprimer le cours <strong className="text-gray-900 dark:text-white">{currentCourseToDelete.name}</strong> de l'institution <strong className="text-gray-900 dark:text-white">{selectedInstitution}</strong> ?</p>
+            </AdminDialog>
 
-                    <div className="flex justify-end mt-4">
-                        <button
-                            onClick={() => deleteCourse(currentCourseToDelete)}
-                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                        >
-                            Supprimer
-                        </button>
-                        <button
-                            onClick={closeDeleteModal}
-                            className="ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-                        >
-                            Annuler
-                        </button>
-                    </div>
-                </div>
-            </Modal>
-
-            <MessageDisplay
-                successMessage={successMessage}
-                errorMessage={errorMessage}
-                setErrorMessage={setErrorMessage}
-                setSuccessMessage={setSuccessMessage}
-            />
-
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-4">
-                {courses.map((course, index) => (
-                    <div
-                        key={index}
-                        className="p-6 border rounded-lg shadow-lg flex flex-col items-center justify-between transition-transform duration-200 hover:scale-105 bg-orange-200 dark:bg-orange-300"
-                    >
-                        <h3 className="text-2xl font-semibold mb-4">{course.name}</h3>
-                        <button
-                            onClick={() => openDeleteModal(course)}
-                            className={`px-4 py-2 rounded-md flex items-center text-white ${
-                                authInstitution !== selectedInstitution
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-gray-700 hover:bg-gray-800"
-                            }`}
-                            disabled={authInstitution !== selectedInstitution}
-                        >
-                            <img src={deleteIcon} alt="Delete icon" className="w-6 h-6 mr-1"/>
-                            Supprimer
-                        </button>
-                    </div>
-                ))}
-
-                {/* Add New Institution button */}
-                {authInstitution === selectedInstitution &&
-                    <div
-                        className="p-6 border rounded-lg shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-105 bg-orange-200 cursor-pointer dark:bg-orange-300"
-                        onClick={openAddModal}
-                    >
-                        <img src={addIcon} alt="Add icon" className="w-14 h-14"/>
-                    </div>
-                }
-            </div>
-        </section>
+            {courses.length === 0 ? (
+                <EmptyState>Aucun cours pour cette institution.</EmptyState>
+            ) : (
+                <ul className="divide-y divide-gray-100 dark:divide-gray-700/70">
+                    {courses.map((course) => (
+                        <li key={course.id} className="flex items-center gap-3 px-5 py-3">
+                            <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#B4283F]/10 text-[#B4283F] dark:bg-[#E0566C]/20 dark:text-[#F07A8D]">
+                                <BookOpenIcon className="h-4 w-4"/>
+                            </span>
+                            <span className="min-w-0 flex-1 truncate font-medium text-gray-900 dark:text-white">{course.name}</span>
+                            {canEdit && (
+                                <button
+                                    type="button"
+                                    onClick={() => openDeleteModal(course)}
+                                    aria-label={`Supprimer ${course.name}`}
+                                    title="Supprimer"
+                                    className={iconButtonDanger}
+                                >
+                                    <TrashIcon className="h-4 w-4"/>
+                                </button>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </SectionCard>
     );
 }
