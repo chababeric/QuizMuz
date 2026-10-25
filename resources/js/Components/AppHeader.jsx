@@ -24,13 +24,14 @@ export function HeaderLink({ icon: LinkIcon, label, active = false, muted = fals
 
 // Leading edge: back button (when there is a parent page), then the page title.
 // Trailing edge: children, or Accueil + Déconnexion by default.
-export default function AppHeader({ title, subtitle, backHref, backLabel, children }) {
+export default function AppHeader({ title, subtitle, backHref, backLabel, onBack, children }) {
     return (
         <header className="sticky top-0 z-30 shrink-0 border-b border-white/[0.07] bg-[#06070D]/90 backdrop-blur-md">
             <div className="max-w-[1240px] mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
                 {backHref && (
                     <Link
                         href={backHref}
+                        onClick={onBack}
                         aria-label={backLabel}
                         className={`-ml-2 min-h-[44px] min-w-[44px] shrink-0 flex items-center justify-center rounded-full text-[#F2F3F8] hover:bg-white/[0.06] ${transition}`}
                     >

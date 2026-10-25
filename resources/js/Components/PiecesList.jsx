@@ -1,6 +1,28 @@
 import React, { memo } from 'react';
 import PieceItem from "@/Components/PieceItem.jsx";
 
+const groupCard = 'relative overflow-hidden rounded-[24px] bg-[#0B0D18] border border-white/[0.08] p-2 md:p-3';
+
+const CountPill = ({ children }) => (
+    <span className="shrink-0 whitespace-nowrap rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-0.5 text-[13px] font-medium text-[#C9CCDA]">
+        {children}
+    </span>
+);
+
+const EmptyState = ({ title, subtitle }) => (
+    <div className="relative overflow-hidden rounded-[24px] bg-[#0B0D18] border border-white/[0.08] p-6 md:p-8">
+        <p className="text-[18px] font-semibold text-[#F2F3F8]">{title}</p>
+        <p className="mt-1 text-[15px] text-[#A9AEC2]">{subtitle}</p>
+    </div>
+);
+
+const GroupHeader = ({ title, count }) => (
+    <div className="flex items-start gap-3 px-3 pt-3 pb-2">
+        <h3 className="flex-1 min-w-0 text-[17px] font-semibold leading-snug text-[#F2F3F8]">{title}</h3>
+        {count}
+    </div>
+);
+
 const PiecesList = memo(({
                              courseName,
                              pieces,
@@ -10,107 +32,70 @@ const PiecesList = memo(({
                              onPieceClick
                          }) => {
     const isFMA = courseName === "Formation Musicale et Auditive";
+    const plural = (count) => isFMA
+        ? `formule${count > 1 ? 's' : ''}`
+        : `pièce${count > 1 ? 's' : ''}`;
+
+    const renderItems = (items) => items.map((item, index) => (
+        <PieceItem
+            key={item.id}
+            piece={item}
+            index={index}
+            isActive={currentPiece?.id === item.id}
+            onClick={onPieceClick}
+            courseName={courseName}
+            showComposer={!isFMA}
+        />
+    ));
 
     const renderModulesWithItems = () => {
         if (modules.length === 0 && nonModulePieces.length === 0) {
             const itemType = isFMA ? "formule" : "pièce";
             const pluralType = isFMA ? "formules" : "pièces";
             return (
-                <div className="text-center py-12">
-                    <div className="inline-block bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl px-8 py-6 border border-white/10">
-                        <div className="text-5xl mb-4">🎵</div>
-                        <p className="text-lg text-gray-300 font-medium">
-                            Aucune {itemType} trouvée pour ce niveau
-                        </p>
-                        <p className="text-sm text-gray-400 mt-2">
-                            Les {pluralType} apparaîtront ici une fois ajoutées
-                        </p>
-                    </div>
-                </div>
+                <EmptyState
+                    title={`Aucune ${itemType} trouvée pour ce niveau`}
+                    subtitle={`Les ${pluralType} apparaîtront ici une fois ajoutées`}
+                />
             );
         }
 
         return (
-            <div className="space-y-2 sm:space-y-6">
+            <div className="flex flex-col gap-4 md:gap-5">
                 {modules.map((moduleData) => {
                     const items = isFMA ? (moduleData.chords || []) : (moduleData.pieces || []);
                     return (
-                        <div
-                            key={moduleData.module.id}
-                            className="bg-gradient-to-r from-emerald-900/20 to-teal-900/20 rounded-lg sm:rounded-2xl border border-emerald-400/20 overflow-hidden"
-                        >
-                            <div className="bg-gradient-to-r from-emerald-600/20 to-teal-600/20 px-3 py-2 sm:px-6 sm:py-4 border-b border-emerald-400/20">
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                    <span className="text-lg sm:text-2xl">📦</span>
-                                    <h3 className="text-sm sm:text-xl font-bold text-white truncate">
-                                        {moduleData.module.title}
-                                    </h3>
-                                </div>
-                            </div>
-
+                        <section key={moduleData.module.id} className={groupCard}>
+                            <GroupHeader
+                                title={moduleData.module.title}
+                                count={<CountPill>{items.length} {plural(items.length)}</CountPill>}
+                            />
                             {moduleData.module.description && (
-                                <div className="px-3 py-2 sm:px-6 sm:py-3 bg-black/20 border-b border-emerald-400/10">
-                                    <p className="text-emerald-200 text-xs sm:text-sm italic leading-relaxed">
-                                        {moduleData.module.description}
-                                    </p>
-                                </div>
+                                <p className="px-3 pb-2 text-[14px] leading-relaxed text-[#A9AEC2]">
+                                    {moduleData.module.description}
+                                </p>
                             )}
-
-                            <div className="p-1 sm:p-2 space-y-0 sm:space-y-1">
-                                {items.length > 0 ? (
-                                    items.map((item, index) => (
-                                        <PieceItem
-                                            key={item.id}
-                                            piece={item}
-                                            index={index}
-                                            isActive={currentPiece?.id === item.id}
-                                            onClick={onPieceClick}
-                                            courseName={courseName}
-                                            showComposer={!isFMA}
-                                        />
-                                    ))
-                                ) : (
-                                    <div className="px-3 py-2 text-xs sm:text-sm text-gray-400">
+                            <div className="mt-1 border-t border-white/[0.06] pt-1">
+                                {items.length > 0 ? renderItems(items) : (
+                                    <p className="px-3 py-2 text-[14px] text-[#A9AEC2]">
                                         Aucun élément dans ce module.
-                                    </div>
+                                    </p>
                                 )}
                             </div>
-                        </div>
+                        </section>
                     );
                 })}
 
                 {nonModulePieces.length > 0 && (
-                    <div className="bg-gradient-to-r from-rose-900/30 to-pink-900/30 rounded-lg sm:rounded-2xl border border-rose-400/20 overflow-hidden">
-                        <div className="bg-gradient-to-r from-rose-600/30 to-pink-600/30 px-3 py-2 sm:px-6 sm:py-4 border-b border-rose-400/20">
-                            <div className="flex items-center gap-2 sm:gap-3">
-                                <span className="text-lg sm:text-2xl">📚</span>
-                                <h3 className="text-sm sm:text-xl font-bold text-white truncate">
-                                    {isFMA ? "Formules sans module" : "Pièces sans module"}
-                                </h3>
-                                <div className="ml-auto bg-rose-500/20 rounded-lg px-2 py-1 sm:px-3">
-                                    <span className="text-xs sm:text-sm text-rose-200 font-medium">
-                                        {nonModulePieces.length} {isFMA
-                                        ? `formule${nonModulePieces.length > 1 ? 's' : ''}`
-                                        : `pièce${nonModulePieces.length > 1 ? 's' : ''}`
-                                    }
-                                    </span>
-                                </div>
-                            </div>
+                    <section className={groupCard}>
+                        <GroupHeader
+                            title={isFMA ? "Formules sans module" : "Pièces sans module"}
+                            count={<CountPill>{nonModulePieces.length} {plural(nonModulePieces.length)}</CountPill>}
+                        />
+                        <div className="mt-1 border-t border-white/[0.06] pt-1">
+                            {renderItems(nonModulePieces)}
                         </div>
-                        <div className="p-1 sm:p-2">
-                            {nonModulePieces.map((piece, index) => (
-                                <PieceItem
-                                    key={piece.id}
-                                    piece={piece}
-                                    index={index}
-                                    isActive={currentPiece?.id === piece.id}
-                                    onClick={onPieceClick}
-                                    courseName={courseName}
-                                    showComposer={!isFMA}
-                                />
-                            ))}
-                        </div>
-                    </div>
+                    </section>
                 )}
             </div>
         );
@@ -119,66 +104,31 @@ const PiecesList = memo(({
     const renderFlatList = () => {
         if (pieces.length === 0) {
             return (
-                <div className="text-center py-12">
-                    <div className="inline-block bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl px-8 py-6 border border-white/10">
-                        <div className="text-5xl mb-4">🎵</div>
-                        <p className="text-lg text-gray-300 font-medium">
-                            Aucune pièce trouvée pour ce niveau
-                        </p>
-                        <p className="text-sm text-gray-400 mt-2">
-                            Les pièces apparaîtront ici une fois ajoutées
-                        </p>
-                    </div>
-                </div>
+                <EmptyState
+                    title="Aucune pièce trouvée pour ce niveau"
+                    subtitle="Les pièces apparaîtront ici une fois ajoutées"
+                />
             );
         }
 
         return (
-            <div className="bg-gradient-to-r from-emerald-900/20 to-teal-900/20 rounded-lg sm:rounded-2xl border border-emerald-400/20 overflow-hidden">
-                <div className="bg-gradient-to-r from-emerald-600/20 to-teal-600/20 px-3 py-2 sm:px-6 sm:py-4 border-b border-emerald-400/20">
-                    <div className="flex items-center gap-2 sm:gap-3">
-                        <span className="text-lg sm:text-2xl">🎼</span>
-                        <h3 className="text-sm sm:text-xl font-bold text-white truncate">
-                            {courseName}
-                        </h3>
-                        <div className="ml-auto bg-emerald-500/20 rounded-lg px-2 py-1 sm:px-3">
-                            <span className="text-xs sm:text-sm text-emerald-200 font-medium">
-                                {pieces.length} pièce{pieces.length > 1 ? 's' : ''}
-                            </span>
-                        </div>
-                    </div>
+            <section className={groupCard}>
+                <GroupHeader
+                    title={courseName}
+                    count={<CountPill>{pieces.length} pièce{pieces.length > 1 ? 's' : ''}</CountPill>}
+                />
+                <div className="mt-1 border-t border-white/[0.06] pt-1">
+                    {renderItems(pieces)}
                 </div>
-                <div className="p-1 sm:p-2 space-y-0 sm:space-y-1">
-                    {pieces.map((piece, index) => (
-                        <PieceItem
-                            key={piece.id}
-                            piece={piece}
-                            index={index}
-                            isActive={currentPiece?.id === piece.id}
-                            onClick={onPieceClick}
-                            courseName={courseName}
-                            showComposer={!isFMA}
-                        />
-                    ))}
-                </div>
-            </div>
+            </section>
         );
     };
 
-    const renderContent = () => {
-        // Use module grouping for both FMA and LitMus
-        if (courseName === "Littérature Musicale" || isFMA) {
-            return renderModulesWithItems();
-        }
-        // Other courses: flat list
-        return renderFlatList();
-    };
-
-    return (
-        <div className="h-full overflow-y-auto custom-scrollbar">
-            {renderContent()}
-        </div>
-    );
+    // Use module grouping for both FMA and LitMus; other courses get a flat list
+    if (courseName === "Littérature Musicale" || isFMA) {
+        return renderModulesWithItems();
+    }
+    return renderFlatList();
 });
 
 PiecesList.displayName = 'PiecesList';

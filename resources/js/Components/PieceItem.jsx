@@ -12,35 +12,34 @@ const PieceItem = memo(({
     const handleClick = () => onClick(piece);
 
     return (
-        <div
-            className={`mb-0 sm:mb-1 rounded-none sm:rounded-lg p-2 border-b border-gray-600 hover:cursor-pointer transition-colors duration-200 ${
-                isActive ? 'bg-rose-600/70' : 'hover:bg-white/10'
-            }`}
+        <button
+            type="button"
+            aria-current={isActive ? 'true' : undefined}
             onClick={handleClick}
+            className={`w-full flex items-start gap-3 min-h-[44px] px-3 py-2.5 rounded-[14px] text-left transition-colors duration-200 motion-reduce:transition-none ${
+                isActive ? 'bg-[rgba(224,86,108,0.16)] ring-1 ring-inset ring-[rgba(224,86,108,0.45)]' : 'hover:bg-white/[0.04]'
+            }`}
         >
-            <h2 className="text-base sm:text-xl font-semibold text-white">
-                {courseName === "Formation Musicale et Auditive" ? (
-                    <>
-                        {showIndex && (
-                            <span className="inline-block w-6 sm:w-8 font-bold mr-1 sm:mr-2 text-sm sm:text-base">{index + 1}.</span>
-                        )}
-                        {piece.chord_name}
-                    </>
-                ) : (
-                    <>
-                        {showIndex && (
-                            <span className="inline-block w-6 sm:w-8 font-bold mr-1 sm:mr-2 text-sm sm:text-base">{index + 1}.</span>
-                        )}
-                        {piece.title}
-                        {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
-                        {piece.mvt && `, ${piece.mvt}`}
-                    </>
-                )}
-            </h2>
-            {showComposer && piece.composer && courseName !== "Formation Musicale et Auditive" && (
-                <p className="text-sm sm:text-lg text-gray-300 ml-7 sm:ml-10">{piece.composer}</p>
+            {showIndex && (
+                <span className={`w-7 shrink-0 text-[15px] font-semibold ${isActive ? 'text-[#F07A8D]' : 'text-[#7D8297]'}`}>{index + 1}.</span>
             )}
-        </div>
+            <span className="flex-1 min-w-0">
+                <span className="block text-[15px] md:text-[16px] font-semibold text-[#F2F3F8]">
+                    {courseName === "Formation Musicale et Auditive" ? (
+                        piece.chord_name
+                    ) : (
+                        <>
+                            {piece.title}
+                            {piece.no_mvt && `, Mvt. ${piece.no_mvt}`}
+                            {piece.mvt && `, ${piece.mvt}`}
+                        </>
+                    )}
+                </span>
+                {showComposer && piece.composer && courseName !== "Formation Musicale et Auditive" && (
+                    <span className="block text-[14px] text-[#A9AEC2]">{piece.composer}</span>
+                )}
+            </span>
+        </button>
     );
 });
 
