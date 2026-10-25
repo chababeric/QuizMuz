@@ -15,8 +15,9 @@ export const buttonDanger = `${buttonBase} bg-red-600 text-white hover:bg-red-70
 export const buttonSecondary = `${buttonBase} border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus-visible:ring-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700`;
 export const iconButtonDanger = 'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-500 transition hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 dark:text-gray-400 dark:hover:bg-red-900/30 dark:hover:text-red-400 motion-reduce:transition-none';
 
-export const AdminInput = forwardRef(function AdminInput({ className = '', ...props }, ref) {
-    return <input ref={ref} {...props} className={`${control} w-full ${className}`}/>;
+// The forms plugin only styles inputs with an explicit type, so default to text
+export const AdminInput = forwardRef(function AdminInput({ type = 'text', className = '', ...props }, ref) {
+    return <input ref={ref} type={type} {...props} className={`${control} w-full ${className}`}/>;
 });
 
 export function FieldError({ message, className = '' }) {
