@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\ChordController;
 use App\Http\Controllers\CourseAdminController;
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InstitutionController;
 use App\Http\Controllers\LogsController;
 use App\Http\Controllers\ModuleController;
@@ -20,8 +21,6 @@ use App\Http\Controllers\SupportController;
 use App\Http\Controllers\UserStatsController;
 use App\Http\Middleware\AddUserPermissions;
 use App\Http\Middleware\UserStats;
-use App\Models\User;
-use App\Models\UserCourseMode;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\LoginUserController;
@@ -158,50 +157,17 @@ Route::get('/admin', function () {
 })->middleware(['auth', 'verified', 'check_timeout', 'update_user_action_time', AddUserPermissions::class])->name('admin');
 
 //! Dashboard Routes
-Route::get('dashboard', function () {
-    $totalStats = [
-        'totalUsers' => User::count(),
-        'totalSoloGames' => UserCourseMode::sum('quiz_count'), // Total quizzes across all users and courses
-        'totalPractice' => UserCourseMode::sum('practice_count'), // Total practices across all users and courses
-    ];
+Route::get('dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified', 'access:SuperAdmin,Teacher', 'check_timeout', 'update_user_action_time', AddUserPermissions::class])
+    ->name('dashboard');
+// Polled every 30 seconds by the dashboard, so it must not count as user activity
+Route::get('dashboard/online', [DashboardController::class, 'online'])
+    ->middleware(['auth', 'verified', 'access:SuperAdmin,Teacher', 'check_timeout'])
+    ->name('dashboard.online');
 
-    // Fetch all users with their institution name and stats from the user_course_modes table
-    $users = User::with([
-        'institution:id,name',
-        'courseModes:id,user_id,course_id,practice_count,quiz_count',
-        'courseModes.course:id,name',
-    ])
-    ->get(['id', 'username', 'first_name', 'last_name', 'institution_id', 'last_action_time']) // User fields
-    ->map(function ($user) {
-        // Get all course stats for the user
-        $courses = $user->courseModes
-            ->map(function ($courseStat) {
-                $totalParticipation = $courseStat->practice_count + $courseStat->quiz_count; // Participation per course
-                return [
-                    'course_name' => $courseStat->course->name ?? 'Unknown Course', // Get course name
-                    'course_id' => $courseStat->course_id,
-                    'total' => $totalParticipation,
-                    'practice' => $courseStat->practice_count,
-                    'quiz' => $courseStat->quiz_count,
-                ];
-            });
-
-        return [
-            'id' => $user->id,
-            'username' => $user->username,
-            'first_name' => $user->first_name,
-            'last_name' => $user->last_name,
-            'institution_name' => $user->institution->name ?? null,
-            'last_action_time' => $user->last_action_time,
-            'courses' => $courses, // Stats with course name
-        ];
-    });
-
-    return Inertia::render('Dashboard', [
-        'totalStats' => $totalStats,
-        'users' => $users,
-    ]);
-})->middleware(['auth', 'verified', 'access:SuperAdmin,Teacher', 'check_timeout', 'update_user_action_time', AddUserPermissions::class])->name('dashboard');
+// Heartbeat sent by open pages so the dashboard knows who is online. It refreshes the session
+// but deliberately skips update_user_action_time, so the 20 minute inactivity timeout still applies.
+Route::post('/heartbeat', fn () => response()->noContent())->middleware(['auth', 'check_timeout'])->name('heartbeat');
 
 Route::middleware(['auth', 'verified', 'access:SuperAdmin,Teacher', 'check_timeout', 'update_user_action_time'])->group(function () {
     Route::get('/admin/total-stats', [UserStatsController::class, 'getTotalStats'])->name('admin.total-stats');
