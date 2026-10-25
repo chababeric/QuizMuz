@@ -155,16 +155,27 @@ export const useAudioPlayer = (currentPiece, courseName, onNext) => {
         setIsPlaying(false);
     }, [safelyPauseAudio]);
 
-    // New function to restart current piece
+    // Restart the current piece from the beginning. Seek without pausing: the play/pause
+    // effect only runs when isPlaying changes, so pausing here while isPlaying is already
+    // true would leave the audio paused with the UI still showing it as playing.
     const restartCurrentPiece = useCallback(() => {
         if (currentPiece) {
             const audioElement = audioRef.current;
-            safelyPauseAudio();
             audioElement.currentTime = 0;
             setProgress(0);
-            setIsPlaying(true);
+
+            if (!isPlaying) {
+                setIsPlaying(true);
+            } else if (audioElement.paused) {
+                audioElement.play().catch(error => {
+                    if (error.name !== 'AbortError') {
+                        console.error("Error playing audio:", error);
+                    }
+                    setIsPlaying(false);
+                });
+            }
         }
-    }, [currentPiece, safelyPauseAudio]);
+    }, [currentPiece, isPlaying]);
 
     return {
         audioRef,
