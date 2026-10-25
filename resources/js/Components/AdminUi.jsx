@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
+import { Transition } from '@headlessui/react';
 import Modal from '@/Components/Modal.jsx';
 import { CircleAlertIcon, CircleCheckIcon } from '@/Components/AppIcons';
 
@@ -13,6 +14,50 @@ export const buttonPrimary = `${buttonBase} bg-[#B4283F] text-white hover:bg-[#C
 export const buttonDanger = `${buttonBase} bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600`;
 export const buttonSecondary = `${buttonBase} border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus-visible:ring-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700`;
 export const iconButtonDanger = 'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-500 transition hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 dark:text-gray-400 dark:hover:bg-red-900/30 dark:hover:text-red-400 motion-reduce:transition-none';
+
+export const AdminInput = forwardRef(function AdminInput({ className = '', ...props }, ref) {
+    return <input ref={ref} {...props} className={`${control} w-full ${className}`}/>;
+});
+
+export function FieldError({ message, className = '' }) {
+    if (!message) return null;
+    return (
+        <p role="alert" className={`flex items-start gap-1.5 text-sm font-medium text-red-600 dark:text-red-400 ${className}`}>
+            <CircleAlertIcon className="mt-0.5 h-4 w-4"/>
+            {message}
+        </p>
+    );
+}
+
+// Label, input passed as children, then the error under it
+export function AdminField({ id, label: text, hint, error, children }) {
+    return (
+        <div>
+            <label htmlFor={id} className={label}>{text}</label>
+            <div className="mt-1.5">{children}</div>
+            {hint && <p className={`mt-1.5 text-xs ${muted}`}>{hint}</p>}
+            <FieldError message={error} className="mt-1.5"/>
+        </div>
+    );
+}
+
+// Short confirmation shown next to a submit button
+export function SavedNote({ show, children }) {
+    return (
+        <Transition
+            show={show}
+            enter="transition ease-in-out motion-reduce:transition-none"
+            enterFrom="opacity-0"
+            leave="transition ease-in-out motion-reduce:transition-none"
+            leaveTo="opacity-0"
+        >
+            <p role="status" className="flex items-center gap-1.5 text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                <CircleCheckIcon className="h-4 w-4"/>
+                {children}
+            </p>
+        </Transition>
+    );
+}
 
 export function SectionCard({ id, title, description, action, children, className = '' }) {
     return (

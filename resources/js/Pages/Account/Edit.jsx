@@ -23,26 +23,16 @@ export default function Edit({ auth }) {
         >
             <Head title="Admin - Compte" />
 
-            <div className="py-12 dark:bg-gray-900">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                        <UpdateProfileInformationForm className="max-w-xl dark:bg-gray-800"/>
-                    </div>
+            <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-8 sm:px-6 lg:grid-cols-2 lg:px-8">
+                <UpdateProfileInformationForm/>
 
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                        <UpdatePasswordForm className="max-w-xl dark:bg-gray-800"/>
-                    </div>
+                <UpdatePasswordForm/>
 
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                        <UpdateAdminKeyForm className="max-w-xl dark:bg-gray-800"/>
-                    </div>
+                <UpdateAdminKeyForm className="lg:col-span-2"/>
 
-                    {canDelete && (
-                        <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                            <DeleteUserForm className="max-w-xl dark:bg-gray-800"/>
-                        </div>
-                    )}
-                </div>
+                {canDelete && (
+                    <DeleteUserForm className="lg:col-span-2"/>
+                )}
             </div>
         </AuthenticatedLayout>
     );
