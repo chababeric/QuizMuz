@@ -1,11 +1,15 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { fieldClass } from '@/Components/QuizUi';
 
 export default function SelectOption({ name, col, data, onChange, lastUpdatedTime, difficulty, value, disabled }) {
     const [selected, setSelected] = useState(value || '');
 
-    const uniqueData = Array.from(new Set(data.map(a => a[col]))).filter((item) => item !== null).sort();
+    // Rebuilt only when the list changes, not on every keystroke
+    const uniqueData = useMemo(
+        () => Array.from(new Set(data.map(a => a[col]))).filter((item) => item !== null).sort(),
+        [data, col]
+    );
 
     useEffect(() => {
         setSelected(value || '');

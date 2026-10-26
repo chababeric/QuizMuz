@@ -92,13 +92,10 @@ Route::middleware(['auth', 'verified', 'check_timeout', 'update_user_action_time
     })->name('highscores');
 
     Route::post('/update-last-action-time', [QuizSoloController::class, 'updateLastActionTime'])->name('updateLastActionTime');
-    Route::get('/scores', [ScoreController::class, 'getAllScores'])->name('allScores');
     Route::get('/all-scores', [ScoreController::class, 'index']);
     Route::get('/api/pieces/level/{level_id}', [PieceController::class, 'getPiecesByLevel']);
     Route::get('/api/chords/level/{level_id}', [ChordController::class, 'getChordsByLevel']);
     Route::get('/api/pieces', [PieceController::class, 'getPiecesById']);
-    Route::get('/api/users', [AdminController::class, 'getAllUsers'])->name('allUsers');
-    Route::get('/api/users-institution', [AdminController::class, 'getUsersFromInstitution'])->name('usersFromInstitution');
     Route::get('/api/levels', [LevelController::class, 'getAllLevels'])->name('allLevels');
     Route::get('/levels-from-course', [LevelController::class, 'getLevelsFromCourse'])->name('levelsFromCourse');
     Route::get('/api/all-pieces', [PieceController::class, 'getAllPieces'])->name('allPieces');
@@ -192,6 +189,11 @@ Route::middleware(['auth', 'verified', 'access:SuperAdmin', 'check_timeout', 'up
     Route::post('/admin/delete-course', [CourseController::class, 'destroy'])->name('admin.delete-course');
     Route::post('/admin/toggle-level-access', [LevelController::class, 'toggleLevelAccess'])->name('admin.toggle-level-access');
     Route::post('/admin/reset-scores', [ScoreController::class, 'resetScores'])->name('admin.reset-scores');
+
+    // User lists and institution scores are for admins only (General and Access pages)
+    Route::get('/scores', [ScoreController::class, 'getAllScores'])->name('allScores');
+    Route::get('/api/users', [AdminController::class, 'getAllUsers'])->name('allUsers');
+    Route::get('/api/users-institution', [AdminController::class, 'getUsersFromInstitution'])->name('usersFromInstitution');
 });
 
 //! Account Management Routes

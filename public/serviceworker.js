@@ -16,6 +16,24 @@ self.addEventListener('install', (event) => {
 });
 
 
+// Vite names built files "<name>-<hash>.<ext>". Once a new version of a file is cached,
+// drop the older versions of it so the cache doesn't keep every past deploy.
+const builtFileName = (pathname) => pathname.match(/^\/build\/assets\/(.+)-[A-Za-z0-9_-]{8}\.(\w+)$/);
+
+const removeOlderVersions = (cache, pathname) => {
+    const current = builtFileName(pathname);
+    if (!current) return Promise.resolve();
+
+    return cache.keys().then((requests) => Promise.all(requests.map((cachedRequest) => {
+        const cachedPath = new URL(cachedRequest.url).pathname;
+        const cached = builtFileName(cachedPath);
+        if (cached && cachedPath !== pathname && cached[1] === current[1] && cached[2] === current[2]) {
+            return cache.delete(cachedRequest);
+        }
+        return null;
+    })));
+};
+
 // Listen for requests
 self.addEventListener('fetch', (event) => {
     const request = event.request;
@@ -32,7 +50,8 @@ self.addEventListener('fetch', (event) => {
                 cache.match(request).then((cached) =>
                     cached || fetch(request).then((response) => {
                         if (response.ok) {
-                            cache.put(request, response.clone());
+                            cache.put(request, response.clone())
+                                .then(() => removeOlderVersions(cache, url.pathname));
                         }
                         return response;
                     })

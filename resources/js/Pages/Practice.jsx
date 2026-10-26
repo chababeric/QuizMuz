@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import React, {useState, useMemo, useCallback, useEffect} from 'react';
-import axios from "axios";
+import { pingActivity } from "@/hooks/activityPing.js";
 import { useAudioPlayer } from "@/hooks/useAudioPlayer.js";
 import PiecesList from "@/Components/PiecesList.jsx";
 import AudioControls from "@/Components/AudioControls.jsx";
@@ -74,10 +74,9 @@ export default function Practice({
             : 'Non disponible';
     }, [lastUpdated]);
 
-    // API call optimization
+    // Keeps the session alive while the student only listens; sent at most once a minute
     const updateLastActionTime = useCallback(() => {
-        axios.post(route('updateLastActionTime'))
-            .catch(error => console.error('Error updating last action time:', error));
+        pingActivity();
     }, []);
 
     // Navigation handlers
@@ -99,6 +98,13 @@ export default function Practice({
         }
     }, [currentPiece, pieces, updateLastActionTime]);
 
+    // The piece Next (or the end of the current one) leads to, buffered ahead by the player
+    const nextPiece = useMemo(() => {
+        if (!currentPiece || pieces.length < 2) return null;
+        const currentIndex = pieces.findIndex(p => p.id === currentPiece.id);
+        return pieces[(currentIndex + 1) % pieces.length];
+    }, [currentPiece, pieces]);
+
     // Audio player hook
     const {
         audioRef,
@@ -111,7 +117,7 @@ export default function Practice({
         setIsPlaying,
         resetAudio,
         restartCurrentPiece
-    } = useAudioPlayer(currentPiece, courseName, handleNext);
+    } = useAudioPlayer(currentPiece, courseName, handleNext, nextPiece);
 
     // Piece selection handler - now handles same piece clicks differently
     const handlePieceClick = useCallback((piece) => {
