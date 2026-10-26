@@ -1,7 +1,8 @@
 import { forwardRef, useEffect, useState } from 'react';
 import { Transition } from '@headlessui/react';
 import Modal from '@/Components/Modal.jsx';
-import { CircleAlertIcon, CircleCheckIcon } from '@/Components/AppIcons';
+import { Link } from '@inertiajs/react';
+import { ChevronIcon, CircleAlertIcon, CircleCheckIcon } from '@/Components/AppIcons';
 
 // Same tokens as the Dashboard so the admin pages read as one system
 export const panel = 'rounded-2xl border border-gray-200 bg-white dark:border-gray-700/70 dark:bg-gray-800';
@@ -129,5 +130,77 @@ export function Toast({ successMessage, errorMessage, setSuccessMessage, setErro
                 </div>
             )}
         </div>
+    );
+}
+
+const formatCount = (value) => Number(value ?? 0).toLocaleString('fr-FR');
+
+// Compact pager: first, last and the pages around the current one, with "…" for the gaps
+export const pageItems = (current, last, siblings) => {
+    const pages = new Set([1, last, current]);
+    for (let offset = 1; offset <= siblings; offset++) {
+        pages.add(current - offset);
+        pages.add(current + offset);
+    }
+    const visible = [...pages].filter((page) => page >= 1 && page <= last).sort((a, b) => a - b);
+    return visible.flatMap((page, index) => {
+        const previous = visible[index - 1];
+        if (previous === undefined || page - previous === 1) return [page];
+        // A gap of a single page shows that page instead of "…"
+        return page - previous === 2 ? [previous + 1, page] : ['…', page];
+    });
+};
+
+// Footer for a Laravel paginator; linkProps go to every Inertia Link (e.g. only, preserveScroll)
+export function Pagination({ paginator, linkProps = {} }) {
+    if (paginator.last_page <= 1) return null;
+
+    const current = paginator.current_page;
+    const pageUrl = (page) => {
+        const url = new URL(paginator.first_page_url, window.location.origin);
+        url.searchParams.set('page', page);
+        return url.pathname + url.search;
+    };
+    const pageLink = 'flex h-10 min-w-[2.25rem] sm:min-w-[2.5rem] items-center justify-center rounded-lg px-1.5 sm:px-2 font-medium';
+    const idle = 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700';
+    const arrow = (page, text, rotate) => page >= 1 && page <= paginator.last_page ? (
+        <Link href={pageUrl(page)} {...linkProps} aria-label={text} className={`${pageLink} ${idle}`}>
+            <ChevronIcon className={`h-4 w-4 ${rotate}`}/>
+        </Link>
+    ) : (
+        <span aria-hidden="true" className={`${pageLink} text-gray-300 dark:text-gray-600`}>
+            <ChevronIcon className={`h-4 w-4 ${rotate}`}/>
+        </span>
+    );
+
+    return (
+        <nav aria-label="Pagination" className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 px-4 sm:px-5 py-3 text-sm dark:border-gray-700">
+            <span className={muted}>
+                {formatCount(paginator.from)}–{formatCount(paginator.to)} sur {formatCount(paginator.total)}
+            </span>
+            <div className="flex items-center gap-0.5 sm:gap-1">
+                {arrow(current - 1, 'Page précédente', 'rotate-180')}
+                {/* Phones: only the current page between the first and last; wider screens add its neighbours */}
+                {[[0, 'flex sm:hidden'], [1, 'hidden sm:flex']].map(([siblings, visibility]) => (
+                    <div key={siblings} className={`${visibility} items-center gap-0.5 sm:gap-1`}>
+                        {pageItems(current, paginator.last_page, siblings).map((item, index) => item === '…' ? (
+                            <span key={`gap-${index}`} aria-hidden="true" className={`${pageLink} min-w-[1.5rem] px-0 text-gray-400 dark:text-gray-500`}>…</span>
+                        ) : (
+                            <Link
+                                key={item}
+                                href={pageUrl(item)}
+                                {...linkProps}
+                                aria-label={`Page ${item}`}
+                                aria-current={item === current ? 'page' : undefined}
+                                className={`${pageLink} ${item === current ? 'bg-[#B4283F] text-white' : idle}`}
+                            >
+                                {item}
+                            </Link>
+                        ))}
+                    </div>
+                ))}
+                {arrow(current + 1, 'Page suivante', '')}
+            </div>
+        </nav>
     );
 }

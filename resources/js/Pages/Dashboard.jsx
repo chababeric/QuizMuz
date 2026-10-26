@@ -5,6 +5,7 @@ import axios from 'axios';
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ChevronIcon, TrophyIcon } from '@/Components/AppIcons';
+import { Pagination } from '@/Components/AdminUi';
 
 const ONLINE_REFRESH_MS = 30_000;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -82,22 +83,6 @@ const SortHeader = ({ label, column, filters, onSort, className = '' }) => {
             </button>
         </th>
     );
-};
-
-// Compact pager: first, last and the pages around the current one, with "…" for the gaps
-const pageItems = (current, last, siblings) => {
-    const pages = new Set([1, last, current]);
-    for (let offset = 1; offset <= siblings; offset++) {
-        pages.add(current - offset);
-        pages.add(current + offset);
-    }
-    const visible = [...pages].filter((page) => page >= 1 && page <= last).sort((a, b) => a - b);
-    return visible.flatMap((page, index) => {
-        const previous = visible[index - 1];
-        if (previous === undefined || page - previous === 1) return [page];
-        // A gap of a single page shows that page instead of "…"
-        return page - previous === 2 ? [previous + 1, page] : ['…', page];
-    });
 };
 
 function UserPanel({ user, status, now, onClose }) {
@@ -438,60 +423,7 @@ export default function Dashboard({ auth, kpis, courses, recentLogs, users, filt
                         </table>
                     </div>
 
-                    {users.last_page > 1 && (
-                        <nav aria-label="Pagination" className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 px-4 sm:px-5 py-3 text-sm dark:border-gray-700">
-                            <span className={muted}>
-                                {formatNumber(users.from)}–{formatNumber(users.to)} sur {formatNumber(users.total)}
-                            </span>
-                            <div className="flex items-center gap-0.5 sm:gap-1">
-                                {(() => {
-                                    const current = users.current_page;
-                                    const pageUrl = (page) => {
-                                        const url = new URL(users.first_page_url, window.location.origin);
-                                        url.searchParams.set('page', page);
-                                        return url.pathname + url.search;
-                                    };
-                                    const pageLink = 'flex h-10 min-w-[2.25rem] sm:min-w-[2.5rem] items-center justify-center rounded-lg px-1.5 sm:px-2 font-medium';
-                                    const idle = 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700';
-                                    const linkProps = { only: ['users', 'filters'], preserveScroll: true, preserveState: true };
-                                    const arrow = (page, label, rotate) => page >= 1 && page <= users.last_page ? (
-                                        <Link href={pageUrl(page)} {...linkProps} aria-label={label} className={`${pageLink} ${idle}`}>
-                                            <ChevronIcon className={`h-4 w-4 ${rotate}`}/>
-                                        </Link>
-                                    ) : (
-                                        <span aria-hidden="true" className={`${pageLink} text-gray-300 dark:text-gray-600`}>
-                                            <ChevronIcon className={`h-4 w-4 ${rotate}`}/>
-                                        </span>
-                                    );
-                                    return (
-                                        <>
-                                            {arrow(current - 1, 'Page précédente', 'rotate-180')}
-                                            {/* Phones: only the current page between the first and last; wider screens add its neighbours */}
-                                            {[[0, 'flex sm:hidden'], [1, 'hidden sm:flex']].map(([siblings, visibility]) => (
-                                                <div key={siblings} className={`${visibility} items-center gap-0.5 sm:gap-1`}>
-                                                    {pageItems(current, users.last_page, siblings).map((item, index) => item === '…' ? (
-                                                        <span key={`gap-${index}`} aria-hidden="true" className={`${pageLink} min-w-[1.5rem] px-0 text-gray-400 dark:text-gray-500`}>…</span>
-                                                    ) : (
-                                                        <Link
-                                                            key={item}
-                                                            href={pageUrl(item)}
-                                                            {...linkProps}
-                                                            aria-label={`Page ${item}`}
-                                                            aria-current={item === current ? 'page' : undefined}
-                                                            className={`${pageLink} ${item === current ? 'bg-[#B4283F] text-white' : idle}`}
-                                                        >
-                                                            {item}
-                                                        </Link>
-                                                    ))}
-                                                </div>
-                                            ))}
-                                            {arrow(current + 1, 'Page suivante', '')}
-                                        </>
-                                    );
-                                })()}
-                            </div>
-                        </nav>
-                    )}
+                    <Pagination paginator={users} linkProps={{ only: ['users', 'filters'], preserveScroll: true, preserveState: true }}/>
                 </section>
 
                 <p className={`text-xs ${muted}`}>
