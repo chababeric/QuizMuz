@@ -1,0 +1,1 @@
+import{b as e}from"./app-B_trJ267.js";const s=6e4;let t=0;const n=()=>{const o=Date.now();return o-t<s?Promise.resolve():(t=o,e.post(route("updateLastActionTime")).catch(r=>{t=0,console.error("Error updating last action time:",r)}))},a="https://www.quizmuz.com".replace(/\/$/,"");export{a as A,n as p};
