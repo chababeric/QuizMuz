@@ -1,20 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
-import MessageDisplay from "@/Components/MessageDisplay.jsx";
 import {DragDropContext, Draggable, Droppable} from '@hello-pangea/dnd';
-import InputLabel from "@/Components/InputLabel.jsx";
-import settingsIcon from '../../../../icons/settings-black.svg';
-import settingsWhiteIcon from '../../../../icons/settings.svg';
-import Modal from "@/Components/Modal.jsx";
 import axios from "axios";
-import TextInput from "@/Components/TextInput.jsx";
 import {useForm} from '@inertiajs/react';
-import PrimaryButton from "@/Components/PrimaryButton.jsx";
-import DangerButton from "@/Components/DangerButton.jsx";
-import { Transition } from "@headlessui/react";
+import { AdminDialog, AdminField, AdminInput, EmptyState, SectionCard, Toast, buttonDanger, buttonPrimary, buttonSecondary, control, iconButtonDanger, muted } from '@/Components/AdminUi';
+import { GripVerticalIcon, PencilIcon, TrashIcon } from '@/Components/AppIcons';
 
 export default function UpdateChord({ className = '', chordsList, setChordsList, levelsList }) {
     const [selectedFilterLevel, setSelectedFilterLevel] = useState('');
-    const [filterDisplay, setFilterDisplay] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -203,174 +195,129 @@ export default function UpdateChord({ className = '', chordsList, setChordsList,
 
     const groupedChords = groupAndSortChords(filteredChords);
 
+    const levelEntries = Object.entries(groupedChords);
+
     return (
-        <section className={className}>
-            <header className="flex items-center justify-between">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Modifier un accord</h2>
-
-                <button
-                    className="text-white"
-                    onClick={() => setFilterDisplay(!filterDisplay)}
-                >
-                    <img
-                        src={window.matchMedia('(prefers-color-scheme: dark)').matches ? settingsWhiteIcon : settingsIcon}
-                        alt="Settings"
-                        className="h-7 w-7"
-                    />
-                </button>
-            </header>
-
-            {errors.error && (
-                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
-                    {errors.error}
+        <SectionCard
+            id="chords-title"
+            title="Modifier un accord"
+            description={`${filteredChords.length} accord${filteredChords.length > 1 ? 's' : ''} · Glissez un accord pour changer son ordre dans le niveau`}
+            className={className}
+            action={
+                <div className="w-full sm:w-56">
+                    <label htmlFor="chords-level-filter" className="sr-only">Filtrer par niveau</label>
+                    <select
+                        id="chords-level-filter"
+                        className={`${control} w-full`}
+                        value={selectedFilterLevel}
+                        onChange={(e) => setSelectedFilterLevel(e.target.value)}
+                    >
+                        <option value="">Tous les niveaux</option>
+                        {levelsList.map((level) => (
+                            <option key={level.id} value={level.id}>
+                                {level.name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
+            }
+        >
+            {errors.error && (
+                <p role="alert" className="mx-5 mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-300">
+                    {errors.error}
+                </p>
             )}
 
-            <Transition
-                show={filterDisplay}
-                enter="transition duration-300 ease-out"
-                enterFrom="transform scale-y-0 opacity-0"
-                enterTo="transform scale-y-100 opacity-100"
-                leave="transition duration-300 ease-in"
-                leaveFrom="transform scale-y-100 opacity-100"
-                leaveTo="transform scale-y-0 opacity-0"
+            <Toast successMessage={successMessage} errorMessage={errorMessage} setSuccessMessage={setSuccessMessage} setErrorMessage={setErrorMessage}/>
+
+            <AdminDialog
+                show={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                title="Supprimer un accord"
+                actions={<>
+                    <button type="button" onClick={() => setIsDeleteModalOpen(false)} className={buttonSecondary}>Annuler</button>
+                    <button type="button" disabled={processing} onClick={() => handleDelete(currentChord.current?.id)} className={buttonDanger}>Supprimer</button>
+                </>}
             >
-                <div className="origin-top mt-6 space-y-6">
-                    <div>
-                        <InputLabel htmlFor="level" value="Niveau" className="dark:text-white" />
+                <p>
+                    Êtes-vous sûr de vouloir supprimer l'accord <strong className="text-gray-900 dark:text-white">{currentChord.current?.chord_name}</strong> du
+                    niveau <strong className="text-gray-900 dark:text-white">{currentChord.current?.level.name}</strong> ?
+                </p>
+            </AdminDialog>
+
+            <AdminDialog
+                show={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                title="Modifier un accord"
+                actions={<>
+                    <button type="button" onClick={() => setIsEditModalOpen(false)} className={buttonSecondary}>Annuler</button>
+                    <button type="submit" form="edit-chord-form" disabled={processing} className={buttonPrimary}>Sauvegarder</button>
+                </>}
+            >
+                <form id="edit-chord-form" onSubmit={submitModifications} className="flex flex-col gap-4">
+                    <AdminField id="edit-chord-level" label="Niveau">
                         <select
-                            id="level"
-                            className="mt-1 block w-full rounded-md dark:text-white dark:bg-gray-800"
-                            value={selectedFilterLevel}
-                            onChange={(e) => setSelectedFilterLevel(e.target.value)}
+                            id="edit-chord-level"
+                            className={`${control} w-full`}
+                            value={data.level}
+                            onChange={handleEditLevelChange}
                         >
-                            <option value="">
-                                Choisir un niveau
+                            <option value={currentChord.current?.level?.id || ''}>
+                                {levelsList.find(level => level.id === parseInt(currentChord.current?.level?.id))?.name || 'Sélectionner un niveau'}
                             </option>
-                            {levelsList.map((level) => (
-                                <option key={level.id} value={level.id}>
-                                    {level.name}
-                                </option>
+                            {levelsList.filter(level => level.id !== parseInt(currentChord.current?.level?.id)).map((level) => (
+                                <option key={level.id} value={level.id}>{level.name}</option>
                             ))}
                         </select>
-                    </div>
-                </div>
-            </Transition>
+                    </AdminField>
 
-            <MessageDisplay successMessage={successMessage} errorMessage={errorMessage} setSuccessMessage={setSuccessMessage} setErrorMessage={setErrorMessage}/>
-
-            <Modal show={isDeleteModalOpen} close={() => setIsDeleteModalOpen(false)}>
-                <div className="p-4">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Supprimer un accord</h2>
-
-                    <p className="text-gray-800 dark:text-gray-200">
-                        Êtes-vous sûr de vouloir supprimer l'accord <span className="font-semibold">{currentChord.current?.chord_name}</span> du
-                        niveau <span className="font-semibold">{currentChord.current?.level.name}</span> ?
-                    </p>
-
-                    <div className="flex justify-end mt-4">
-                        <button
-                            onClick={() => setIsDeleteModalOpen(false)}
-                            className="mr-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-                            type="button"
+                    <AdminField
+                        id="edit-chord-module"
+                        label="Module (optionnel)"
+                        hint={selectedEditLevel && modules.length === 0 ? 'Aucun module disponible pour ce niveau' : null}
+                    >
+                        <select
+                            id="edit-chord-module"
+                            className={`${control} w-full`}
+                            value={data.module}
+                            onChange={(e) => setData('module', e.target.value)}
+                            disabled={!selectedEditLevel || modules.length === 0}
                         >
-                            Annuler
-                        </button>
+                            <option value="">Aucun module</option>
+                            {modules.map((module) => (
+                                <option key={module.id} value={module.id}>{module.title}</option>
+                            ))}
+                        </select>
+                    </AdminField>
 
-                        <DangerButton disabled={processing} onClick={() => handleDelete(currentChord.current?.id)}>
-                            Supprimer
-                        </DangerButton>
-                    </div>
-                </div>
-            </Modal>
+                    <AdminField id="edit-chord-name" label="Nom de l'accord">
+                        <AdminInput
+                            id="edit-chord-name"
+                            value={data.chord_name}
+                            onChange={(e) => setData('chord_name', e.target.value)}
+                            autoFocus
+                            autoComplete="off"
+                        />
+                    </AdminField>
+                </form>
+            </AdminDialog>
 
-            <Modal show={isEditModalOpen} close={() => setIsEditModalOpen(false)}>
-                <div className="p-4">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Modifier un accord</h2>
-
-                    <form onSubmit={submitModifications} className={`processing ? 'opacity-50' : '' space-y-2`}>
-                        <div className="max-h-96 overflow-y-auto hide-scrollbar">
-                            <div>
-                                <InputLabel htmlFor="edit_level" value="Niveau" className="dark:text-white"/>
-                                <select
-                                    id="edit_level"
-                                    className="mt-1 block w-full rounded-md dark:text-white dark:bg-gray-800"
-                                    value={data.level}
-                                    onChange={handleEditLevelChange}
-                                >
-                                    <option value={currentChord.current?.level?.id || ''}>
-                                        {levelsList.find(level => level.id === parseInt(currentChord.current?.level?.id))?.name || 'Sélectionner un niveau'}
-                                    </option>
-                                    {levelsList.filter(level => level.id !== parseInt(currentChord.current?.level?.id)).map((level) => (
-                                        <option key={level.id} value={level.id}>{level.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <InputLabel htmlFor="edit_module" value="Module (optionnel)" className="dark:text-white"/>
-                                <select
-                                    id="edit_module"
-                                    className="mt-1 block w-full rounded-md dark:text-white dark:bg-gray-800"
-                                    value={data.module}
-                                    onChange={(e) => setData('module', e.target.value)}
-                                    disabled={!selectedEditLevel || modules.length === 0}
-                                >
-                                    <option value="">Aucun module</option>
-                                    {modules.map((module) => (
-                                        <option key={module.id} value={module.id}>{module.title}</option>
-                                    ))}
-                                </select>
-                                {selectedEditLevel && modules.length === 0 && (
-                                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                        Aucun module disponible pour ce niveau
-                                    </p>
-                                )}
-                            </div>
-
-                            <div>
-                                <InputLabel htmlFor="chord_name" value="Nom de l'accord" className="dark:text-white"/>
-                                <TextInput
-                                    id="chord_name"
-                                    className="mt-1 block border border-black w-full rounded-md dark:text-white dark:bg-gray-800"
-                                    value={data.chord_name}
-                                    onChange={(e) => setData('chord_name', e.target.value)}
-                                    isFocused
-                                    autoComplete="chord_name"
-                                />
-                            </div>
-
-                            <div className="flex justify-start mt-4">
-                                <button
-                                    onClick={() => setIsEditModalOpen(false)}
-                                    className="mr-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-                                    type="button"
-                                >
-                                    Annuler
-                                </button>
-
-                                <PrimaryButton disabled={processing} className="dark:bg-blue-500 dark:hover:bg-blue-600">
-                                    Sauvegarder
-                                </PrimaryButton>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </Modal>
-
-            <div className="mt-6 space-y-6">
+            {levelEntries.length === 0 ? (
+                <EmptyState>Aucun accord pour le moment.</EmptyState>
+            ) : (
                 <DragDropContext onDragEnd={handleOnDragEnd}>
-                    <div className="w-full max-h-[600px] overflow-y-auto mt-4 bg-gray-50 dark:bg-gray-900 rounded-md">
-                        {Object.entries(groupedChords).map(([levelName, levelChords]) => (
+                    <div className="max-h-[640px] overflow-y-auto">
+                        {levelEntries.map(([levelName, levelChords]) => (
                             <div key={levelName}>
                                 {/* Level Header */}
-                                <h3 className="w-fit text-lg font-semibold text-gray-800 dark:text-gray-200 mt-2 mb-2 ml-1">
-                                    Niveau: {levelName}
+                                <h3 className="sticky top-0 z-10 flex items-baseline gap-2 border-y border-gray-200 bg-gray-50 px-5 py-2 text-sm font-semibold text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                                    Niveau {levelName}
+                                    <span className={`font-normal ${muted}`}>{levelChords.length}</span>
                                 </h3>
                                 <Droppable droppableId={`level-${levelName}`}>
                                     {(provided) => (
                                         <ul
-                                            className="w-full divide-y divide-gray-300 dark:divide-neutral-700"
+                                            className="divide-y divide-gray-100 dark:divide-gray-700/70"
                                             {...provided.droppableProps}
                                             ref={provided.innerRef}
                                         >
@@ -380,46 +327,49 @@ export default function UpdateChord({ className = '', chordsList, setChordsList,
                                                     draggableId={chord.id.toString()}
                                                     index={index}
                                                 >
-                                                    {(provided) => (
+                                                    {(provided, snapshot) => (
                                                         <li
-                                                            className="flex flex-col sm:flex-row items-start sm:items-center px-4 py-3 bg-white dark:bg-gray-800 space-y-2 sm:space-y-0 sm:space-x-4"
+                                                            className={`flex items-center gap-3 px-5 py-2.5 ${
+                                                                snapshot.isDragging ? 'rounded-xl bg-white shadow-lg ring-1 ring-[#B4283F] dark:bg-gray-800' : 'bg-white dark:bg-gray-800'
+                                                            }`}
                                                             ref={provided.innerRef}
                                                             {...provided.draggableProps}
                                                             {...provided.dragHandleProps}
                                                         >
+                                                            <GripVerticalIcon className={`h-4 w-4 cursor-grab ${muted}`}/>
                                                             {/* Number Column */}
-                                                            <span
-                                                                className="w-9 font-medium text-gray-700 dark:text-gray-200">
+                                                            <span className={`w-7 shrink-0 text-right text-sm tabular-nums ${muted}`}>
                                                                 {index + 1}
                                                             </span>
                                                             {/* Info Columns */}
-                                                            <div className="flex-1 flex flex-wrap sm:flex-nowrap gap-y-2 sm:gap-y-0 sm:gap-x-6">
-                                                                <span className="w-full sm:w-12 truncate font-semibold text-gray-900 dark:text-gray-100">
-                                                                    {chord.level.name}
-                                                                </span>
-                                                                <span className="truncate text-gray-800 dark:text-gray-300">
-                                                                    {chord.chord_name} &nbsp;&nbsp;
-                                                                </span>
+                                                            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+                                                                <span className="truncate font-medium text-gray-900 dark:text-white">{chord.chord_name}</span>
                                                                 {/* Display module if exists */}
                                                                 {chord.module && (
-                                                                    <span className="truncate text-blue-600 dark:text-blue-400 text-sm">
+                                                                    <span className="max-w-full truncate rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-800 dark:border-violet-800/60 dark:bg-violet-950/50 dark:text-violet-200">
                                                                         Module: {chord.module.title}
                                                                     </span>
                                                                 )}
                                                             </div>
                                                             {/* Actions */}
-                                                            <div className="flex space-x-2">
+                                                            <div className="flex shrink-0 items-center gap-1">
                                                                 <button
+                                                                    type="button"
                                                                     onClick={() => openEditModal(chord)}
-                                                                    className="text-blue-500 hover:underline"
+                                                                    aria-label={`Modifier ${chord.chord_name}`}
+                                                                    title="Modifier"
+                                                                    className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B4283F] dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                                                                 >
-                                                                    Modifier
+                                                                    <PencilIcon className="h-4 w-4"/>
                                                                 </button>
                                                                 <button
+                                                                    type="button"
                                                                     onClick={() => openDeleteModal(chord)}
-                                                                    className="text-red-500 hover:underline"
+                                                                    aria-label={`Supprimer ${chord.chord_name}`}
+                                                                    title="Supprimer"
+                                                                    className={iconButtonDanger}
                                                                 >
-                                                                    Supprimer
+                                                                    <TrashIcon className="h-4 w-4"/>
                                                                 </button>
                                                             </div>
                                                         </li>
@@ -434,7 +384,7 @@ export default function UpdateChord({ className = '', chordsList, setChordsList,
                         ))}
                     </div>
                 </DragDropContext>
-            </div>
-        </section>
+            )}
+        </SectionCard>
     );
 }

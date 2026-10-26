@@ -1,9 +1,7 @@
 import { useState } from "react";
-import MessageDisplay from "@/Components/MessageDisplay.jsx";
-import Modal from "@/Components/Modal.jsx";
-import deleteIcon from "../../../../icons/delete.svg";
-import addIcon from "../../../../icons/add.svg";
 import axios from "axios";
+import { AdminDialog, EmptyState, SectionCard, buttonDanger, buttonPrimary, buttonSecondary, control, iconButtonDanger, label } from "@/Components/AdminUi";
+import { BuildingIcon, PlusIcon, TrashIcon } from "@/Components/AppIcons";
 
 export default function InstitutionManagement({ institutions, getInstitutions, successMessage, setSuccessMessage, errorMessage, setErrorMessage }) {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -60,97 +58,83 @@ export default function InstitutionManagement({ institutions, getInstitutions, s
         }
     };
 
-    return (
-        <section>
-            {/* Modal for adding a new institution */}
-            <Modal show={isAddModalOpen} onClose={closeAddModal}>
-                <div className="p-4">
-                    <h2 className="text-xl font-semibold mb-4 dark:text-white">Ajouter une nouvelle institution</h2>
+    const submitAdd = (e) => {
+        e.preventDefault();
+        addInstitution();
+    };
 
-                    {/* New Institution Name */}
-                    <label className="block mb-2 dark:text-white">Nom de l'institution:</label>
+    return (
+        <SectionCard
+            id="institutions-title"
+            title="Institutions"
+            description={`${institutions.length} institution${institutions.length > 1 ? 's' : ''}`}
+            action={
+                <button type="button" onClick={openAddModal} className={buttonPrimary}>
+                    <PlusIcon className="h-4 w-4"/> Ajouter
+                </button>
+            }
+        >
+            {/* Modal for adding a new institution */}
+            <AdminDialog
+                show={isAddModalOpen}
+                onClose={closeAddModal}
+                title="Ajouter une institution"
+                actions={<>
+                    <button type="button" onClick={closeAddModal} className={buttonSecondary}>Annuler</button>
+                    <button type="submit" form="add-institution-form" className={buttonPrimary}>Ajouter</button>
+                </>}
+            >
+                <form id="add-institution-form" onSubmit={submitAdd}>
+                    <label htmlFor="new-institution-name" className={label}>Nom de l'institution</label>
                     <input
+                        id="new-institution-name"
                         type="text"
                         value={newInstitutionName}
                         onChange={(e) => setNewInstitutionName(e.target.value)}
-                        className="mb-4 p-2 border rounded w-full dark:text-white dark:bg-gray-800"
+                        required
+                        autoFocus
+                        className={`${control} mt-1.5 w-full`}
                     />
-
-                    {/* Buttons */}
-                    <div className="flex justify-end">
-                        <button
-                            onClick={addInstitution}
-                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
-                        >
-                            Ajouter
-                        </button>
-                        <button
-                            onClick={closeAddModal}
-                            className="ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-                        >
-                            Annuler
-                        </button>
-                    </div>
-                </div>
-            </Modal>
+                </form>
+            </AdminDialog>
 
             {/* Modal for delete confirmation */}
-            <Modal show={isDeleteModalOpen} onClose={closeDeleteModal}>
-                <div className="p-4">
-                    <h2 className="text-xl font-semibold mb-4 dark:text-white">Confirmer la suppression</h2>
-                    <p className="dark:text-white">Êtes-vous sûr de vouloir supprimer l'institution <span className="font-bold">{currentInstitutionToDelete?.name}</span> ?</p>
-
-                    {/* Buttons */}
-                    <div className="flex justify-end mt-4">
-                        <button
-                            onClick={() => deleteInstitution(currentInstitutionToDelete)}
-                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                        >
-                            Supprimer
-                        </button>
-                        <button
-                            onClick={closeDeleteModal}
-                            className="ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-                        >
-                            Annuler
-                        </button>
-                    </div>
-                </div>
-            </Modal>
-
-            <MessageDisplay
-                successMessage={successMessage}
-                errorMessage={errorMessage}
-                setErrorMessage={setErrorMessage}
-                setSuccessMessage={setSuccessMessage}
-            />
+            <AdminDialog
+                show={isDeleteModalOpen}
+                onClose={closeDeleteModal}
+                title="Supprimer l'institution ?"
+                actions={<>
+                    <button type="button" onClick={closeDeleteModal} className={buttonSecondary}>Annuler</button>
+                    <button type="button" onClick={() => deleteInstitution(currentInstitutionToDelete)} className={buttonDanger}>Supprimer</button>
+                </>}
+            >
+                <p>Êtes-vous sûr de vouloir supprimer l'institution <strong className="text-gray-900 dark:text-white">{currentInstitutionToDelete?.name}</strong> ?</p>
+            </AdminDialog>
 
             {/* Institutions List */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-4">
-                {institutions.map((institution, index) => (
-                    <div
-                        key={index}
-                        className="p-6 border rounded-lg shadow-lg flex flex-col items-center justify-between transition-transform duration-200 hover:scale-105 bg-blue-200 dark:bg-blue-400"
-                    >
-                        <h3 className="text-2xl font-semibold mb-4">{institution.name}</h3>
-                        <button
-                            onClick={() => openDeleteModal(institution)}
-                            className="px-4 py-2 rounded-md flex items-center text-white bg-gray-700 hover:bg-gray-800"
-                        >
-                            <img src={deleteIcon} alt="Delete icon" className="w-6 h-6 mr-1" />
-                            Supprimer
-                        </button>
-                    </div>
-                ))}
-
-                {/* Add New Institution button */}
-                <div
-                    className="p-6 border rounded-lg shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-105 bg-blue-200 cursor-pointer dark:bg-blue-400"
-                    onClick={openAddModal}
-                >
-                    <img src={addIcon} alt="Add icon" className="w-14 h-14" />
-                </div>
-            </div>
-        </section>
+            {institutions.length === 0 ? (
+                <EmptyState>Aucune institution pour le moment.</EmptyState>
+            ) : (
+                <ul className="divide-y divide-gray-100 dark:divide-gray-700/70">
+                    {institutions.map((institution) => (
+                        <li key={institution.id} className="flex items-center gap-3 px-5 py-3">
+                            <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                <BuildingIcon className="h-4 w-4"/>
+                            </span>
+                            <span className="min-w-0 flex-1 truncate font-medium text-gray-900 dark:text-white">{institution.name}</span>
+                            <button
+                                type="button"
+                                onClick={() => openDeleteModal(institution)}
+                                aria-label={`Supprimer ${institution.name}`}
+                                title="Supprimer"
+                                className={iconButtonDanger}
+                            >
+                                <TrashIcon className="h-4 w-4"/>
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </SectionCard>
     );
 }

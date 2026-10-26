@@ -1,9 +1,6 @@
 
 import { useForm } from '@inertiajs/react';
-import { Transition } from '@headlessui/react';
-import InputError from '@/Components/InputError.jsx';
-import InputLabel from '@/Components/InputLabel.jsx';
-import PrimaryButton from '@/Components/PrimaryButton.jsx';
+import { AdminField, AdminInput, SavedNote, SectionCard, buttonPrimary, control, muted } from '@/Components/AdminUi';
 import React, { useState, useEffect, useMemo } from "react";
 import FilterableSelect from "@/Components/FilterableSelect.jsx";
 
@@ -121,136 +118,124 @@ export default function AddNewPiece({ className = '', piecesList, getAllPieces, 
     }
 
     return (
-        <section className={className}>
-            <header>
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Ajouter une nouvelle pièce</h2>
-            </header>
-
+        <SectionCard id="new-piece-title" title="Ajouter une nouvelle pièce" description={courseName} className={className}>
             {errors.error && (
-                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                <p role="alert" className="mx-5 mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-300">
                     {errors.error}
-                </div>
+                </p>
             )}
 
-            <form onSubmit={submitNewPiece} className="mt-6 space-y-6">
-                <div>
-                    <InputLabel htmlFor="level" value="Niveau" className="dark:text-white"/>
-                    <select
-                        id="level"
-                        className="mt-1 block w-full rounded-md dark:bg-gray-700 dark:text-white"
-                        value={data.level}
-                        onChange={(e) => setData('level', e.target.value)}
-                        required
-                    >
-                        <option value="">Choisir un niveau</option>
-                        {levelsList.map((level) => (
-                            <option key={level.id} value={level.id}>{level.name}</option>
-                        ))}
-                    </select>
-                    <InputError className="mt-2" message={errors.level}/>
-                </div>
-
-                {isLitMusCourse && data.level && (
-                    <div>
-                        <InputLabel htmlFor="module_id" value="Module (optionnel)" className="dark:text-white"/>
+            <form onSubmit={submitNewPiece} className="flex flex-col gap-5 p-5">
+                <div className="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
+                    <AdminField id="new-piece-level" label="Niveau" error={errors.level}>
                         <select
-                            id="module_id"
-                            className="mt-1 block w-full rounded-md dark:bg-gray-700 dark:text-white"
-                            value={data.module_id}
-                            onChange={(e) => setData('module_id', e.target.value)}
+                            id="new-piece-level"
+                            className={`${control} w-full`}
+                            value={data.level}
+                            onChange={(e) => setData('level', e.target.value)}
+                            required
                         >
-                            <option value="">Aucun module</option>
-                            {modules.map((module) => (
-                                <option key={module.id} value={module.id}>{module.title}</option>
+                            <option value="">Choisir un niveau</option>
+                            {levelsList.map((level) => (
+                                <option key={level.id} value={level.id}>{level.name}</option>
                             ))}
                         </select>
-                        <InputError className="mt-2" message={errors.module_id}/>
-                    </div>
-                )}
+                    </AdminField>
 
-                {/* Render fields in the order specified by fieldConfigs */}
-                {fieldConfigs.map((field) => (
-                    <div key={field.key}>
-                        <InputLabel htmlFor={field.key} value={field.label} className="dark:text-white"/>
-                        <FilterableSelect
-                            value={data[field.key]}
-                            onChange={(value) => setData(field.key, value)}
-                            options={piecesList.map(piece => piece[field.dbField]).filter(Boolean)}
-                        />
-                        <InputError className="mt-2" message={errors[field.key]}/>
-                    </div>
-                ))}
+                    {isLitMusCourse && data.level && (
+                        <AdminField id="new-piece-module" label="Module (optionnel)" error={errors.module_id}>
+                            <select
+                                id="new-piece-module"
+                                className={`${control} w-full`}
+                                value={data.module_id}
+                                onChange={(e) => setData('module_id', e.target.value)}
+                            >
+                                <option value="">Aucun module</option>
+                                {modules.map((module) => (
+                                    <option key={module.id} value={module.id}>{module.title}</option>
+                                ))}
+                            </select>
+                        </AdminField>
+                    )}
 
-                <div className="flex flex-col mb-4 w-full">
-                    <InputLabel htmlFor="fileName" value="Nom du fichier audio" className="dark:text-white"/>
-                    <span className="text-sm text-red-600">C'est important de suivre la convention de nom suivante:
-                    <span
-                        className="text-sm text-gray-500 italic dark:text-white">compositeur_titre_no_mvt_mvt.mp3</span>
-                    </span>
-                    <ul className="list-disc list-inside text-sm text-gray-500 dark:text-white">
-                        <li>Si un des paramètres ne s'applique pas, remplacer par 0</li>
-                        <li>Si un des paramètres contient plus qu'un mot, remplacer les caractères blancs par des
-                            underscores (_)
-                        </li>
-                        <li>Toutes les lettres doivent être en minusculles</li>
-                        <li>Utiliser seulement le nom de famille du compositeur, à l'exeption des surnoms&nbsp;
-                            <span className="italic">(béatrice_de_die ou vivaldi)</span>
-                        </li>
-                        <li>Ne pas utiliser des accents</li>
-                        <li>Remplacer toute apostrophe par un underscore (_)
-                            <span className="italic">(l_hiver)</span>
-                        </li>
-                        <li>Chaque nom de fichier doit être unique</li>
-                        <li>Le nom doit obligatoirement finir par .mp3 et le fichier doit également avoir cette
-                            extension.&nbsp;
-                            <span className="text-red-500 italic">Attention: les autres formats de fichiers audio
-                                            ne sont pas acceptés par le système (ex. .wav, .m4a, etc.)
-                                        </span>
-                        </li>
-                        <li>Si le compositeur vient d'une famille de compositeurs et les autres sont également présents
-                            dans le logiciel,
-                            ajouter le nom ainsi que le prénom, séparés par un underscore (_). Ex: mendelssohn_felix,
-                            mendelssohn_fanny.
-                        </li>
-                        <li>Si plusieurs pieces ont le même nom de fichier, ajouter un underscore avec un numéro à la
-                            fin du nom (_1, _2, etc.)
-                        </li>
-                    </ul>
-                    <input
-                        id="fileName"
-                        type="text"
-                        className="new-piece-input dark:bg-gray-700 dark:text-white"
-                        value={data.fileName}
-                        onChange={(e) => setData('fileName', e.target.value)}
-                    />
-                    <InputError className="mt-2" message={errors.fileName}/>
+                    {/* Render fields in the order specified by fieldConfigs */}
+                    {fieldConfigs.map((field) => (
+                        <AdminField key={field.key} id={`new-piece-${field.key}`} label={field.label} error={errors[field.key]}>
+                            <FilterableSelect
+                                id={`new-piece-${field.key}`}
+                                value={data[field.key]}
+                                onChange={(value) => setData(field.key, value)}
+                                options={piecesList.map(piece => piece[field.dbField]).filter(Boolean)}
+                            />
+                        </AdminField>
+                    ))}
                 </div>
 
-                <div className="flex flex-col mb-4 w-full">
-                    <InputLabel htmlFor="audioFile" value="Fichier audio" className="dark:text-white"/>
-                    <input
-                        id="audioFile"
-                        type="file"
-                        className="new-piece-input dark:bg-gray-700 dark:text-white"
-                        onChange={(e) => setData('audioFile', e.target.files.length ? e.target.files[0] : null)}
-                    />
-                    <InputError className="mt-2" message={errors.audioFile}/>
+                <div className="grid grid-cols-1 gap-x-5 gap-y-4 border-t border-gray-200 pt-5 md:grid-cols-2 dark:border-gray-700">
+                    <div className="flex flex-col gap-3">
+                        <AdminField id="new-piece-file-name" label="Nom du fichier audio" error={errors.fileName}>
+                            <AdminInput
+                                id="new-piece-file-name"
+                                className="font-mono"
+                                value={data.fileName}
+                                onChange={(e) => setData('fileName', e.target.value)}
+                            />
+                        </AdminField>
+
+                        <details className="group rounded-xl border border-amber-200 bg-amber-50 text-sm text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200">
+                            <summary className="cursor-pointer list-none px-4 py-3 font-medium [&::-webkit-details-marker]:hidden">
+                                C'est important de suivre la convention de nom suivante:{' '}
+                                <span className="break-all font-mono italic">compositeur_titre_no_mvt_mvt.mp3</span>
+                                <span className="mt-1 block text-xs font-normal underline group-open:hidden">Voir les règles</span>
+                                <span className="mt-1 hidden text-xs font-normal underline group-open:block">Masquer les règles</span>
+                            </summary>
+                            <ul className="list-disc space-y-1 px-4 pb-4 pl-8 text-gray-700 dark:text-gray-300">
+                                <li>Si un des paramètres ne s'applique pas, remplacer par 0</li>
+                                <li>Si un des paramètres contient plus qu'un mot, remplacer les caractères blancs par des
+                                    underscores (_)
+                                </li>
+                                <li>Toutes les lettres doivent être en minusculles</li>
+                                <li>Utiliser seulement le nom de famille du compositeur, à l'exeption des surnoms&nbsp;
+                                    <span className="italic">(béatrice_de_die ou vivaldi)</span>
+                                </li>
+                                <li>Ne pas utiliser des accents</li>
+                                <li>Remplacer toute apostrophe par un underscore (_)
+                                    <span className="italic">(l_hiver)</span>
+                                </li>
+                                <li>Chaque nom de fichier doit être unique</li>
+                                <li>Le nom doit obligatoirement finir par .mp3 et le fichier doit également avoir cette
+                                    extension.&nbsp;
+                                    <span className="font-medium italic text-red-600 dark:text-red-400">Attention: les autres formats de fichiers audio
+                                        ne sont pas acceptés par le système (ex. .wav, .m4a, etc.)
+                                    </span>
+                                </li>
+                                <li>Si le compositeur vient d'une famille de compositeurs et les autres sont également présents
+                                    dans le logiciel,
+                                    ajouter le nom ainsi que le prénom, séparés par un underscore (_). Ex: mendelssohn_felix,
+                                    mendelssohn_fanny.
+                                </li>
+                                <li>Si plusieurs pieces ont le même nom de fichier, ajouter un underscore avec un numéro à la
+                                    fin du nom (_1, _2, etc.)
+                                </li>
+                            </ul>
+                        </details>
+                    </div>
+
+                    <AdminField id="new-piece-audio" label="Fichier audio" hint="Format .mp3 uniquement" error={errors.audioFile}>
+                        <input
+                            id="new-piece-audio"
+                            type="file"
+                            className={`block w-full text-sm ${muted} file:mr-3 file:h-10 file:cursor-pointer file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:text-sm file:font-semibold file:text-gray-700 hover:file:bg-gray-200 dark:file:bg-gray-700 dark:file:text-gray-200 dark:hover:file:bg-gray-600`}
+                            onChange={(e) => setData('audioFile', e.target.files.length ? e.target.files[0] : null)}
+                        />
+                    </AdminField>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton type="submit" disabled={processing} className="dark:bg-blue-500 dark:hover:bg-blue-700">Ajouter la pièce</PrimaryButton>
-
-                    <Transition
-                        show={recentlySuccessful}
-                        enter="transition ease-in-out"
-                        enterFrom="opacity-0"
-                        leave="transition ease-in-out"
-                        leaveTo="opacity-0"
-                    >
-                        <p className="text-green-500 text-sm">Pièce ajoutée!</p>
-                    </Transition>
+                    <button type="submit" disabled={processing} className={buttonPrimary}>Ajouter la pièce</button>
+                    <SavedNote show={recentlySuccessful}>Pièce ajoutée!</SavedNote>
                 </div>
             </form>
-        </section>
+        </SectionCard>
     );
 }

@@ -4,14 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Http\Middleware\UserStats;
 use App\Models\Chord;
+use App\Models\Level;
 use App\Models\Module;
 use App\Models\Piece;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PracticeController extends Controller
 {
+    // Only what the Practice page shows (plus module_id for grouping); the full rows carry answers and timestamps it never reads
+    private const PIECE_COLUMNS = ['id', 'module_id', 'title', 'composer', 'no_mvt', 'mvt', 'file_name'];
+    private const CHORD_COLUMNS = ['id', 'module_id', 'chord_name', 'file_name'];
+
     public function index(Request $request): Response
     {
         $initiator = auth()->user();
@@ -28,9 +34,9 @@ class PracticeController extends Controller
         if ($courseName === "Formation Musicale et Auditive") {
             $allChords = Chord::where('level_id', $level)
                 ->orderBy('order')
-                ->get();
+                ->get(self::CHORD_COLUMNS);
 
-            $lastUpdated = $allChords->sortByDesc('updated_at')->first()?->updated_at;
+            $lastUpdated = Chord::where('level_id', $level)->max('updated_at');
 
             // Normalize module_id to int and split
             $groupedByModule = [];
@@ -84,10 +90,10 @@ class PracticeController extends Controller
             // For LitMus course, fetch pieces and organize by modules
             $allPieces = Piece::where('level_id', $level)
                 ->orderBy('order')
-                ->get();
+                ->get(self::PIECE_COLUMNS);
 
             // Get last updated
-            $lastUpdated = $allPieces->sortByDesc('updated_at')->first()?->updated_at;
+            $lastUpdated = Piece::where('level_id', $level)->max('updated_at');
 
             // Group pieces by module_id
             $groupedByModule = [];
@@ -143,14 +149,11 @@ class PracticeController extends Controller
             // For other courses, fetch pieces
             $pieces = Piece::where('level_id', $level)
                 ->orderBy('order')
-                ->get()
+                ->get(self::PIECE_COLUMNS)
                 ->toArray();
 
             // Get last updated
-            $lastUpdated = Piece::where('level_id', $level)
-                ->orderBy('updated_at', 'desc')
-                ->first()
-                ?->updated_at;
+            $lastUpdated = Piece::where('level_id', $level)->max('updated_at');
         }
 
         $userStats = new UserStats();
@@ -158,9 +161,10 @@ class PracticeController extends Controller
 
         return Inertia::render('Practice', [
             'level' => $level,
+            'levelName' => Level::find($level)?->name,
             'courseId' => $courseId,
             'courseName' => $courseName,
-            'lastUpdated' => $lastUpdated ? $lastUpdated->toISOString() : null,
+            'lastUpdated' => $lastUpdated ? Carbon::parse($lastUpdated)->toISOString() : null,
             'piecesList' => $pieces,
             'modulesList' => $modules,
             'nonModulePiecesList' => $nonModulePieces,

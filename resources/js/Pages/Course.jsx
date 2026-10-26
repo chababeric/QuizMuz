@@ -1,148 +1,148 @@
 import { Link, Head } from '@inertiajs/react';
 import React from "react";
+import AppHeader from '@/Components/AppHeader';
+import { ChevronIcon, ClockIcon } from '@/Components/AppIcons';
+import { courseStyle } from '@/Components/courseStyles';
 
-export default function Course({ auth, courses }) {
+const formatNumber = (value) => value.toLocaleString('fr-FR');
+
+const Stat = ({ label, value, large = false }) => (
+    <div>
+        <div className="text-[13px] text-[#A9AEC2]">{label}</div>
+        <div className={`${large ? 'text-[32px]' : 'text-[22px]'} font-bold leading-tight`}>{value}</div>
+    </div>
+);
+
+export default function Course({ auth, courses, lastLevel }) {
+    const transition = 'transition duration-200 motion-reduce:transition-none';
+    const card = 'relative overflow-hidden rounded-[24px] bg-[#0B0D18] border';
+
+    const lastIndex = lastLevel ? courses.findIndex(course => course.id === lastLevel.courseId) : -1;
+    const lastCourse = lastIndex >= 0 && courses[lastIndex].played ? courses[lastIndex] : null;
+    const lastStyle = lastCourse && courseStyle(lastCourse.name, lastCourse.id);
+
     return (
-        <div className="main-app min-h-screen flex flex-col bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900">
-            <div className="background-container"></div>
+        <div className="min-h-[100dvh] flex flex-col bg-[#06070D] text-[#F2F3F8] font-sans">
             <Head title="Cours - QuizMuz"/>
+            <AppHeader title="Cours" backHref={route('welcome')} backLabel="Retour à l'accueil"/>
 
-            {/* Header Section */}
-            <div className="relative z-10 px-4 py-6 sm:py-8">
-                <div className="max-w-6xl mx-auto">
-                    {/* Welcome Message */}
-                    <div className="text-center mb-8">
-                        <div className="inline-block bg-gradient-to-r from-indigo-900/90 via-purple-900/90 to-indigo-900/90 backdrop-blur-sm rounded-2xl px-8 py-6 shadow-2xl border border-white/20">
-                            <div className="flex items-center justify-center gap-4 mb-3">
-                                <span className="text-5xl">👋</span>
-                                <h1 className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-white via-indigo-200 to-white bg-clip-text text-transparent">
-                                    Bienvenue, {auth.user.first_name || auth.user.username}!
-                                </h1>
-                            </div>
-                            <div className="h-1 bg-gradient-to-r from-transparent via-indigo-400 to-transparent rounded-full"></div>
-                        </div>
-                    </div>
+            <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 pt-6 pb-10 md:pt-10 md:pb-14 flex flex-col gap-6 md:gap-8">
+                <div>
+                    <h2 className="text-[32px] md:text-[44px] font-bold leading-tight">
+                        Bonjour, {auth.user.first_name || auth.user.username}
+                    </h2>
+                    <p className="mt-1 text-[16px] md:text-[18px] text-[#C9CCDA]">Choisissez un cours pour continuer.</p>
                 </div>
-            </div>
 
-            {/* Main Content */}
-            <div className="flex-1 flex items-center justify-center px-4">
-                <div className="max-w-4xl w-full">
-                    {/* Course Selection Section */}
-                    <div className="bg-gradient-to-r from-slate-900/20 to-indigo-900/20 backdrop-blur-sm rounded-2xl border border-indigo-400/20 overflow-hidden shadow-2xl">
-                        {/* Header */}
-                        <div className="bg-gradient-to-r from-emerald-600/30 to-teal-600/30 px-6 sm:px-8 py-6 border-b border-emerald-400/20">
-                            <div className="text-center">
-                                <div className="flex items-center justify-center gap-3 mb-2">
-                                    <span className="text-4xl">📚</span>
-                                    <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                                        Choisissez un cours
-                                    </h2>
-                                </div>
-                                <div className="h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent rounded-full"></div>
-                            </div>
-                        </div>
+                {/* Resume the most recently played course */}
+                {lastCourse && (
+                    <section aria-labelledby="resume-heading" className={`${card} ${lastStyle.border} p-6 md:p-8 flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-10`}>
+                        <div aria-hidden="true" className={`absolute inset-0 pointer-events-none ${lastStyle.glow}`}></div>
 
-                        {/* Courses Grid */}
-                        <div className="p-6 sm:p-8">
-                            {courses && courses.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {courses.map((course, index) => (
-                                        <Link
-                                            key={course.id}
-                                            href={route('mainmenu', {courseId: course.id})}
-                                            className="group relative overflow-hidden bg-gradient-to-br from-purple-600/20 to-indigo-600/20 backdrop-blur-sm rounded-2xl p-8 border border-purple-400/30 hover:border-purple-300 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/30"
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-r from-purple-400/10 to-indigo-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-                                            <div className="relative z-10 text-center">
-                                                {/* Course Icon */}
-                                                <div className="text-6xl mb-4">
-                                                    {course.name.includes('Littérature') ? '🎼' :
-                                                        course.name.includes('Formation') ? '🎵' :
-                                                            course.name.includes('Harmonie') ? '🎹' : '🎧'}
-                                                </div>
-
-                                                {/* Course Name */}
-                                                <h3 className="text-xl font-bold text-white group-hover:text-purple-200 transition-colors duration-300 leading-tight">
-                                                    {course.name}
-                                                </h3>
-
-                                                {/* Course Description */}
-                                                {course.description && (
-                                                    <p className="text-purple-200 text-sm mt-3 leading-relaxed">
-                                                        {course.description}
-                                                    </p>
-                                                )}
-
-                                                {/* Visual Indicator */}
-                                                <div className="mt-4 flex items-center justify-center gap-2 text-purple-300 group-hover:text-purple-200 transition-colors duration-300">
-                                                    <span className="text-sm font-medium">Accéder au cours</span>
-                                                    <svg className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    ))}
-                                </div>
-                            ) : (
-                                /* No Courses Available */
-                                <div className="text-center py-12">
-                                    <div className="text-6xl mb-6">📚</div>
-                                    <h3 className="text-2xl font-bold text-white mb-4">
-                                        Aucun cours disponible
-                                    </h3>
-                                    <p className="text-indigo-200 text-lg">
-                                        Il n'y a actuellement aucun cours disponible pour votre profil.
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* Course Info */}
-                            {courses && courses.length > 0 && (
-                                <div className="mt-8 p-6 bg-gradient-to-r from-blue-900/20 to-indigo-900/20 rounded-xl border border-blue-400/20">
-                                    <div className="flex items-start gap-4">
-                                        <span className="text-3xl flex-shrink-0">💡</span>
-                                        <div>
-                                            <h4 className="text-lg font-semibold text-blue-200 mb-2">
-                                                À propos des cours
-                                            </h4>
-                                            <p className="text-blue-100 leading-relaxed">
-                                                Chaque cours offre des modules d'apprentissage spécialisés avec des quiz interactifs.
-                                                Sélectionnez un cours pour accéder aux différents niveaux et commencer votre apprentissage.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Navigation Section */}
-                    <div className="text-center mt-8">
-                        <Link
-                            href={route('welcome')}
-                            className="group relative inline-flex items-center gap-3 overflow-hidden bg-gradient-to-r from-gray-700/80 to-gray-800/80 backdrop-blur-sm rounded-xl px-6 py-3 border border-gray-500/50 hover:border-gray-300 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-gray-500/30"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-gray-500/20 to-gray-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                            <span className="relative z-10 text-xl">🏠</span>
-                            <span className="relative z-10 text-white font-medium group-hover:text-gray-200 transition-colors duration-300">
-                                Retour à l'accueil
+                        <div className="relative flex-1 min-w-0 flex flex-col gap-5">
+                            <span className="self-start inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1 text-[13px] font-medium text-[#C9CCDA]">
+                                <ClockIcon className="w-4 h-4"/>
+                                Reprendre où vous en étiez
                             </span>
-                        </Link>
-                    </div>
-                </div>
-            </div>
+                            <div>
+                                <div className="flex items-center gap-4">
+                                    <span className={`w-12 h-12 shrink-0 rounded-[14px] flex items-center justify-center ${lastStyle.tile}`}>
+                                        <lastStyle.Icon className="w-6 h-6"/>
+                                    </span>
+                                    <h2 id="resume-heading" className="text-[26px] md:text-[40px] font-bold leading-tight">{lastCourse.name}</h2>
+                                </div>
+                                <p className="mt-3 text-[17px] text-[#C9CCDA]">Niveau {lastLevel.name}</p>
+                            </div>
+                            <div>
+                                <Link
+                                    href={route('mainmenu', {courseId: lastCourse.id})}
+                                    className={`inline-flex items-center gap-1 min-h-[48px] rounded-full bg-[#B4283F] hover:bg-[#C8304A] px-6 text-[16px] font-semibold text-white ${transition}`}
+                                >
+                                    Continuer <ChevronIcon/>
+                                </Link>
+                            </div>
+                        </div>
 
-            {/* Footer */}
-            <footer className="relative z-10 py-8 text-center">
-                <div className="bg-black/20 backdrop-blur-sm rounded-xl mx-4 py-4 border border-white/10">
-                    <p className="text-white/80 text-sm font-medium">
-                        Sélectionnez un cours pour commencer votre apprentissage musical
-                    </p>
-                </div>
-            </footer>
+                        <div className="relative grid grid-cols-2 gap-4 lg:w-[360px] lg:shrink-0">
+                            <div className="rounded-[14px] border border-white/[0.08] bg-white/[0.03] p-5">
+                                <Stat label="Classement" value={lastCourse.rank ? `${lastCourse.rank}ᵉ` : '—'} large/>
+                            </div>
+                            <div className="rounded-[14px] border border-white/[0.08] bg-white/[0.03] p-5">
+                                <Stat label="Points" value={formatNumber(lastCourse.score)} large/>
+                            </div>
+                        </div>
+                    </section>
+                )}
+
+                {/* All courses */}
+                <section aria-labelledby="courses-heading" className="flex flex-col gap-4">
+                    <div className="flex items-baseline justify-between gap-4">
+                        <h2 id="courses-heading" className="text-[13px] font-semibold uppercase tracking-[0.12em] text-[#A9AEC2]">
+                            Tous les cours
+                        </h2>
+                        <span className="text-[13px] text-[#A9AEC2]">{courses.length} cours</span>
+                    </div>
+
+                    {courses.length === 0 ? (
+                        <div className={`${card} border-white/[0.08] p-6 md:p-8`}>
+                            <h3 className="text-[22px] font-semibold">Aucun cours disponible</h3>
+                            <p className="mt-1 text-[15px] text-[#C9CCDA]">
+                                Votre établissement n'a pas encore ouvert de cours pour votre profil.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="grid gap-3 md:gap-6 [grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr))]">
+                            {courses.map((course, index) => {
+                                const style = courseStyle(course.name, course.id);
+                                const isLast = Boolean(lastCourse && course.id === lastCourse.id);
+                                return (
+                                    <Link
+                                        key={course.id}
+                                        href={route('mainmenu', {courseId: course.id})}
+                                        className={`group ${card} border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 p-4 md:p-6 flex flex-col gap-5 ${transition}`}
+                                    >
+                                        <div aria-hidden="true" className={`absolute inset-0 pointer-events-none ${style.glow}`}></div>
+                                        {/* Phones: one row (icon, name, chevron). Wider: icon row, then name below */}
+                                        <div className="relative flex flex-wrap items-center gap-x-3 gap-y-5">
+                                            <span className={`order-1 w-11 h-11 shrink-0 rounded-[14px] flex items-center justify-center ${style.tile}`}>
+                                                <style.Icon/>
+                                            </span>
+                                            <div className="order-2 flex-1 min-w-0 md:order-4 md:flex-none md:w-full">
+                                                <h3 className="text-[18px] md:text-[24px] font-bold leading-tight">{course.name}</h3>
+                                                <p className="mt-0.5 md:mt-1 text-[14px] md:text-[16px] text-[#C9CCDA]">
+                                                    {course.levelCount > 0
+                                                        ? `${course.levelCount} ${course.levelCount > 1 ? 'niveaux' : 'niveau'}`
+                                                        : 'Aucun niveau ouvert'}
+                                                </p>
+                                            </div>
+                                            {isLast && (
+                                                <span className="hidden md:inline order-2 ml-auto rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-0.5 text-[13px] font-medium text-[#C9CCDA]">
+                                                    Dernier cours
+                                                </span>
+                                            )}
+                                            <ChevronIcon className={`order-3 ${isLast ? '' : 'md:ml-auto'} w-5 h-5 text-[#A9AEC2] group-hover:text-[#F2F3F8]`}/>
+                                        </div>
+
+                                        <div className="relative mt-auto border-t border-white/[0.08] pt-4 hidden md:grid grid-cols-2 gap-4">
+                                            {course.score > 0 ? (
+                                                <>
+                                                    <Stat label="Classement" value={course.rank ? `${course.rank}ᵉ` : '—'}/>
+                                                    <Stat label="Points" value={formatNumber(course.score)}/>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Stat label="Classement" value="—"/>
+                                                    <div className="self-end text-[15px] text-[#A9AEC2]">Pas encore commencé</div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    )}
+                </section>
+            </main>
         </div>
     );
 }

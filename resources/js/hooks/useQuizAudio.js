@@ -1,5 +1,7 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import { AUDIO_BASE_URL } from './audioBaseUrl.js';
+
+const HAVE_METADATA = 1;
 
 export const useQuizAudio = (audioFile, audioType = 'piece') => {
     const audioRef = useRef(null);
@@ -13,65 +15,91 @@ export const useQuizAudio = (audioFile, audioType = 'piece') => {
         return `${baseUrl}${filename}`;
     }, [audioType]);
 
-    const playAudio = useCallback((startAtRandomPosition = false) => {
-        if (!audioFile || isLoading) return;
+    // One player per piece, created as soon as the piece is known so the file
+    // downloads while the student reads the questions. Replays reuse it.
+    useEffect(() => {
+        if (!audioFile) return;
 
-        setIsLoading(true);
+        const audio = new Audio();
+        audio.preload = 'auto';
+        audio.src = getAudioUrl(audioFile);
+        audio.onended = () => setIsPlaying(false);
+        audio.load();
+        audioRef.current = audio;
+
+        return () => {
+            audio.pause();
+            audio.onended = null;
+            audio.onloadedmetadata = null;
+            audio.onerror = null;
+            audio.removeAttribute('src');
+            audio.load();
+            if (audioRef.current === audio) {
+                audioRef.current = null;
+            }
+            setIsPlaying(false);
+            setIsLoading(false);
+        };
+    }, [audioFile, getAudioUrl]);
+
+    const playAudio = useCallback((startAtRandomPosition = false) => {
+        const audio = audioRef.current;
+        if (!audio || isLoading) return;
+
         setIsPlaying(true);
 
-        // Clean up existing audio
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current = null;
-        }
-
-        const newAudio = new Audio(getAudioUrl(audioFile));
-
-        newAudio.onloadeddata = () => {
+        const start = () => {
             setIsLoading(false);
 
             if (startAtRandomPosition && audioType === 'piece') {
-                const maxRandomStartTime = Math.max(0, newAudio.duration - 20);
-                newAudio.currentTime = Math.random() * maxRandomStartTime;
+                const maxRandomStartTime = Math.max(0, audio.duration - 20);
+                audio.currentTime = Math.random() * maxRandomStartTime;
             } else {
-                newAudio.currentTime = 0;
+                audio.currentTime = 0;
             }
 
-            newAudio.play().catch(error => {
+            audio.play().catch(error => {
                 console.error("Error playing audio:", error);
                 setIsPlaying(false);
                 setIsLoading(false);
             });
         };
 
-        newAudio.onerror = () => {
+        audio.onerror = () => {
             console.error("Error loading audio");
             setIsPlaying(false);
             setIsLoading(false);
         };
 
-        newAudio.onended = () => {
-            setIsPlaying(false);
-        };
-
-        audioRef.current = newAudio;
-        newAudio.load();
-    }, [audioFile, audioType, isLoading, getAudioUrl]);
+        // The duration is needed for the random start, so wait for the metadata if it isn't there yet
+        if (audio.readyState >= HAVE_METADATA) {
+            start();
+        } else {
+            setIsLoading(true);
+            audio.onloadedmetadata = () => {
+                audio.onloadedmetadata = null;
+                start();
+            };
+        }
+    }, [isLoading, audioType]);
 
     const stopAudio = useCallback(() => {
         setIsPlaying(false);
         setIsLoading(false);
 
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
+        const audio = audioRef.current;
+        if (audio) {
+            audio.onloadedmetadata = null;
+            audio.pause();
+            audio.currentTime = 0;
         }
     }, []);
 
     const cleanup = useCallback(() => {
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current = null;
+        const audio = audioRef.current;
+        if (audio) {
+            audio.onloadedmetadata = null;
+            audio.pause();
         }
         setIsPlaying(false);
         setIsLoading(false);

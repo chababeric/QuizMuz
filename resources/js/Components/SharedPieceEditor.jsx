@@ -109,62 +109,47 @@ export default function SharedPieceEditor({
             });
     };
 
+    const courseName = mode === 'litmus' ? 'Littérature Musicale' : 'Histoire de la Musique';
+
     return (
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                <AddNewPiece
-                    className="max-w-xl"
-                    piecesList={filteredPiecesList || []}
-                    setPiecesList={handleSetPiecesList}
-                    getAllPieces={getAllPieces}
-                    user={user}
-                    courseName={mode === 'litmus' ? 'Littérature Musicale' : 'Histoire de la Musique'}
-                />
-            </div>
+        <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+            <AddNewPiece
+                piecesList={filteredPiecesList || []}
+                setPiecesList={handleSetPiecesList}
+                getAllPieces={getAllPieces}
+                user={user}
+                courseName={courseName}
+            />
+
+            <UpdatePiece
+                piecesList={filteredPiecesList || []}
+                setPiecesList={handleSetPiecesList}
+                coursesList={filteredCoursesList || []}
+                // getPiecesInReserve={getPiecesInReserve}
+                getAllPieces={getAllPieces}
+                user={user}
+                courseName={courseName}
+            />
 
             {mode === 'litmus' && (
-                <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
+                <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
                     <ModuleList
-                        className="max-w-xl"
                         user={user}
-                        courseName={mode === 'litmus' ? 'Littérature Musicale' : 'Histoire de la Musique'}
+                        courseName={courseName}
                     />
-                </div>
-            )}
 
-            {mode === 'litmus' && (
-                <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
                     <AddModule
-                        className="max-w-xl"
                         coursesList={filteredCoursesList || []}
                         user={user}
-                        courseName={mode === 'litmus' ? 'Littérature Musicale' : 'Histoire de la Musique'}
+                        courseName={courseName}
                     />
-                </div>
-            )}
 
-            {mode === 'litmus' && (
-                <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
                     <UpdateModule
                         coursesList={filteredCoursesList || []}
-                        className="max-w-xl"
-                        courseName={mode === 'litmus' ? 'Littérature Musicale' : 'Histoire de la Musique'}
+                        courseName={courseName}
                     />
                 </div>
             )}
-
-            <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                <UpdatePiece
-                    className="w-full"
-                    piecesList={filteredPiecesList || []}
-                    setPiecesList={handleSetPiecesList}
-                    coursesList={filteredCoursesList || []}
-                    // getPiecesInReserve={getPiecesInReserve}
-                    getAllPieces={getAllPieces}
-                    user={user}
-                    courseName={mode === 'litmus' ? 'Littérature Musicale' : 'Histoire de la Musique'}
-                />
-            </div>
         </div>
     );
 }

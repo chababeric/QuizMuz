@@ -1,10 +1,6 @@
 import { useRef } from 'react';
-import InputError from '@/Components/InputError.jsx';
-import InputLabel from '@/Components/InputLabel.jsx';
-import PrimaryButton from '@/Components/PrimaryButton.jsx';
-import TextInput from '@/Components/TextInput.jsx';
 import { useForm } from '@inertiajs/react';
-import { Transition } from '@headlessui/react';
+import { AdminField, AdminInput, SavedNote, SectionCard, buttonPrimary } from '@/Components/AdminUi';
 
 export default function UpdatePasswordForm({ className = '' }) {
     const passwordInput = useRef();
@@ -45,85 +41,53 @@ export default function UpdatePasswordForm({ className = '' }) {
     };
 
     return (
-        <section className={className}>
-            <header>
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Mot de passe</h2>
-
-                <p className="mt-1 text-sm text-gray-600 dark:text-white">
-                    Modifier le mot de passe d'un compte.
-                </p>
-            </header>
-
+        <SectionCard id="password-title" title="Mot de passe" description="Modifier le mot de passe d'un compte." className={className}>
             {errors.error && (
-                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                <p role="alert" className="mx-5 mt-5 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-300">
                     {errors.error}
-                </div>
+                </p>
             )}
 
-            <form onSubmit={updatePassword} className="mt-6 space-y-6">
-                <div>
-                    <InputLabel htmlFor="username" value="Nom d'utilisateur" className="dark:text-white"/>
-
-                    <TextInput
+            <form onSubmit={updatePassword} className="flex flex-1 flex-col gap-5 p-5">
+                <AdminField id="username" label="Nom d'utilisateur" error={errors.username}>
+                    <AdminInput
                         id="username"
                         ref={usernameInput}
                         value={data.username}
                         onChange={(e) => setData('username', e.target.value)}
-                        className="mt-1 block w-full dark:text-white dark:bg-gray-800"
-                        autoComplete="username"
+                        autoComplete="off"
                         required
                     />
+                </AdminField>
 
-                    <InputError message={errors.username} className="mt-2" />
-                </div>
-
-                <div>
-                    <InputLabel htmlFor="password" value="Nouveau mot de passe" className="dark:text-white"/>
-
-                    <TextInput
+                <AdminField id="password" label="Nouveau mot de passe" error={errors.password}>
+                    <AdminInput
                         id="password"
                         ref={passwordInput}
                         value={data.password}
                         onChange={(e) => setData('password', e.target.value)}
                         type="password"
-                        className="mt-1 block w-full dark:text-white dark:bg-gray-800"
                         autoComplete="new-password"
                         required
                     />
+                </AdminField>
 
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div>
-                    <InputLabel htmlFor="password_confirmation" value="Confirmer le mot de passe" className="dark:text-white"/>
-
-                    <TextInput
+                <AdminField id="password_confirmation" label="Confirmer le mot de passe" error={errors.password_confirmation}>
+                    <AdminInput
                         id="password_confirmation"
                         value={data.password_confirmation}
                         onChange={(e) => setData('password_confirmation', e.target.value)}
                         type="password"
-                        className="mt-1 block w-full dark:text-white dark:bg-gray-800"
-                        autoComplete="new-password dark:text-white dark:bg-gray-800"
+                        autoComplete="new-password"
                         required
                     />
+                </AdminField>
 
-                    <InputError message={errors.password_confirmation} className="mt-2" />
-                </div>
-
-                <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing} className="dark:bg-blue-500 dark:hover:bg-blue-700">Sauvegarder</PrimaryButton>
-
-                    <Transition
-                        show={recentlySuccessful}
-                        enter="transition ease-in-out"
-                        enterFrom="opacity-0"
-                        leave="transition ease-in-out"
-                        leaveTo="opacity-0"
-                    >
-                        <p className="text-sm text-green-500">Sauvegardé.</p>
-                    </Transition>
+                <div className="mt-auto flex items-center gap-4 pt-1">
+                    <button type="submit" disabled={processing} className={buttonPrimary}>Sauvegarder</button>
+                    <SavedNote show={recentlySuccessful}>Sauvegardé.</SavedNote>
                 </div>
             </form>
-        </section>
+        </SectionCard>
     );
 }

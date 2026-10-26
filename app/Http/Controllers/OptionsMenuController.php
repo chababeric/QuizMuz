@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Chord;
+use App\Models\Level;
 use App\Models\Module;
 use App\Models\Piece;
 use Illuminate\Http\Request;
@@ -85,6 +86,7 @@ class OptionsMenuController extends Controller
 
         return Inertia::render('OptionsMenu', [
             'level' => $level,
+            'levelName' => Level::find($level)?->name,
             'courseId' => $courseId,
             'courseName' => $courseName,
             'pieces' => $pieces,

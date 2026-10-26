@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
 import { useForm } from '@inertiajs/react';
+import { AdminField, AdminInput, SectionCard, Toast, buttonPrimary, control, muted, textarea } from '@/Components/AdminUi';
 
 export default function UpdateModule({ className = '', courseName }) {
     const [modules, setModules] = useState([]);
@@ -105,32 +102,23 @@ export default function UpdateModule({ className = '', courseName }) {
 
 
     return (
-        <section className={className}>
-            <header>
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Modifier un Module</h2>
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    Sélectionnez un module existant et mettez à jour ses informations.
-                </p>
-            </header>
-
+        <SectionCard
+            id="edit-module-title"
+            title="Modifier un Module"
+            description="Sélectionnez un module existant et mettez à jour ses informations."
+            className={className}
+        >
             {errors.error && (
-                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                <p role="alert" className="mx-5 mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-300">
                     {errors.error}
-                </div>
+                </p>
             )}
 
-            <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-                {successMessage && (
-                    <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
-                        <span className="block sm:inline">{successMessage}</span>
-                    </div>
-                )}
-
-                <div>
-                    <InputLabel htmlFor="level_id" value="Niveau" className="dark:text-white"/>
+            <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-4 p-5">
+                <AdminField id="edit-module-level" label="Niveau" error={errors.level_id}>
                     <select
-                        id="level_id"
-                        className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                        id="edit-module-level"
+                        className={`${control} w-full`}
                         onChange={handleLevelChange}
                         value={data.level_id}
                         required
@@ -142,14 +130,12 @@ export default function UpdateModule({ className = '', courseName }) {
                             </option>
                         ))}
                     </select>
-                    <InputError message={errors.level_id} className="mt-2" />
-                </div>
+                </AdminField>
 
-                <div>
-                    <InputLabel htmlFor="module" value="Module" className="dark:text-white"/>
+                <AdminField id="edit-module-module" label="Module">
                     <select
-                        id="module"
-                        className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                        id="edit-module-module"
+                        className={`${control} w-full`}
                         onChange={handleModuleChange}
                         value={selectedModule}
                         disabled={!data.level_id || modules.length === 0}
@@ -162,43 +148,43 @@ export default function UpdateModule({ className = '', courseName }) {
                             </option>
                         ))}
                     </select>
-                </div>
+                </AdminField>
 
-                {selectedModule && (
+                {selectedModule ? (
                     <>
-                        <div>
-                            <InputLabel htmlFor="title" value="Titre du module" className="dark:text-white"/>
-                            <TextInput
-                                id="title"
-                                type="text"
-                                className="mt-1 block w-full dark:bg-gray-900 dark:text-white dark:border-gray-700"
+                        <AdminField id="edit-module-title-input" label="Titre du module" error={errors.title}>
+                            <AdminInput
+                                id="edit-module-title-input"
                                 value={data.title}
                                 onChange={e => setData('title', e.target.value)}
                                 required
                             />
-                            <InputError message={errors.title} className="mt-2" />
-                        </div>
+                        </AdminField>
 
-                        <div>
-                            <InputLabel htmlFor="description" value="Description (optionnelle)" className="dark:text-white"/>
+                        <AdminField id="edit-module-description" label="Description (optionnelle)" error={errors.description}>
                             <textarea
-                                id="description"
-                                className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                                id="edit-module-description"
+                                className={textarea}
                                 value={data.description}
                                 onChange={e => setData('description', e.target.value)}
                                 rows="3"
                             />
-                            <InputError message={errors.description} className="mt-2" />
-                        </div>
+                        </AdminField>
 
-                        <div className="flex items-center gap-4">
-                            <PrimaryButton disabled={loading}>
+                        <div className="mt-auto flex items-center gap-4 pt-1">
+                            <button type="submit" disabled={loading} className={buttonPrimary}>
                                 {loading ? 'Mise à jour en cours...' : 'Mettre à jour le module'}
-                            </PrimaryButton>
+                            </button>
                         </div>
                     </>
+                ) : (
+                    <p className={`rounded-xl border border-dashed border-gray-300 px-4 py-6 text-center text-sm dark:border-gray-600 ${muted}`}>
+                        Choisissez un niveau puis un module pour le modifier.
+                    </p>
                 )}
             </form>
-        </section>
+
+            <Toast successMessage={successMessage} setSuccessMessage={setSuccessMessage} errorMessage="" setErrorMessage={() => {}}/>
+        </SectionCard>
     );
 }

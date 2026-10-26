@@ -1,22 +1,14 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import MessageDisplay from "@/Components/MessageDisplay.jsx";
 import {DragDropContext, Draggable, Droppable} from '@hello-pangea/dnd';
-import InputLabel from "@/Components/InputLabel.jsx";
-import settingsIcon from '../../../../icons/settings-black.svg';
-import settingsWhiteIcon from '../../../../icons/settings.svg';
-import Modal from "@/Components/Modal.jsx";
 import axios from "axios";
-import TextInput from "@/Components/TextInput.jsx";
 import {useForm} from '@inertiajs/react';
-import PrimaryButton from "@/Components/PrimaryButton.jsx";
-import DangerButton from "@/Components/DangerButton.jsx";
-import {Transition} from "@headlessui/react";
+import { AdminDialog, AdminField, AdminInput, EmptyState, SectionCard, Toast, buttonDanger, buttonPrimary, buttonSecondary, control, iconButtonDanger, muted } from '@/Components/AdminUi';
+import { GripVerticalIcon, PencilIcon, TrashIcon } from '@/Components/AppIcons';
 
 export default function UpdatePiece({ className = '', piecesList, setPiecesList, courseName }) {
     const [levelsList, setLevelsList] = useState([]);
     const [levelsModifyOptions, setLevelsModifyOptions] = useState([]);
     const [selectedFilterLevel, setSelectedFilterLevel] = useState('');
-    const [filterDisplay, setFilterDisplay] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -286,181 +278,140 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
 
     const groupedPieces = groupAndSortPieces(filteredPieces);
 
+    const levelEntries = Object.entries(groupedPieces);
+
     return (
-        <section className={className}>
-            <header className="flex items-center justify-between">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Modifier une pièce</h2>
-
-                <button
-                    className="text-white"
-                    onClick={() => setFilterDisplay(!filterDisplay)}
-                >
-                    <img
-                        src={window.matchMedia('(prefers-color-scheme: dark)').matches ? settingsWhiteIcon : settingsIcon}
-                        alt="Settings"
-                        className="h-7 w-7"
-                    />
-                </button>
-            </header>
-
-            <Transition
-                show={filterDisplay}
-                enter="transition duration-300 ease-out"
-                enterFrom="transform scale-y-0 opacity-0"
-                enterTo="transform scale-y-100 opacity-100"
-                leave="transition duration-300 ease-in"
-                leaveFrom="transform scale-y-100 opacity-100"
-                leaveTo="transform scale-y-0 opacity-0"
-            >
-                <div className="origin-top mt-6 space-y-6">
-                    <div>
-                        <InputLabel htmlFor="level" value="Niveau" className="dark:text-white" />
-                        <select
-                            id="level"
-                            className="mt-1 block w-full rounded-md dark:text-white dark:bg-gray-800"
-                            value={selectedFilterLevel}
-                            onChange={(e) => setSelectedFilterLevel(e.target.value)}
-                        >
-                            <option value="">
-                                Choisir un niveau
+        <SectionCard
+            id="pieces-title"
+            title="Modifier une pièce"
+            description={`${filteredPieces.length} pièce${filteredPieces.length > 1 ? 's' : ''} · Glissez une pièce pour changer son ordre dans le niveau`}
+            className={className}
+            action={
+                <div className="w-full sm:w-56">
+                    <label htmlFor="pieces-level-filter" className="sr-only">Filtrer par niveau</label>
+                    <select
+                        id="pieces-level-filter"
+                        className={`${control} w-full`}
+                        value={selectedFilterLevel}
+                        onChange={(e) => setSelectedFilterLevel(e.target.value)}
+                    >
+                        <option value="">Tous les niveaux</option>
+                        {levelsList.map((level) => (
+                            <option key={level.id} value={level.id}>
+                                {level.name}
                             </option>
-                            {levelsList.map((level) => (
-                                <option key={level.id} value={level.id}>
-                                    {level.name}
+                        ))}
+                    </select>
+                </div>
+            }
+        >
+            <Toast successMessage={successMessage} errorMessage={errorMessage} setSuccessMessage={setSuccessMessage} setErrorMessage={setErrorMessage}/>
+
+            <AdminDialog
+                show={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                title="Retirer une pièce"
+                actions={<>
+                    <button type="button" onClick={() => setIsDeleteModalOpen(false)} className={buttonSecondary}>Annuler</button>
+                    <button type="button" disabled={processing} onClick={() => handleDelete(currentPiece.current?.id)} className={buttonDanger}>Retirer</button>
+                </>}
+            >
+                <p>
+                    Êtes-vous sûr de vouloir retirer la pièce <strong className="text-gray-900 dark:text-white">{currentPiece.current?.title}</strong>
+                    &nbsp;de <strong className="text-gray-900 dark:text-white">{currentPiece.current?.composer}</strong> du
+                    niveau <strong className="text-gray-900 dark:text-white">{currentPiece.current?.level.name}</strong> ?
+                </p>
+            </AdminDialog>
+
+            <AdminDialog
+                wide
+                show={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                title="Modifier une pièce"
+                actions={<>
+                    <button type="button" onClick={() => setIsEditModalOpen(false)} className={buttonSecondary}>Annuler</button>
+                    <button type="submit" form="edit-piece-form" disabled={processing} className={buttonPrimary}>Sauvegarder</button>
+                </>}
+            >
+                <form id="edit-piece-form" onSubmit={submitModifications} className="-mx-1 max-h-[60vh] overflow-y-auto px-1">
+                    <div className="grid grid-cols-1 gap-x-4 gap-y-4 pb-1 sm:grid-cols-2">
+                        <AdminField id="edit-piece-level" label="Niveau">
+                            <select
+                                id="edit-piece-level"
+                                className={`${control} w-full`}
+                                value={data.level}
+                                onChange={(e) => setData('level', e.target.value)}
+                            >
+                                <option value={currentPiece.current?.level?.id || ''}>
+                                    {levelsModifyOptions.find(level => level.id === parseInt(currentPiece.current?.level?.id))?.name || 'Sélectionner un niveau'}
                                 </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-            </Transition>
+                                {levelsModifyOptions.filter(level => level.id !== parseInt(currentPiece.current?.level?.id)).map((level) => (
+                                    <option key={level.id} value={level.id}>{level.name}</option>
+                                ))}
+                            </select>
+                        </AdminField>
 
-            <MessageDisplay successMessage={successMessage} errorMessage={errorMessage} setSuccessMessage={setSuccessMessage} setErrorMessage={setErrorMessage}/>
-
-            <Modal show={isDeleteModalOpen} close={() => setIsDeleteModalOpen(false)}>
-                <div className="p-4">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Retirer une pièce</h2>
-
-                    <p className="text-gray-800 dark:text-gray-200">
-                        Êtes-vous sûr de vouloir retirer la pièce <span className="font-semibold">{currentPiece.current?.title}</span>
-                        &nbsp;de <span className="font-semibold">{currentPiece.current?.composer}</span> du
-                        niveau <span className="font-semibold">{currentPiece.current?.level.name}</span> ?
-                    </p>
-
-                    <div className="flex justify-end mt-4">
-                        <button
-                            onClick={() => setIsDeleteModalOpen(false)}
-                            className="mr-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-                            type="button"
-                        >
-                            Annuler
-                        </button>
-
-                        <DangerButton disabled={processing} onClick={() => handleDelete(currentPiece.current?.id)}>
-                            Retirer
-                        </DangerButton>
-                    </div>
-                </div>
-            </Modal>
-
-            <Modal show={isEditModalOpen} close={() => setIsEditModalOpen(false)} maxWidth="2xl">
-                <div className="p-6">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Modifier une pièce</h2>
-
-                    <form onSubmit={submitModifications} className={`processing ? 'opacity-50' : '' space-y-3`}>
-                        <div className="max-h-96 overflow-y-auto hide-scrollbar">
-                            <div>
-                                <InputLabel htmlFor="level" value="Niveau" className="dark:text-white"/>
+                        {/* Add module selection for LitMus courses */}
+                        {isLitMusCourse && (
+                            <AdminField id="edit-piece-module" label="Module (optionnel)">
                                 <select
-                                    id="level"
-                                    className="mt-1 block w-full rounded-md dark:text-white dark:bg-gray-800"
-                                    value={data.level}
-                                    onChange={(e) => setData('level', e.target.value)}
+                                    id="edit-piece-module"
+                                    className={`${control} w-full`}
+                                    value={data.module_id || ''}
+                                    onChange={(e) => setData('module_id', e.target.value)}
                                 >
-                                    <option value={currentPiece.current?.level?.id || ''}>
-                                        {levelsModifyOptions.find(level => level.id === parseInt(currentPiece.current?.level?.id))?.name || 'Sélectionner un niveau'}
-                                    </option>
-                                    {levelsModifyOptions.filter(level => level.id !== parseInt(currentPiece.current?.level?.id)).map((level) => (
-                                        <option key={level.id} value={level.id}>{level.name}</option>
+                                    <option value="">Aucun module</option>
+                                    {modules.map((module) => (
+                                        <option key={module.id} value={module.id}>
+                                            {module.title}
+                                        </option>
                                     ))}
                                 </select>
-                            </div>
+                            </AdminField>
+                        )}
 
-                            {/* Add module selection for LitMus courses */}
-                            {isLitMusCourse && (
-                                <div>
-                                    <InputLabel htmlFor="module_id" value="Module (optionnel)" className="dark:text-white"/>
-                                    <select
-                                        id="module_id"
-                                        className="mt-1 block w-full rounded-md dark:text-white dark:bg-gray-800"
-                                        value={data.module_id || ''}
-                                        onChange={(e) => setData('module_id', e.target.value)}
-                                    >
-                                        <option value="">Aucun module</option>
-                                        {modules.map((module) => (
-                                            <option key={module.id} value={module.id}>
-                                                {module.title}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
+                        {/* Render fields in the order specified by fieldConfigs */}
+                        {fieldConfigs.map((field) => (
+                            <AdminField key={field.key} id={`edit-piece-${field.key}`} label={field.label}>
+                                <AdminInput
+                                    id={`edit-piece-${field.key}`}
+                                    value={data[field.key]}
+                                    onChange={(e) => setData(field.key, e.target.value)}
+                                />
+                            </AdminField>
+                        ))}
 
-                            {/* Render fields in the order specified by fieldConfigs */}
-                            {fieldConfigs.map((field) => (
-                                <div key={field.key}>
-                                    <InputLabel htmlFor={field.key} value={field.label} className="dark:text-white"/>
-                                    <TextInput
-                                        id={field.key}
-                                        type="text"
-                                        className="mt-1 block border border-black w-full rounded-md dark:text-white dark:bg-gray-800"
-                                        value={data[field.key]}
-                                        onChange={(e) => setData(field.key, e.target.value)}
-                                    />
-                                </div>
-                            ))}
-
-                            <div>
-                                <InputLabel htmlFor="file_name" value="Nom du fichier audio" className="dark:text-white"/>
-                                <TextInput
-                                    id="file_name"
-                                    className="mt-1 block border border-black w-full rounded-md dark:text-white dark:bg-gray-800"
+                        <div className="sm:col-span-2">
+                            <AdminField id="edit-piece-file-name" label="Nom du fichier audio">
+                                <AdminInput
+                                    id="edit-piece-file-name"
+                                    className="font-mono disabled:bg-gray-50 disabled:text-gray-500 dark:disabled:bg-gray-800"
                                     value={data.file_name}
                                     readOnly
                                     disabled
                                 />
-                            </div>
-
-                            <div className="flex justify-start mt-4">
-                                <button
-                                    onClick={() => setIsEditModalOpen(false)}
-                                    className="mr-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-                                    type="button"
-                                >
-                                    Annuler
-                                </button>
-
-                                <PrimaryButton disabled={processing} className="dark:bg-blue-500 dark:hover:bg-blue-600">
-                                    Sauvegarder
-                                </PrimaryButton>
-                            </div>
+                            </AdminField>
                         </div>
-                    </form>
-                </div>
-            </Modal>
+                    </div>
+                </form>
+            </AdminDialog>
 
-            <div className="mt-6 space-y-6">
+            {levelEntries.length === 0 ? (
+                <EmptyState>Aucune pièce pour le moment.</EmptyState>
+            ) : (
                 <DragDropContext onDragEnd={handleOnDragEnd}>
-                    <div className="w-full max-h-[600px] overflow-y-auto mt-4 bg-gray-50 dark:bg-gray-900 rounded-md">
-                        {Object.entries(groupedPieces).map(([levelName, levelPieces]) => (
+                    <div className="max-h-[640px] overflow-y-auto">
+                        {levelEntries.map(([levelName, levelPieces]) => (
                             <div key={levelName}>
                                 {/* Level Header */}
-                                <h3 className="w-fit text-lg font-semibold text-gray-800 dark:text-gray-200 mt-2 mb-2 ml-1">
-                                    Niveau: {levelName}
+                                <h3 className="sticky top-0 z-10 flex items-baseline gap-2 border-y border-gray-200 bg-gray-50 px-5 py-2 text-sm font-semibold text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                                    Niveau {levelName}
+                                    <span className={`font-normal ${muted}`}>{levelPieces.length}</span>
                                 </h3>
                                 <Droppable droppableId={`level-${levelName}`}>
                                     {(provided) => (
                                         <ul
-                                            className="w-full divide-y divide-gray-300 dark:divide-neutral-700"
+                                            className="divide-y divide-gray-100 dark:divide-gray-700/70"
                                             {...provided.droppableProps}
                                             ref={provided.innerRef}
                                         >
@@ -470,53 +421,50 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                                                     draggableId={piece.id.toString()}
                                                     index={index}
                                                 >
-                                                    {(provided) => (
+                                                    {(provided, snapshot) => (
                                                         <li
-                                                            className="flex flex-col sm:flex-row items-start sm:items-center px-4 py-3 bg-white dark:bg-gray-800 space-y-2 sm:space-y-0 sm:space-x-4"
+                                                            className={`flex items-center gap-3 px-5 py-2.5 ${
+                                                                snapshot.isDragging ? 'rounded-xl bg-white shadow-lg ring-1 ring-[#B4283F] dark:bg-gray-800' : 'bg-white dark:bg-gray-800'
+                                                            }`}
                                                             ref={provided.innerRef}
                                                             {...provided.draggableProps}
                                                             {...provided.dragHandleProps}
                                                         >
+                                                            <GripVerticalIcon className={`h-4 w-4 cursor-grab ${muted}`}/>
                                                             {/* Number Column */}
-                                                            <span
-                                                                className="w-9 font-medium text-gray-700 dark:text-gray-200">
+                                                            <span className={`w-7 shrink-0 text-right text-sm tabular-nums ${muted}`}>
                                                                 {index + 1}
                                                             </span>
                                                             {/* Info Columns */}
-                                                            <div className="flex-1 flex flex-wrap sm:flex-nowrap gap-y-2 sm:gap-y-0 sm:gap-x-6">
-                                                                <span className="w-full sm:w-12 truncate font-semibold text-gray-900 dark:text-gray-100">
-                                                                    {piece.level.name}
-                                                                </span>
-                                                                <span className="truncate text-gray-800 dark:text-gray-300">
-                                                                    {piece.title} &nbsp;&nbsp;
-                                                                </span>
-                                                                <span className="truncate text-gray-600 dark:text-gray-400">
-                                                                    {piece.composer} &nbsp;&nbsp;
-                                                                </span>
-                                                                {piece.no_mvt && (
-                                                                    <span className="truncate text-gray-500 dark:text-gray-400">
-                                                                        Mvt: {piece.no_mvt} &nbsp;&nbsp;
-                                                                    </span>
-                                                                )}
-                                                                {piece.mvt && (
-                                                                    <span className="truncate text-gray-500 dark:text-gray-400">
-                                                                        {piece.mvt}
-                                                                    </span>
-                                                                )}
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="truncate font-medium text-gray-900 dark:text-white">{piece.title}</p>
+                                                                <p className={`truncate text-sm ${muted}`}>
+                                                                    {[
+                                                                        piece.composer,
+                                                                        piece.no_mvt && `Mvt: ${piece.no_mvt}`,
+                                                                        piece.mvt,
+                                                                    ].filter(Boolean).join(' · ')}
+                                                                </p>
                                                             </div>
                                                             {/* Actions */}
-                                                            <div className="flex space-x-2">
+                                                            <div className="flex shrink-0 items-center gap-1">
                                                                 <button
+                                                                    type="button"
                                                                     onClick={() => openEditModal(piece)}
-                                                                    className="text-blue-500 hover:underline"
+                                                                    aria-label={`Modifier ${piece.title}`}
+                                                                    title="Modifier"
+                                                                    className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B4283F] dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                                                                 >
-                                                                    Modifier
+                                                                    <PencilIcon className="h-4 w-4"/>
                                                                 </button>
                                                                 <button
+                                                                    type="button"
                                                                     onClick={() => openDeleteModal(piece)}
-                                                                    className="text-red-500 hover:underline"
+                                                                    aria-label={`Retirer ${piece.title}`}
+                                                                    title="Retirer"
+                                                                    className={iconButtonDanger}
                                                                 >
-                                                                    Retirer
+                                                                    <TrashIcon className="h-4 w-4"/>
                                                                 </button>
                                                             </div>
                                                         </li>
@@ -531,7 +479,7 @@ export default function UpdatePiece({ className = '', piecesList, setPiecesList,
                         ))}
                     </div>
                 </DragDropContext>
-            </div>
-        </section>
+            )}
+        </SectionCard>
     );
 }

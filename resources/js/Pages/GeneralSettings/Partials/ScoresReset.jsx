@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import Modal from "@/Components/Modal.jsx";
-import MessageDisplay from "@/Components/MessageDisplay.jsx";
 import axios from 'axios';
+import { AdminDialog, EmptyState, SectionCard, buttonDanger, buttonSecondary, muted } from "@/Components/AdminUi";
+import { RotateCcwIcon } from "@/Components/AppIcons";
 
-export default function ScoresReset({auth, scores, getScores, successMessage, setSuccessMessage, errorMessage, setErrorMessage, selectedInstitution, selectedInstitutionId }) {
+export default function ScoresReset({auth, scores, courses = [], getScores, successMessage, setSuccessMessage, errorMessage, setErrorMessage, selectedInstitution, selectedInstitutionId }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const openModal = () => setIsModalOpen(true);
@@ -24,71 +24,66 @@ export default function ScoresReset({auth, scores, getScores, successMessage, se
         }
     };
 
+    // Scores can only be reset for the admin's own institution
+    const canEdit = auth.user.institution_id === selectedInstitutionId;
+    const courseNames = Object.fromEntries(courses.map((course) => [course.id, course.name]));
+
     return (
-        <section>
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-semibold text-gray-900 max-w-xs dark:text-white">Réinitialisation des scores - {selectedInstitution}</h2>
-                <button
-                    onClick={openModal}
-                    className={`px-4 py-2 rounded-md transition duration-200 ml-4 ${
-                        scores.length === 0 || auth.user.institution_id !== selectedInstitutionId
-                            ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                            : 'bg-red-500 text-white hover:bg-red-600'
-                    }`}
-                    disabled={scores.length === 0 || auth.user.institution_id !== selectedInstitutionId}
-                >
-                    Réinitialiser
+        <SectionCard
+            id="scores-title"
+            title={`Scores · ${selectedInstitution}`}
+            description={`${scores.length} score${scores.length > 1 ? 's' : ''} enregistré${scores.length > 1 ? 's' : ''}`}
+            action={canEdit && (
+                <button type="button" onClick={openModal} disabled={scores.length === 0} className={buttonDanger}>
+                    <RotateCcwIcon className="h-4 w-4"/> Réinitialiser
                 </button>
-            </div>
-
-            <MessageDisplay
-                successMessage={successMessage}
-                errorMessage={errorMessage}
-                setErrorMessage={setErrorMessage}
-                setSuccessMessage={setSuccessMessage}
-            />
-
-            <div className="flex flex-col space-y-4 max-h-[600px] overflow-y-auto p-4 md:p-8">
-                {scores.map((scoreItem, index) => (
-                    <div
-                        key={index}
-                        className="p-3 border rounded-lg shadow-lg flex justify-between items-center bg-gray-100 transition-transform duration-200 hover:scale-105 hover:text-blue-600 dark:bg-gray-600 dark:text-white dark:border-gray-800 dark:hover:text-blue-400"
-                    >
-                        <div>
-                            <h3 className="text-xl font-semibold">
-                                {scoreItem.user.last_name}, {scoreItem.user.first_name}
-                            </h3>
-                            <p className="text-gray-600 dark:text-white">{scoreItem.user.username}</p>
-                        </div>
-
-                        <div>{scoreItem.score}</div>
-                    </div>
-                ))}
-            </div>
-
-            {isModalOpen && (
-                <Modal show={isModalOpen}>
-                    <div className="p-6">
-                        <h2 className="text-lg font-bold mb-4 dark:text-white">Confirmation</h2>
-                        <p className="dark:text-white">Êtes-vous sûr de vouloir <strong>réinitialiser tous les scores</strong> de l'institution : <strong>{selectedInstitution}</strong>?</p>
-                        <p className="text-red-500 mt-6">Cette action est irréversible.</p>
-                        <div className="mt-6 flex justify-end space-x-4">
-                            <button
-                                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
-                                onClick={resetScores}
-                            >
-                                Confirmer
-                            </button>
-                            <button
-                                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition"
-                                onClick={closeModal}
-                            >
-                                Annuler
-                            </button>
-                        </div>
-                    </div>
-                </Modal>
             )}
-        </section>
+        >
+            {scores.length === 0 ? (
+                <EmptyState>Aucun score pour cette institution.</EmptyState>
+            ) : (
+                <div className="max-h-[480px] overflow-auto">
+                    <table className="min-w-full text-left text-sm">
+                        <thead className={`sticky top-0 bg-gray-50 text-xs uppercase tracking-wide dark:bg-gray-900 ${muted}`}>
+                            <tr>
+                                <th scope="col" className="w-14 py-3 pl-5 pr-2 font-semibold">#</th>
+                                <th scope="col" className="px-4 py-3 font-semibold">Élève</th>
+                                <th scope="col" className="hidden px-4 py-3 font-semibold sm:table-cell">Cours</th>
+                                <th scope="col" className="py-3 pl-4 pr-5 text-right font-semibold">Score</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 dark:divide-gray-700/70">
+                            {scores.map((scoreItem, index) => (
+                                <tr key={scoreItem.id ?? index}>
+                                    <td className={`py-3 pl-5 pr-2 tabular-nums ${muted}`}>{index + 1}</td>
+                                    <td className="px-4 py-3">
+                                        <p className="font-medium text-gray-900 dark:text-white">{scoreItem.user.last_name}, {scoreItem.user.first_name}</p>
+                                        <p className={`text-xs ${muted}`}>
+                                            {scoreItem.user.username}
+                                            {courseNames[scoreItem.course_id] && <span className="sm:hidden"> · {courseNames[scoreItem.course_id]}</span>}
+                                        </p>
+                                    </td>
+                                    <td className="hidden px-4 py-3 text-gray-700 dark:text-gray-300 sm:table-cell">{courseNames[scoreItem.course_id] ?? '—'}</td>
+                                    <td className="py-3 pl-4 pr-5 text-right font-semibold tabular-nums text-gray-900 dark:text-white">{Number(scoreItem.score).toLocaleString('fr-FR')}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            <AdminDialog
+                show={isModalOpen}
+                onClose={closeModal}
+                title="Réinitialiser les scores ?"
+                actions={<>
+                    <button type="button" onClick={closeModal} className={buttonSecondary}>Annuler</button>
+                    <button type="button" onClick={resetScores} className={buttonDanger}>Réinitialiser</button>
+                </>}
+            >
+                <p>Êtes-vous sûr de vouloir <strong className="text-gray-900 dark:text-white">réinitialiser tous les scores</strong> de l'institution <strong className="text-gray-900 dark:text-white">{selectedInstitution}</strong> ?</p>
+                <p className="mt-3 font-medium text-red-600 dark:text-red-400">Cette action est irréversible.</p>
+            </AdminDialog>
+        </SectionCard>
     );
 }

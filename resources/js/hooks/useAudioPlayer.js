@@ -1,8 +1,28 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { AUDIO_BASE_URL } from './audioBaseUrl.js';
 
-export const useAudioPlayer = (currentPiece, courseName, onNext) => {
-    const audioRef = useRef(new Audio());
+// readyState values of a media element
+const HAVE_METADATA = 1;
+const HAVE_FUTURE_DATA = 3;
+
+const audioUrl = (piece, courseName) => courseName === "Formation Musicale et Auditive"
+    ? `${AUDIO_BASE_URL}/storage/fma_chords/${piece.file_name}`
+    : `${AUDIO_BASE_URL}/storage/litmus_pieces/${piece.file_name}`;
+
+const releaseAudio = (audioElement) => {
+    audioElement.pause();
+    audioElement.removeAttribute('src');
+    audioElement.load();
+};
+
+export const useAudioPlayer = (currentPiece, courseName, onNext, nextPiece = null) => {
+    const audioRef = useRef(null);
+    // Created once; useRef(new Audio()) would build a throwaway element on every render
+    if (audioRef.current === null) {
+        audioRef.current = new Audio();
+    }
+    // Second player that buffers the next piece in the background: { id, audio }
+    const preloadRef = useRef(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -40,6 +60,33 @@ export const useAudioPlayer = (currentPiece, courseName, onNext) => {
 
     // Separate effect for handling piece changes vs play/pause
     useEffect(() => {
+        if (currentPiece && currentPieceId !== currentPiece.id) {
+            // First, safely pause current audio and cancel any ongoing promises
+            safelyPauseAudio();
+            setProgress(0);
+            setCurrentPieceId(currentPiece.id);
+
+            const preloaded = preloadRef.current;
+            if (preloaded && preloaded.id === currentPiece.id) {
+                // The next piece is already buffering: switch to that player instead of starting a new download
+                releaseAudio(audioRef.current);
+                audioRef.current = preloaded.audio;
+                preloadRef.current = null;
+
+                const audioElement = audioRef.current;
+                audioElement.currentTime = 0;
+                setDuration(audioElement.readyState >= HAVE_METADATA ? audioElement.duration : 0);
+                setIsLoading(audioElement.readyState < HAVE_FUTURE_DATA);
+            } else {
+                const audioElement = audioRef.current;
+                setDuration(0);
+                setIsLoading(true);
+                audioElement.src = audioUrl(currentPiece, courseName);
+                audioElement.currentTime = 0; // Reset position only for new pieces
+            }
+        }
+
+        // Listeners go on whichever element is playing now (it may have just been swapped)
         const audioElement = audioRef.current;
 
         const handleTimeUpdate = () => setProgress(audioElement.currentTime);
@@ -57,28 +104,6 @@ export const useAudioPlayer = (currentPiece, courseName, onNext) => {
         };
 
         if (currentPiece) {
-            // Check if this is a new piece
-            const isNewPiece = currentPieceId !== currentPiece.id;
-
-            if (isNewPiece) {
-                // First, safely pause current audio and cancel any ongoing promises
-                safelyPauseAudio();
-
-                const audioSrc = courseName === "Formation Musicale et Auditive"
-                    ? `${AUDIO_BASE_URL}/storage/fma_chords/${currentPiece.file_name}`
-                    : `${AUDIO_BASE_URL}/storage/litmus_pieces/${currentPiece.file_name}`;
-
-                // Only reset states when changing to a new piece
-                setProgress(0);
-                setDuration(0);
-                setIsLoading(true);
-                setCurrentPieceId(currentPiece.id);
-
-                audioElement.src = audioSrc;
-                audioElement.currentTime = 0; // Reset position only for new pieces
-            }
-
-            // Add event listeners (always needed)
             audioElement.addEventListener('timeupdate', handleTimeUpdate);
             audioElement.addEventListener('loadedmetadata', handleLoadedMetadata);
             audioElement.addEventListener('canplaythrough', handleCanPlayThrough);
@@ -88,16 +113,30 @@ export const useAudioPlayer = (currentPiece, courseName, onNext) => {
         }
 
         return () => {
-            if (audioElement) {
-                audioElement.removeEventListener('timeupdate', handleTimeUpdate);
-                audioElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
-                audioElement.removeEventListener('canplaythrough', handleCanPlayThrough);
-                audioElement.removeEventListener('loadstart', handleLoadStart);
-                audioElement.removeEventListener('ended', handleEnded);
-                audioElement.removeEventListener('error', handleError);
-            }
+            audioElement.removeEventListener('timeupdate', handleTimeUpdate);
+            audioElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
+            audioElement.removeEventListener('canplaythrough', handleCanPlayThrough);
+            audioElement.removeEventListener('loadstart', handleLoadStart);
+            audioElement.removeEventListener('ended', handleEnded);
+            audioElement.removeEventListener('error', handleError);
         };
     }, [currentPiece, courseName, onNext, currentPieceId, safelyPauseAudio]);
+
+    // Buffer the next piece once the current one is ready, so it doesn't compete for bandwidth
+    useEffect(() => {
+        if (!nextPiece || isLoading || !currentPiece || nextPiece.id === currentPiece.id) return;
+        if (preloadRef.current?.id === nextPiece.id) return;
+
+        if (preloadRef.current) {
+            releaseAudio(preloadRef.current.audio);
+        }
+
+        const audio = new Audio();
+        audio.preload = 'auto';
+        audio.src = audioUrl(nextPiece, courseName);
+        audio.load();
+        preloadRef.current = { id: nextPiece.id, audio };
+    }, [nextPiece, currentPiece, courseName, isLoading]);
 
     // Separate effect for handling play/pause state
     useEffect(() => {
@@ -144,6 +183,10 @@ export const useAudioPlayer = (currentPiece, courseName, onNext) => {
                 audioElement.currentTime = 0;
                 audioElement.src = '';
             }
+            if (preloadRef.current) {
+                releaseAudio(preloadRef.current.audio);
+                preloadRef.current = null;
+            }
         };
     }, [safelyPauseAudio]);
 
@@ -155,16 +198,27 @@ export const useAudioPlayer = (currentPiece, courseName, onNext) => {
         setIsPlaying(false);
     }, [safelyPauseAudio]);
 
-    // New function to restart current piece
+    // Restart the current piece from the beginning. Seek without pausing: the play/pause
+    // effect only runs when isPlaying changes, so pausing here while isPlaying is already
+    // true would leave the audio paused with the UI still showing it as playing.
     const restartCurrentPiece = useCallback(() => {
         if (currentPiece) {
             const audioElement = audioRef.current;
-            safelyPauseAudio();
             audioElement.currentTime = 0;
             setProgress(0);
-            setIsPlaying(true);
+
+            if (!isPlaying) {
+                setIsPlaying(true);
+            } else if (audioElement.paused) {
+                audioElement.play().catch(error => {
+                    if (error.name !== 'AbortError') {
+                        console.error("Error playing audio:", error);
+                    }
+                    setIsPlaying(false);
+                });
+            }
         }
-    }, [currentPiece, safelyPauseAudio]);
+    }, [currentPiece, isPlaying]);
 
     return {
         audioRef,

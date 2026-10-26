@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use App\Models\Institution;
 use App\Models\Level;
+use App\Models\Module;
+use App\Models\Score;
 use App\Models\User;
+use App\Models\UserCourseMode;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -39,10 +42,45 @@ class LevelController extends Controller
             ->orderBy('name', 'asc')  // Sort alphabetically by name
             ->get();
 
+        // Module titles per level, used as practice topics
+        $modulesByLevel = Module::whereIn('level_id', $levels->pluck('id'))
+            ->orderBy('order')
+            ->get(['level_id', 'title'])
+            ->groupBy('level_id')
+            ->map(fn ($modules) => $modules->pluck('title'));
+
+        // Scores are cumulative per course, so the leaderboard is course-wide
+        $leaderboard = Score::with('user:id,username')
+            ->where('course_id', $courseId)
+            ->where('score', '>', 0)
+            ->orderBy('score', 'desc')
+            ->take(3)
+            ->get()
+            ->map(fn ($score) => [
+                'userId' => $score->user_id,
+                'username' => $score->user->username,
+                'score' => $score->score,
+            ]);
+
+        $userScore = Score::where('user_id', $user->id)->where('course_id', $courseId)->value('score') ?? 0;
+        $userRank = $userScore > 0
+            ? Score::where('course_id', $courseId)->where('score', '>', $userScore)->count() + 1
+            : null;
+
+        $modeCounts = UserCourseMode::where('user_id', $user->id)->where('course_id', $courseId)->first();
+
         return Inertia::render('MainMenu', [
             'levels' => $levels,
             'courseId' => $courseId,
             'courseName' => $courseName,
+            'modulesByLevel' => $modulesByLevel,
+            'leaderboard' => $leaderboard,
+            'userStats' => [
+                'score' => $userScore,
+                'rank' => $userRank,
+                'quizCount' => $modeCounts->quiz_count ?? 0,
+                'practiceCount' => $modeCounts->practice_count ?? 0,
+            ],
         ]);
     }
 

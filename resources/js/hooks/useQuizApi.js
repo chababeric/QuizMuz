@@ -1,14 +1,9 @@
 import { useCallback } from 'react';
 import axios from 'axios';
+import { pingActivity } from './activityPing.js';
 
 export const useQuizApi = () => {
-    const updateLastActionTime = useCallback(async () => {
-        try {
-            await axios.post(route('updateLastActionTime'));
-        } catch (error) {
-            console.error('Error updating last action time:', error);
-        }
-    }, []);
+    const updateLastActionTime = useCallback(() => pingActivity(), []);
 
     // The quiz routes record the user's activity server-side, so no separate keep-alive call is needed here
     const makeApiCall = useCallback(async (url, payload = {}, options = {}) => {

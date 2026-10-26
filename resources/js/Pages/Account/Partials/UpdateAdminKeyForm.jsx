@@ -1,10 +1,6 @@
 import { useRef, useState } from 'react';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
 import { useForm, usePage } from '@inertiajs/react';
-import { Transition } from '@headlessui/react';
+import { AdminField, AdminInput, SavedNote, SectionCard, buttonPrimary, buttonSecondary, muted } from '@/Components/AdminUi';
 
 export default function UpdateAdminKeyForm({ className = '' }) {
     const user = usePage().props.auth.user;
@@ -78,106 +74,73 @@ export default function UpdateAdminKeyForm({ className = '' }) {
     };
 
     return (
-        <section className={className}>
-            <header>
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Clé d'administrateur</h2>
-
-                <p className="mt-1 text-sm text-gray-600 dark:text-white">
-                    Modifier la clé d'administrateur.
-                </p>
-            </header>
-
+        <SectionCard id="admin-key-title" title="Clé d'administrateur" description="Modifier la clé d'administrateur." className={className}>
             {errors.error && (
-                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                <p role="alert" className="mx-5 mt-5 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-300">
                     {errors.error}
-                </div>
+                </p>
             )}
 
-            <form onSubmit={validateKey} className="mt-6 space-y-6">
-                <p className="text-sm text-gray-800 dark:text-white">
-                    Pour des raisons de sécurité, la clé d'administrateur ne peut pas être affichée à cause de son chiffrement.
-                    Cependant, vous pouvez la vérifier en la saisissant dans le champ ci-dessous.
-                </p>
-                <div>
-                    <InputLabel htmlFor="key" value="Clé admin à vérifier" className="dark:text-white"/>
+            <div className="grid flex-1 grid-cols-1 divide-y divide-gray-200 md:grid-cols-2 md:divide-x md:divide-y-0 dark:divide-gray-700">
+                <form onSubmit={validateKey} className="flex flex-col gap-5 p-5">
+                    <div>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Vérifier la clé actuelle</h3>
+                        <p className={`mt-1 text-sm ${muted}`}>
+                            Pour des raisons de sécurité, la clé d'administrateur ne peut pas être affichée à cause de son chiffrement.
+                            Cependant, vous pouvez la vérifier en la saisissant dans le champ ci-dessous.
+                        </p>
+                    </div>
 
-                    <TextInput
-                        id="key"
-                        ref={confirmationKey}
-                        value={data.key}
-                        onChange={(e) => setData('key', e.target.value)}
-                        className="mt-1 block w-full dark:text-white dark:bg-gray-800"
-                        autoComplete="key"
-                        required
-                    />
+                    <AdminField id="key" label="Clé admin à vérifier" error={errors.key}>
+                        <AdminInput
+                            id="key"
+                            ref={confirmationKey}
+                            value={data.key}
+                            onChange={(e) => setData('key', e.target.value)}
+                            autoComplete="off"
+                            required
+                        />
+                    </AdminField>
 
-                    <InputError className="mt-2" message={errors.key}/>
-                </div>
+                    <div className="mt-auto flex items-center gap-4 pt-1">
+                        <button type="submit" disabled={processing} className={buttonSecondary}>Vérifier</button>
+                        <SavedNote show={recentlyValidated}>Clé correcte.</SavedNote>
+                    </div>
+                </form>
 
-                <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing} className="dark:bg-blue-500 dark:hover:bg-blue-700">Vérifier</PrimaryButton>
+                {/* Key Update Form */}
+                <form onSubmit={updateKey} className="flex flex-col gap-5 p-5">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Définir une nouvelle clé</h3>
 
-                    <Transition
-                        show={recentlyValidated}
-                        enter="transition ease-in-out"
-                        enterFrom="opacity-0"
-                        leave="transition ease-in-out"
-                        leaveTo="opacity-0"
-                    >
-                        <p className="text-sm text-green-500">Clé correcte.</p>
-                    </Transition>
-                </div>
-            </form>
+                    <AdminField id="newKey" label="Nouvelle clé admin" error={errors.newKey}>
+                        <AdminInput
+                            id="newKey"
+                            ref={newKey}
+                            value={data.newKey}
+                            onChange={(e) => setData('newKey', e.target.value)}
+                            autoComplete="off"
+                            required
+                        />
+                    </AdminField>
 
-            {/* Key Update Form */}
-            <form onSubmit={updateKey} className="mt-10 space-y-6">
-                <div>
-                    <InputLabel htmlFor="newKey" value="Nouvelle clé admin" className="dark:text-white"/>
+                    <AdminField id="userPassword" label={`Mot de passe de ${user.username}`} error={errors.userPassword}>
+                        <AdminInput
+                            id="userPassword"
+                            ref={userPassword}
+                            value={data.userPassword}
+                            onChange={(e) => setData('userPassword', e.target.value)}
+                            type="password"
+                            autoComplete="current-password"
+                            required
+                        />
+                    </AdminField>
 
-                    <TextInput
-                        id="newKey"
-                        ref={newKey}
-                        value={data.newKey}
-                        onChange={(e) => setData('newKey', e.target.value)}
-                        className="mt-1 block w-full dark:text-white dark:bg-gray-800"
-                        autoComplete="newKey"
-                        required
-                    />
-
-                    <InputError className="mt-2" message={errors.newKey}/>
-                </div>
-
-                <div>
-                    <InputLabel htmlFor="userPassword" value={`Mot de passe de ${user.username}`} className="dark:text-white"/>
-
-                    <TextInput
-                        id="userPassword"
-                        ref={userPassword}
-                        value={data.userPassword}
-                        onChange={(e) => setData('userPassword', e.target.value)}
-                        type="password"
-                        className="mt-1 block w-full dark:text-white dark:bg-gray-800"
-                        autoComplete="password"
-                        required
-                    />
-
-                    <InputError className="mt-2" message={errors.userPassword}/>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing} className="dark:bg-blue-500 dark:hover:bg-blue-700">Sauvegarder</PrimaryButton>
-
-                    <Transition
-                        show={recentlyUpdated}
-                        enter="transition ease-in-out"
-                        enterFrom="opacity-0"
-                        leave="transition ease-in-out"
-                        leaveTo="opacity-0"
-                    >
-                        <p className="text-sm text-green-500">Clé sauvegardée.</p>
-                    </Transition>
-                </div>
-            </form>
-        </section>
+                    <div className="mt-auto flex items-center gap-4 pt-1">
+                        <button type="submit" disabled={processing} className={buttonPrimary}>Sauvegarder</button>
+                        <SavedNote show={recentlyUpdated}>Clé sauvegardée.</SavedNote>
+                    </div>
+                </form>
+            </div>
+        </SectionCard>
     );
 }

@@ -1,13 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
-import DangerButton from '@/Components/DangerButton.jsx';
-import InputError from '@/Components/InputError.jsx';
-import InputLabel from '@/Components/InputLabel.jsx';
-import Modal from '@/Components/Modal.jsx';
-import SecondaryButton from '@/Components/SecondaryButton.jsx';
-import TextInput from '@/Components/TextInput.jsx';
 import { useForm, usePage } from '@inertiajs/react';
-import PrimaryButton from "@/Components/PrimaryButton.jsx";
-import {Transition} from "@headlessui/react";
+import { AdminDialog, AdminField, AdminInput, SavedNote, SectionCard, buttonDanger, buttonSecondary } from '@/Components/AdminUi';
 
 export default function DeleteUserForm({ className = '' }) {
     const { flash, errors: pageErrors } = usePage().props;
@@ -76,90 +69,67 @@ export default function DeleteUserForm({ className = '' }) {
     };
 
     return (
-        <section className={`space-y-6 ${className}`}>
-            <header>
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Suppression de compte</h2>
-
-                <p className="mt-1 text-sm text-gray-600 dark:text-white">
-                    Une fois un compte est supprimé, toutes ses données seront définitivement supprimées. Veuillez entrer
-                    le <strong>nom d'utilisateur</strong> du compte à supprimer.
-                    <br/><br/>
-                    Attention, vous pouvez seulement supprimer des comptes de votre <strong>institution</strong>.
-                </p>
-            </header>
-
-            <form onSubmit={submit} className="mt-6 space-y-6">
-                <div>
-                    <InputLabel htmlFor="usernameToDelete" value="Nom d'utilisateur" className="dark:text-white"/>
-
-                    <TextInput
-                        id="usernameToDelete"
-                        value={data.usernameToDelete}
-                        onChange={(e) => setData('usernameToDelete', e.target.value)}
-                        className="mt-1 block w-full dark:text-white dark:bg-gray-800"
-                        autoComplete="usernameToDelete"
-                        required
-                    />
-
-                    <InputError message={pageErrors.usernameToDelete || errors.usernameToDelete} className="mt-2"/>
+        <SectionCard id="delete-account-title" title="Suppression de compte" description="Supprimer définitivement le compte d'un utilisateur." className={className}>
+            <form onSubmit={submit} className="grid grid-cols-1 items-start gap-5 p-5 md:grid-cols-2">
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200">
+                    <p>
+                        Une fois un compte est supprimé, toutes ses données seront définitivement supprimées. Veuillez entrer
+                        le <strong>nom d'utilisateur</strong> du compte à supprimer.
+                    </p>
+                    <p className="mt-2">
+                        Attention, vous pouvez seulement supprimer des comptes de votre <strong>institution</strong>.
+                    </p>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing} className="dark:bg-blue-500 dark:hover:bg-blue-700">Supprimer</PrimaryButton>
+                <div className="flex flex-col gap-5">
+                    <AdminField id="usernameToDelete" label="Nom d'utilisateur" error={pageErrors.usernameToDelete || errors.usernameToDelete}>
+                        <AdminInput
+                            id="usernameToDelete"
+                            value={data.usernameToDelete}
+                            onChange={(e) => setData('usernameToDelete', e.target.value)}
+                            autoComplete="off"
+                            required
+                        />
+                    </AdminField>
 
-                    <Transition
-                        show={recentlyUpdated}
-                        enter="transition ease-in-out"
-                        enterFrom="opacity-0"
-                        leave="transition ease-in-out"
-                        leaveTo="opacity-0"
-                    >
-                        <p className="text-sm text-green-500">Compte supprimé.</p>
-                    </Transition>
+                    <div className="flex items-center gap-4">
+                        <button type="submit" disabled={processing} className={buttonDanger}>Supprimer</button>
+                        <SavedNote show={recentlyUpdated}>Compte supprimé.</SavedNote>
+                    </div>
                 </div>
             </form>
 
-            <Modal show={confirmingUserDeletion} onClose={closeModal}>
-                <form onSubmit={deleteUser} className="p-6">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-                        Êtes-vous sûr de vouloir supprimer le compte <strong>{userToDelete?.username}</strong> de <strong>{userToDelete?.first_name} {userToDelete?.last_name}</strong>?
-                    </h2>
+            <AdminDialog
+                show={confirmingUserDeletion}
+                onClose={closeModal}
+                title="Supprimer ce compte ?"
+                actions={<>
+                    <button type="button" onClick={closeModal} className={buttonSecondary}>Annuler</button>
+                    <button type="submit" form="delete-user-form" disabled={processing} className={buttonDanger}>Supprimer le compte</button>
+                </>}
+            >
+                <form id="delete-user-form" onSubmit={deleteUser} className="flex flex-col gap-4">
+                    <p>
+                        Êtes-vous sûr de vouloir supprimer le compte <strong className="text-gray-900 dark:text-white">{userToDelete?.username}</strong> de <strong className="text-gray-900 dark:text-white">{userToDelete?.first_name} {userToDelete?.last_name}</strong> ?
+                    </p>
+                    <p>Pour confirmer la suppression de ce compte, veuillez entrer votre mot de passe.</p>
+                    <p className="font-medium text-red-600 dark:text-red-400">Attention, cette action est irréversible.</p>
 
-                    <div className="mt-1 text-sm text-gray-600 dark:text-white">
-                        Pour confirmer la suppression de ce compte, veuillez entrer votre mot de passe.
-                        <br/><br/>
-
-                        <p className="text-red-600">Attention, cette action est irréversible.</p>
-                    </div>
-
-                    <div className="mt-6">
-                        <InputLabel htmlFor="password" value="Password" className="sr-only dark:text-white"/>
-
-                        <TextInput
-                            id="password"
+                    <AdminField id="delete_password" label="Votre mot de passe" error={errors.password}>
+                        <AdminInput
+                            id="delete_password"
                             type="password"
                             name="password"
                             ref={passwordInput}
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
-                            className="mt-1 block w-3/4 dark:text-white dark:bg-gray-800"
-                            isFocused
-                            placeholder="Mot de passe"
+                            autoComplete="current-password"
+                            autoFocus
                             required
                         />
-
-                        <InputError message={errors.password} className="mt-2" />
-                    </div>
-
-                    <div className="mt-6 flex justify-end">
-                        <SecondaryButton onClick={closeModal}>Annuler</SecondaryButton>
-
-                        <DangerButton className="ms-3" disabled={processing}>
-                            Supprimer le compte
-                        </DangerButton>
-                    </div>
+                    </AdminField>
                 </form>
-            </Modal>
-        </section>
+            </AdminDialog>
+        </SectionCard>
     );
 }

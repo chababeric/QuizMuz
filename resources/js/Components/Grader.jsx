@@ -1,4 +1,12 @@
 import React from 'react';
+import { CircleAlertIcon, CircleCheckIcon, CircleXIcon } from '@/Components/AppIcons';
+
+// Correct (exact), partially correct (accepted but spelled differently) or incorrect
+const statusStyles = {
+    correct: { label: 'Correct', Icon: CircleCheckIcon, text: 'text-[#5FD39A]', box: 'border-[rgba(30,158,98,0.35)] bg-[rgba(30,158,98,0.08)]' },
+    partial: { label: 'Partiellement', Icon: CircleAlertIcon, text: 'text-[#F2B94B]', box: 'border-[rgba(242,185,75,0.35)] bg-[rgba(242,185,75,0.08)]' },
+    incorrect: { label: 'Incorrect', Icon: CircleXIcon, text: 'text-[#F07A8D]', box: 'border-[rgba(224,86,108,0.35)] bg-[rgba(224,86,108,0.08)]' },
+};
 
 export default function Grader({ results, elements }) {
     const normalizeString = (str) => {
@@ -6,7 +14,7 @@ export default function Grader({ results, elements }) {
         return str
             .toLowerCase()
             .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '');
+            .replace(/[̀-ͯ]/g, '');
     };
 
     const filteredResults = elements
@@ -25,29 +33,11 @@ export default function Grader({ results, elements }) {
             return null;
         }).filter(Boolean);
 
-    const getResultIcon = (result) => {
+    const getStatus = (result) => {
         if (result.isCorrect) {
-            return result.normalizedCorrectAnswer !== result.normalizedUserAnswer ? '🟡' : '✅';
+            return result.normalizedCorrectAnswer !== result.normalizedUserAnswer ? 'partial' : 'correct';
         }
-        return '❌';
-    };
-
-    const getResultColor = (result) => {
-        if (result.isCorrect) {
-            return result.normalizedCorrectAnswer !== result.normalizedUserAnswer
-                ? 'from-yellow-600/80 to-amber-600/80 border-yellow-400/50'
-                : 'from-emerald-600/80 to-green-600/80 border-emerald-400/50';
-        }
-        return 'from-red-600/80 to-rose-600/80 border-red-400/50';
-    };
-
-    const getTextColor = (result) => {
-        if (result.isCorrect) {
-            return result.normalizedCorrectAnswer !== result.normalizedUserAnswer
-                ? 'text-yellow-100'
-                : 'text-emerald-100';
-        }
-        return 'text-red-100';
+        return 'incorrect';
     };
 
     const correctCount = filteredResults.filter(r => r.isCorrect).length;
@@ -55,104 +45,48 @@ export default function Grader({ results, elements }) {
     const percentage = Math.round((correctCount / totalCount) * 100);
 
     return (
-        <div className="space-y-6">
-            {/* Summary Header */}
-            <div className="text-center">
-                <div className="inline-block bg-gradient-to-r from-slate-800/60 to-indigo-800/60 backdrop-blur-sm rounded-xl px-6 py-4 border border-indigo-400/30 shadow-xl">
-                    <div className="flex items-center gap-4">
-                        <span className="text-3xl">📊</span>
-                        <div>
-                            <h2 className="text-2xl font-bold text-white mb-1">Résultats</h2>
-                            <p className="text-indigo-200">
-                                {correctCount}/{totalCount} correct{correctCount > 1 ? 's' : ''} ({percentage}%)
-                            </p>
-                        </div>
-                        <div className="text-4xl ml-4">
-                            {percentage >= 80 ? '🎉' : percentage >= 60 ? '👍' : '💪'}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Results Cards */}
-            <div className="space-y-3">
-                {filteredResults.map((result, index) => (
-                    <div key={index} className={`bg-gradient-to-r ${getResultColor(result)} backdrop-blur-sm rounded-xl border overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300`}>
-                        <div className="p-4">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <span className="text-2xl">{getResultIcon(result)}</span>
-                                    <div>
-                                        <h3 className={`font-bold text-lg ${getTextColor(result)}`}>
-                                            {result.parameterName}
-                                        </h3>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className={`text-sm ${getTextColor(result)} opacity-80`}>
-                                                Réponse correcte:
-                                            </span>
-                                            <span className={`font-semibold ${getTextColor(result)}`}>
-                                                {result.correctAnswer}
-                                            </span>
-                                        </div>
-                                        {result.userAnswer && result.userAnswer !== result.correctAnswer && (
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <span className={`text-sm ${getTextColor(result)} opacity-80`}>
-                                                    Votre réponse:
-                                                </span>
-                                                <span className={`font-semibold ${getTextColor(result)} line-through`}>
-                                                    {result.userAnswer}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <div className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                                        result.isCorrect
-                                            ? result.normalizedCorrectAnswer !== result.normalizedUserAnswer
-                                                ? 'bg-yellow-500/20 text-yellow-200'
-                                                : 'bg-emerald-500/20 text-emerald-200'
-                                            : 'bg-red-500/20 text-red-200'
-                                    }`}>
-                                        {result.isCorrect
-                                            ? result.normalizedCorrectAnswer !== result.normalizedUserAnswer
-                                                ? 'Partiellement'
-                                                : 'Correct'
-                                            : 'Incorrect'
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Performance Message */}
-            <div className="text-center mt-8">
-                <div className={`inline-block backdrop-blur-sm rounded-xl px-6 py-4 border shadow-xl ${
-                    percentage >= 80
-                        ? 'bg-gradient-to-r from-emerald-800/60 to-green-800/60 border-emerald-400/30'
+        <div className="flex flex-col gap-4">
+            {/* Summary */}
+            <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 rounded-[16px] border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+                <p className="text-[15px] text-[#C9CCDA]">
+                    <span className="text-[24px] font-bold text-[#F2F3F8]">{correctCount}/{totalCount}</span>
+                    {' '}correct{correctCount > 1 ? 's' : ''} ({percentage}%)
+                </p>
+                <p className="text-[15px] font-semibold text-[#F2F3F8]">
+                    {percentage >= 80
+                        ? 'Excellent travail !'
                         : percentage >= 60
-                            ? 'bg-gradient-to-r from-blue-800/60 to-indigo-800/60 border-blue-400/30'
-                            : 'bg-gradient-to-r from-orange-800/60 to-red-800/60 border-orange-400/30'
-                }`}>
-                    <p className={`font-semibold text-lg ${
-                        percentage >= 80
-                            ? 'text-emerald-200'
-                            : percentage >= 60
-                                ? 'text-blue-200'
-                                : 'text-orange-200'
-                    }`}>
-                        {percentage >= 80
-                            ? 'Excellent travail ! 🌟'
-                            : percentage >= 60
-                                ? 'Bon travail ! Continuez ainsi ! 👏'
-                                : 'Continuez à vous entraîner ! 💪'
-                        }
-                    </p>
-                </div>
+                            ? 'Bon travail ! Continuez ainsi !'
+                            : 'Continuez à vous entraîner !'
+                    }
+                </p>
             </div>
+
+            {/* One row per answer */}
+            <ul className="grid gap-3 md:grid-cols-2">
+                {filteredResults.map((result, index) => {
+                    const status = statusStyles[getStatus(result)];
+                    return (
+                        <li key={index} className={`rounded-[16px] border px-4 py-3 ${status.box}`}>
+                            <div className="flex items-center justify-between gap-3">
+                                <h3 className="text-[15px] font-semibold text-[#F2F3F8]">{result.parameterName}</h3>
+                                <span className={`inline-flex items-center gap-1.5 text-[13px] font-semibold ${status.text}`}>
+                                    <status.Icon className="w-4 h-4"/>
+                                    {status.label}
+                                </span>
+                            </div>
+                            <p className="mt-1 text-[14px] text-[#C9CCDA]">
+                                Réponse correcte: <span className="font-semibold text-[#F2F3F8]">{result.correctAnswer}</span>
+                            </p>
+                            {result.userAnswer && result.userAnswer !== result.correctAnswer && (
+                                <p className="mt-0.5 text-[14px] text-[#A9AEC2]">
+                                    Votre réponse: <span className="font-semibold line-through">{result.userAnswer}</span>
+                                </p>
+                            )}
+                        </li>
+                    );
+                })}
+            </ul>
         </div>
     );
 }

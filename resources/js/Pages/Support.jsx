@@ -1,121 +1,106 @@
-import React from "react";
-import { Link, Head } from '@inertiajs/react';
+import React, { useState } from "react";
+import { Head } from '@inertiajs/react';
+import AppHeader from '@/Components/AppHeader';
+import { CheckIcon, CopyIcon, LifeBuoyIcon, MailIcon, MessageIcon } from '@/Components/AppIcons';
+
+const SUPPORT_EMAIL = 'chababeric@quizmuz.com';
+
+const transition = 'transition duration-200 motion-reduce:transition-none';
+const card = 'relative overflow-hidden rounded-[24px] bg-[#0B0D18] border border-white/[0.08]';
+
+const SupportCard = ({ icon: CardIcon, tile, glow, title, children }) => (
+    <section className={`${card} p-5 md:p-6 flex flex-col gap-4`}>
+        <div aria-hidden="true" className={`absolute inset-0 pointer-events-none ${glow}`}></div>
+        <div className="relative flex items-center gap-3">
+            <span aria-hidden="true" className={`w-11 h-11 shrink-0 rounded-[14px] flex items-center justify-center ${tile}`}>
+                <CardIcon/>
+            </span>
+            <h3 className="text-[20px] font-semibold">{title}</h3>
+        </div>
+        <div className="relative flex flex-col gap-3 text-[16px] leading-relaxed text-[#C9CCDA]">
+            {children}
+        </div>
+    </section>
+);
 
 export default function Support() {
+    const [copied, setCopied] = useState(false);
+
+    const copyEmail = async () => {
+        try {
+            await navigator.clipboard.writeText(SUPPORT_EMAIL);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (e) {
+            console.error("Could not copy the e-mail address", e);
+        }
+    };
+
     return (
-        <div className="main-app min-h-screen flex flex-col bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-            <div className="background-container"></div>
+        <div className="min-h-[100dvh] flex flex-col bg-[#06070D] text-[#F2F3F8] font-sans">
             <Head title="Support - QuizMuz"/>
+            <AppHeader title="Support" backHref={route('welcome')} backLabel="Retour à l'accueil"/>
 
-            {/* Header Section */}
-            <div className="relative w-full mt-2 mb-8 px-4">
-                {/* Back Button - Above title on mobile, beside on desktop */}
-                <div className="flex justify-start mb-4 sm:mb-0 sm:absolute sm:left-3 sm:top-1/2 sm:-translate-y-1/2 sm:z-10">
-                    <Link
-                        href={route('welcome')}
-                        className="group"
+            <main className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 pt-5 pb-10 md:pt-10 md:pb-14 flex flex-col gap-4 md:gap-6">
+                <section className={`${card} border-[rgba(224,86,108,0.28)] p-6 md:p-8 flex items-center gap-4`}>
+                    <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(224,86,108,0.16),transparent_60%)]"></div>
+                    <span aria-hidden="true" className="relative w-12 h-12 shrink-0 rounded-[14px] bg-[rgba(224,86,108,0.14)] text-[#F07A8D] flex items-center justify-center">
+                        <LifeBuoyIcon className="w-6 h-6"/>
+                    </span>
+                    <h2 className="relative text-[28px] md:text-[40px] font-bold leading-tight">Besoin d'aide?</h2>
+                </section>
+
+                <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
+                    <SupportCard
+                        icon={MailIcon}
+                        title="Contact par e-mail"
+                        tile="bg-[rgba(224,86,108,0.14)] text-[#F07A8D]"
+                        glow="bg-[radial-gradient(circle_at_top_right,rgba(224,86,108,0.16),transparent_60%)]"
                     >
-                        <div className="bg-gradient-to-r from-slate-800/90 to-slate-700/90 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20 hover:border-blue-300 transition-all duration-300 shadow-lg hover:shadow-blue-500/30">
-                            <div className="flex items-center gap-2 text-white group-hover:text-blue-200">
-                                <svg className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                                </svg>
-                                <span className="text-sm font-medium">Retour à l'accueil</span>
-                            </div>
+                        <p>
+                            Pour toute question, problème ou suggestion, veuillez&nbsp;
+                            <a
+                                href={`mailto:${SUPPORT_EMAIL}`}
+                                className="font-semibold text-[#F07A8D] underline decoration-2 underline-offset-2 hover:text-[#F2F3F8]"
+                            >
+                                me contacter
+                            </a>
+                            .
+                        </p>
+                    </SupportCard>
+
+                    <SupportCard
+                        icon={CopyIcon}
+                        title="Adresse e-mail"
+                        tile="bg-[rgba(242,185,75,0.12)] text-[#F2B94B]"
+                        glow="bg-[radial-gradient(circle_at_top_right,rgba(242,185,75,0.14),transparent_60%)]"
+                    >
+                        <p>Si le lien ne fonctionne pas, vous pouvez copier l'adresse e-mail suivante:</p>
+                        <div className="flex items-center gap-2 rounded-[14px] border border-white/[0.08] bg-white/[0.03] pl-4 pr-1.5 py-1.5">
+                            <span className="flex-1 min-w-0 break-all font-mono text-[14px] sm:text-[15px] font-medium text-[#F2B94B]">{SUPPORT_EMAIL}</span>
+                            <button
+                                type="button"
+                                onClick={copyEmail}
+                                aria-label={copied ? "Adresse e-mail copiée" : "Copier l'adresse e-mail"}
+                                className={`shrink-0 min-h-[44px] min-w-[44px] px-3 justify-center inline-flex items-center gap-1.5 rounded-[10px] text-[14px] font-semibold text-[#F2F3F8] hover:bg-white/[0.06] ${transition}`}
+                            >
+                                {copied ? <CheckIcon className="w-4 h-4"/> : <CopyIcon className="w-4 h-4"/>}
+                                <span aria-hidden="true" className="hidden sm:inline">{copied ? 'Copié' : 'Copier'}</span>
+                                <span aria-live="polite" className="sr-only">{copied ? 'Adresse e-mail copiée' : ''}</span>
+                            </button>
                         </div>
-                    </Link>
+                    </SupportCard>
+
+                    <SupportCard
+                        icon={MessageIcon}
+                        title="Réseaux sociaux"
+                        tile="bg-[rgba(162,120,224,0.14)] text-[#BFA0F0]"
+                        glow="bg-[radial-gradient(circle_at_top_right,rgba(162,120,224,0.16),transparent_60%)]"
+                    >
+                        <p>Vous pouvez également me contacter par Mio ou n'importe quel réseau social.</p>
+                    </SupportCard>
                 </div>
-
-                {/* Title - Centered */}
-                <div className="flex justify-center">
-                    <div className="text-center">
-                        <div className="inline-block bg-gradient-to-r from-blue-900/90 via-cyan-900/90 to-blue-900/90 backdrop-blur-sm rounded-2xl px-8 py-4 shadow-2xl border border-white/20">
-                            <div className="flex items-center gap-3 mb-2">
-                                <span className="text-4xl">🆘</span>
-                                <h1 className="text-5xl font-bold bg-gradient-to-r from-white via-blue-200 to-white bg-clip-text text-transparent">
-                                    Support
-                                </h1>
-                            </div>
-                            <div className="h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent rounded-full"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="flex-1 flex items-center justify-center px-4">
-                <div className="max-w-2xl w-full">
-                    <div className="bg-gradient-to-r from-blue-900/20 to-cyan-900/20 backdrop-blur-sm rounded-2xl border border-blue-400/20 overflow-hidden shadow-2xl">
-                        {/* Header */}
-                        <div className="bg-gradient-to-r from-blue-600/30 to-cyan-600/30 px-6 sm:px-8 py-6 border-b border-blue-400/20">
-                            <div className="text-center">
-                                <div className="text-6xl mb-4">💬</div>
-                                <h2 className="text-3xl font-bold text-white mb-2">
-                                    Besoin d'aide?
-                                </h2>
-                                <div className="h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent rounded-full"></div>
-                            </div>
-                        </div>
-
-                        {/* Content */}
-                        <div className="p-6 sm:p-8 space-y-6">
-                            {/* Email Contact */}
-                            <div className="bg-gradient-to-r from-emerald-900/20 to-teal-900/20 backdrop-blur-sm rounded-xl border border-emerald-400/20 p-6">
-                                <div className="flex items-start gap-4">
-                                    <span className="text-3xl flex-shrink-0">📧</span>
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="text-xl font-semibold text-white mb-3">Contact par e-mail</h3>
-                                        <p className="text-white text-lg leading-relaxed">
-                                            Pour toute question, problème ou suggestion, veuillez&nbsp;
-                                            <a
-                                                href="mailto:chababeric@quizmuz.com"
-                                                className="text-emerald-400 hover:text-emerald-300 underline decoration-2 underline-offset-2 transition-colors duration-300 font-medium break-all"
-                                            >
-                                                me contacter
-                                            </a>
-                                            .
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Email Copy */}
-                            <div className="bg-gradient-to-r from-amber-900/20 to-orange-900/20 backdrop-blur-sm rounded-xl border border-amber-400/20 p-6">
-                                <div className="flex items-start gap-4">
-                                    <span className="text-3xl flex-shrink-0">📋</span>
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="text-xl font-semibold text-white mb-3">Adresse e-mail</h3>
-                                        <p className="text-white text-lg leading-relaxed mb-3">
-                                            Si le lien ci-dessus ne fonctionne pas, vous pouvez copier l'adresse e-mail suivante:
-                                        </p>
-                                        <div className="bg-black/30 rounded-lg px-4 py-3 border border-amber-400/30">
-                                            <span className="text-amber-400 font-mono text-lg font-medium break-all">
-                                                chababeric@quizmuz.com
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Social Networks */}
-                            <div className="bg-gradient-to-r from-purple-900/20 to-pink-900/20 backdrop-blur-sm rounded-xl border border-purple-400/20 p-6">
-                                <div className="flex items-start gap-4">
-                                    <span className="text-3xl flex-shrink-0">🌐</span>
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="text-xl font-semibold text-white mb-3">Réseaux sociaux</h3>
-                                        <p className="text-white text-lg leading-relaxed">
-                                            Vous pouvez également me contacter par Mio ou n'importe quel réseau social.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Footer Spacing */}
-            <div className="h-8"></div>
+            </main>
         </div>
     );
 }
