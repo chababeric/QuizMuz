@@ -1,5 +1,39 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { EmptyState, SectionCard, Toast, control, muted } from '@/Components/AdminUi';
+import { XIcon } from '@/Components/AppIcons';
+
+const COURSE_ROLE_NAMES = ['fma_admin', 'litmus_admin', 'history_admin'];
+const fullName = (user) => [user.last_name, user.first_name].filter(Boolean).join(', ');
+
+// Removable role pill; flashes green right after it was added
+function RoleChip({ role, tone, flashing, disabled, onRemove, userName }) {
+    const tones = {
+        global: 'border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-800/60 dark:bg-sky-950/50 dark:text-sky-200',
+        course: 'border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-800/60 dark:bg-violet-950/50 dark:text-violet-200',
+    };
+    return (
+        <span
+            title={role.courseName}
+            className={`inline-flex items-center gap-1 rounded-full border py-0.5 pl-2.5 pr-1 text-xs font-medium transition motion-reduce:transition-none ${
+                flashing ? 'border-emerald-300 bg-emerald-100 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-200' : tones[tone]
+            }`}
+        >
+            {role.name}
+            <button
+                type="button"
+                onClick={onRemove}
+                disabled={disabled}
+                aria-label={`Retirer le rôle ${role.name} de ${userName}`}
+                className="flex h-5 w-5 items-center justify-center rounded-full opacity-70 hover:bg-black/10 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-white/10"
+            >
+                <XIcon className="h-3 w-3"/>
+            </button>
+        </span>
+    );
+}
+
+const NoRole = () => <span className={`text-sm ${muted}`}>Aucun rôle</span>;
 
 export default function HandleAccess({ className = '', roles, courses }) {
     const [loading, setLoading] = useState(true);
@@ -21,12 +55,11 @@ export default function HandleAccess({ className = '', roles, courses }) {
         if (users.length > 0) {
             const grouped = {};
 
-            // Sort users alphabetically by full name
-            const sortedUsers = [...users].sort((a, b) => {
-                const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
-                const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
-                return nameA.localeCompare(nameB);
-            });
+            // Sort users alphabetically by family name, then first name
+            const sortedUsers = [...users].sort((a, b) =>
+                (a.last_name ?? '').localeCompare(b.last_name ?? '', 'fr', { sensitivity: 'base' })
+                || (a.first_name ?? '').localeCompare(b.first_name ?? '', 'fr', { sensitivity: 'base' })
+            );
 
             // Group sorted users by institution
             sortedUsers.forEach(user => {
@@ -262,348 +295,180 @@ export default function HandleAccess({ className = '', roles, courses }) {
         return availableRoles;
     };
 
-    // Render table for desktop view with dropdown menus
-    const renderDesktopTable = (institutionUsers) => {
-        return (
-            <div className="hidden md:block overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead className="bg-gray-50 dark:bg-gray-700">
+    // Global roles, course roles (with their course) and the roles that can still be added
+    const getUserRoles = (user) => {
+        const globalRoles = user.roles.filter(role => !COURSE_ROLE_NAMES.includes(role.system_name));
+        const courseRoles = [];
+
+        courses.forEach(course => {
+            if (courseAdmins[course.id]) {
+                roles
+                    .filter(role => COURSE_ROLE_NAMES.includes(role.system_name) && isCourseAdmin(user, course.id, role.id))
+                    .forEach(role => courseRoles.push({ ...role, courseId: course.id, courseName: course.name }));
+            }
+        });
+
+        return { globalRoles, courseRoles, availableRoles: getAvailableRolesFlat(user) };
+    };
+
+    const renderGlobalRoles = (user, globalRoles) => globalRoles.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+            {globalRoles.map(role => (
+                <RoleChip
+                    key={role.id}
+                    role={role}
+                    tone="global"
+                    userName={fullName(user)}
+                    flashing={flashingRole === `${user.id}-${role.id}`}
+                    disabled={updatingUser === user.id}
+                    onRemove={() => updateUserRole(user.id, role.id, 'remove')}
+                />
+            ))}
+        </div>
+    ) : <NoRole/>;
+
+    const renderCourseRoles = (user, courseRoles) => courseRoles.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+            {courseRoles.map(role => (
+                <RoleChip
+                    key={`${role.id}-${role.courseId}`}
+                    role={role}
+                    tone="course"
+                    userName={fullName(user)}
+                    flashing={flashingRole === `course-${user.id}-${role.id}-${role.courseId}`}
+                    disabled={updatingUser === user.id}
+                    onRemove={() => removeCourseAdmin(user.id, role.id, role.courseId)}
+                />
+            ))}
+        </div>
+    ) : <NoRole/>;
+
+    // Flat dropdown for both role types
+    const renderRoleSelect = (user, availableRoles) => (
+        <select
+            aria-label={`Ajouter un rôle à ${fullName(user)}`}
+            className={`${control} w-full`}
+            onChange={(e) => {
+                if (e.target.value) {
+                    const [type, roleId, courseId] = e.target.value.split('-');
+
+                    if (type === 'global') {
+                        updateUserRole(user.id, parseInt(roleId), 'add');
+                    } else if (type === 'course') {
+                        addCourseAdmin(user.id, parseInt(roleId), parseInt(courseId));
+                    }
+
+                    e.target.value = ''; // Reset dropdown after selection
+                }
+            }}
+            disabled={updatingUser === user.id || availableRoles.length === 0}
+        >
+            <option value="">{availableRoles.length === 0 ? 'Tous les rôles attribués' : 'Ajouter un rôle…'}</option>
+            {availableRoles.map(role => (
+                <option key={role.value} value={role.value}>
+                    {role.label}
+                </option>
+            ))}
+        </select>
+    );
+
+    // Render table for desktop view
+    const renderDesktopTable = (institutionUsers) => (
+        <div className="hidden overflow-x-auto md:block">
+            <table className="min-w-full text-left text-sm">
+                <thead className={`bg-gray-50 text-xs uppercase tracking-wide dark:bg-gray-900/40 ${muted}`}>
                     <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Nom
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Nom d'utilisateur
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Rôles Globaux
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Rôles de Cours
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Ajouter un rôle
-                        </th>
+                        <th scope="col" className="py-3 pl-5 pr-4 font-semibold">Nom</th>
+                        <th scope="col" className="px-4 py-3 font-semibold">Rôles globaux</th>
+                        <th scope="col" className="px-4 py-3 font-semibold">Rôles de cours</th>
+                        <th scope="col" className="w-56 py-3 pl-4 pr-5 font-semibold">Ajouter un rôle</th>
                     </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700/70">
                     {institutionUsers.map(user => {
-                        // Filter global roles (excluding course-specific admin roles)
-                        const userGlobalRoles = user.roles.filter(role =>
-                            !['fma_admin', 'litmus_admin', 'history_admin'].includes(role.system_name)
-                        );
-
-                        // Create an array to hold all course roles across all courses
-                        const userCourseRoles = [];
-
-                        // For each course, get the user's admin roles
-                        courses.forEach(course => {
-                            if (courseAdmins[course.id]) {
-                                const courseRoles = roles.filter(role =>
-                                    ['fma_admin', 'litmus_admin', 'history_admin'].includes(role.system_name) &&
-                                    isCourseAdmin(user, course.id, role.id)
-                                );
-
-                                // Add course info to each role
-                                courseRoles.forEach(role => {
-                                    userCourseRoles.push({
-                                        ...role,
-                                        courseId: course.id,
-                                        courseName: course.name
-                                    });
-                                });
-                            }
-                        });
-
-                        // Get available roles for this user
-                        const availableRoles = getAvailableRolesFlat(user);
+                        const { globalRoles, courseRoles, availableRoles } = getUserRoles(user);
 
                         return (
-                            <tr key={user.id}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                    {user.first_name} {user.last_name}
+                            <tr key={user.id} className={updatingUser === user.id ? 'opacity-60' : ''}>
+                                <td className="whitespace-nowrap py-3 pl-5 pr-4">
+                                    <p className="font-medium text-gray-900 dark:text-white">{fullName(user)}</p>
+                                    <p className={`text-xs ${muted}`}>{user.username}</p>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                    {user.username}
-                                </td>
-                                <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
-                                    {userGlobalRoles.length > 0 ? (
-                                        <div className="flex flex-wrap gap-1">
-                                            {userGlobalRoles.map(role => (
-                                                <div
-                                                    key={role.id}
-                                                    className={`mb-1 px-2 py-1 rounded text-xs text-white flex items-center ${
-                                                        flashingRole === `${user.id}-${role.id}`
-                                                            ? 'bg-green-500 animate-pulse'
-                                                            : 'bg-blue-600'
-                                                    }`}
-                                                >
-                                                    <span>{role.name}</span>
-                                                    <button
-                                                        onClick={() => updateUserRole(user.id, role.id, 'remove')}
-                                                        className="ml-2 text-white hover:text-red-200"
-                                                        disabled={updatingUser === user.id}
-                                                    >
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <span className="text-gray-500 dark:text-gray-400">Aucun rôle</span>
-                                    )}
-                                </td>
-                                <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
-                                    {userCourseRoles.length > 0 ? (
-                                        <div className="flex flex-wrap gap-1">
-                                            {userCourseRoles.map(role => (
-                                                <div
-                                                    key={`${role.id}-${role.courseId}`}
-                                                    className={`mb-1 px-2 py-1 rounded text-xs text-white flex items-center ${
-                                                        flashingRole === `course-${user.id}-${role.id}-${role.courseId}`
-                                                            ? 'bg-green-500 animate-pulse'
-                                                            : 'bg-purple-600'
-                                                    }`}
-                                                >
-                                                    <span>{role.name}</span>
-                                                    <button
-                                                        onClick={() => removeCourseAdmin(user.id, role.id, role.courseId)}
-                                                        className="ml-2 text-white hover:text-red-200"
-                                                        disabled={updatingUser === user.id}
-                                                    >
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <span className="text-gray-500 dark:text-gray-400">Aucun rôle</span>
-                                    )}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                    <div className="relative inline-block w-full">
-                                        <select
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                            onChange={(e) => {
-                                                if (e.target.value) {
-                                                    const [type, roleId, courseId] = e.target.value.split('-');
-
-                                                    if (type === 'global') {
-                                                        updateUserRole(user.id, parseInt(roleId), 'add');
-                                                    } else if (type === 'course') {
-                                                        addCourseAdmin(user.id, parseInt(roleId), parseInt(courseId));
-                                                    }
-
-                                                    e.target.value = ''; // Reset dropdown after selection
-                                                }
-                                            }}
-                                            disabled={updatingUser === user.id}
-                                        >
-                                            <option value="">Sélection</option>
-                                            {availableRoles.map(role => (
-                                                <option key={role.value} value={role.value}>
-                                                    {role.label}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </td>
+                                <td className="px-4 py-3">{renderGlobalRoles(user, globalRoles)}</td>
+                                <td className="px-4 py-3">{renderCourseRoles(user, courseRoles)}</td>
+                                <td className="py-3 pl-4 pr-5">{renderRoleSelect(user, availableRoles)}</td>
                             </tr>
                         );
                     })}
-                    </tbody>
-                </table>
-            </div>
-        );
-    };
+                </tbody>
+            </table>
+        </div>
+    );
 
     // Render mobile cards view
-    const renderMobileCards = (institutionUsers) => {
-        return (
-            <div className="md:hidden space-y-4">
-                {institutionUsers.map(user => {
-                    // Filter global roles (excluding course-specific admin roles)
-                    const userGlobalRoles = user.roles.filter(role =>
-                        !['fma_admin', 'litmus_admin', 'history_admin'].includes(role.system_name)
-                    );
+    const renderMobileCards = (institutionUsers) => (
+        <ul className="divide-y divide-gray-100 md:hidden dark:divide-gray-700/70">
+            {institutionUsers.map(user => {
+                const { globalRoles, courseRoles, availableRoles } = getUserRoles(user);
 
-                    // Create an array to hold all course roles across all courses
-                    const userCourseRoles = [];
-
-                    // For each course, get the user's admin roles
-                    courses.forEach(course => {
-                        if (courseAdmins[course.id]) {
-                            const courseRoles = roles.filter(role =>
-                                ['fma_admin', 'litmus_admin', 'history_admin'].includes(role.system_name) &&
-                                isCourseAdmin(user, course.id, role.id)
-                            );
-
-                            // Add course info to each role
-                            courseRoles.forEach(role => {
-                                userCourseRoles.push({
-                                    ...role,
-                                    courseId: course.id,
-                                    courseName: course.name
-                                });
-                            });
-                        }
-                    });
-
-                    // Get available roles for this user
-                    const availableRoles = getAvailableRolesFlat(user);
-
-                    return (
-                        <div key={user.id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                            <div className="mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
-                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                    {user.first_name} {user.last_name}
-                                </h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">@{user.username}</p>
-                            </div>
-
-                            {/* Global Roles Section */}
-                            <div className="mb-3">
-                                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rôles Globaux:</h4>
-                                {userGlobalRoles.length > 0 ? (
-                                    <div className="flex flex-wrap gap-1 mb-2">
-                                        {userGlobalRoles.map(role => (
-                                            <div
-                                                key={role.id}
-                                                className={`mb-1 px-2 py-1 rounded text-xs text-white flex items-center ${
-                                                    flashingRole === `${user.id}-${role.id}`
-                                                        ? 'bg-green-500 animate-pulse'
-                                                        : 'bg-blue-600'
-                                                }`}
-                                            >
-                                                <span>{role.name}</span>
-                                                <button
-                                                    onClick={() => updateUserRole(user.id, role.id, 'remove')}
-                                                    className="ml-2 text-white hover:text-red-200"
-                                                    disabled={updatingUser === user.id}
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <span className="text-sm text-gray-500 dark:text-gray-400 block mb-2">Aucun rôle</span>
-                                )}
-                            </div>
-
-                            {/* Course Roles Section */}
-                            <div className="mb-3">
-                                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rôles de Cours:</h4>
-                                {userCourseRoles.length > 0 ? (
-                                    <div className="flex flex-wrap gap-1 mb-2">
-                                        {userCourseRoles.map(role => (
-                                            <div
-                                                key={`${role.id}-${role.courseId}`}
-                                                className={`mb-1 px-2 py-1 rounded text-xs text-white flex items-center ${
-                                                    flashingRole === `course-${user.id}-${role.id}-${role.courseId}`
-                                                        ? 'bg-green-500 animate-pulse'
-                                                        : 'bg-purple-600'
-                                                }`}
-                                            >
-                                                <span>{role.name}</span>
-                                                <button
-                                                    onClick={() => removeCourseAdmin(user.id, role.id, role.courseId)}
-                                                    className="ml-2 text-white hover:text-red-200"
-                                                    disabled={updatingUser === user.id}
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <span className="text-sm text-gray-500 dark:text-gray-400 block mb-2">Aucun rôle</span>
-                                )}
-                            </div>
-
-                            {/* Simple flat dropdown for both role types */}
-                            <div className="relative inline-block w-full">
-                                <select
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    onChange={(e) => {
-                                        if (e.target.value) {
-                                            const [type, roleId, courseId] = e.target.value.split('-');
-
-                                            if (type === 'global') {
-                                                updateUserRole(user.id, parseInt(roleId), 'add');
-                                            } else if (type === 'course') {
-                                                addCourseAdmin(user.id, parseInt(roleId), parseInt(courseId));
-                                            }
-
-                                            e.target.value = ''; // Reset dropdown after selection
-                                        }
-                                    }}
-                                    disabled={updatingUser === user.id}
-                                >
-                                    <option value="">Sélection</option>
-                                    {availableRoles.map(role => (
-                                        <option key={role.value} value={role.value}>
-                                            {role.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                return (
+                    <li key={user.id} className={`flex flex-col gap-3 px-5 py-4 ${updatingUser === user.id ? 'opacity-60' : ''}`}>
+                        <div>
+                            <p className="font-medium text-gray-900 dark:text-white">{fullName(user)}</p>
+                            <p className={`text-xs ${muted}`}>{user.username}</p>
                         </div>
-                    );
-                })}
-            </div>
-        );
-    };
+                        <div>
+                            <p className={`mb-1.5 text-xs font-semibold uppercase tracking-wide ${muted}`}>Rôles globaux</p>
+                            {renderGlobalRoles(user, globalRoles)}
+                        </div>
+                        <div>
+                            <p className={`mb-1.5 text-xs font-semibold uppercase tracking-wide ${muted}`}>Rôles de cours</p>
+                            {renderCourseRoles(user, courseRoles)}
+                        </div>
+                        {renderRoleSelect(user, availableRoles)}
+                    </li>
+                );
+            })}
+        </ul>
+    );
+
+    const institutions = Object.keys(groupedUsers);
 
     return (
-        <section className={className}>
+        <div className={`flex flex-col gap-6 ${className}`}>
             <header>
-                <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">Gestion des accès utilisateurs</h2>
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Gestion des accès utilisateurs</h2>
+                <p className={`mt-1 text-sm ${muted}`}>
                     Gérez les rôles et les accès des utilisateurs.
                 </p>
             </header>
 
-            {message && (
-                <div className="mt-4 p-4 bg-green-100 text-green-700 rounded">
-                    {message}
-                </div>
+            {loading ? (
+                <SectionCard id="access-loading" title="Utilisateurs">
+                    <EmptyState>Chargement des utilisateurs...</EmptyState>
+                </SectionCard>
+            ) : institutions.length === 0 ? (
+                <SectionCard id="access-empty" title="Utilisateurs">
+                    <EmptyState>Aucun utilisateur.</EmptyState>
+                </SectionCard>
+            ) : (
+                institutions.map((institution, index) => (
+                    <SectionCard
+                        key={institution}
+                        id={`institution-${index}`}
+                        title={institution}
+                        description={`${groupedUsers[institution].length} utilisateur${groupedUsers[institution].length > 1 ? 's' : ''}`}
+                    >
+                        {/* Desktop view */}
+                        {renderDesktopTable(groupedUsers[institution])}
+
+                        {/* Mobile view */}
+                        {renderMobileCards(groupedUsers[institution])}
+                    </SectionCard>
+                ))
             )}
 
-            {error && (
-                <div className="mt-4 p-4 bg-red-100 text-red-700 rounded">
-                    {error}
-                </div>
-            )}
-
-            <div className="mt-6">
-                {loading ? (
-                    <p className="text-gray-600 dark:text-gray-400">Chargement des utilisateurs...</p>
-                ) : (
-                    <div className="space-y-8">
-                        {Object.keys(groupedUsers).map(institution => (
-                            <div key={institution}>
-                                <h3 className="text-md font-medium text-gray-800 dark:text-gray-200 mb-4 border-b pb-2">
-                                    {institution} ({groupedUsers[institution].length} utilisateurs)
-                                </h3>
-                                {/* Desktop view */}
-                                {renderDesktopTable(groupedUsers[institution])}
-
-                                {/* Mobile view */}
-                                {renderMobileCards(groupedUsers[institution])}
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </section>
+            <Toast successMessage={message} errorMessage={error} setSuccessMessage={setMessage} setErrorMessage={setError}/>
+        </div>
     );
 }
