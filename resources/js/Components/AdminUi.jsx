@@ -7,6 +7,7 @@ import { CircleAlertIcon, CircleCheckIcon } from '@/Components/AppIcons';
 export const panel = 'rounded-2xl border border-gray-200 bg-white dark:border-gray-700/70 dark:bg-gray-800';
 export const muted = 'text-gray-500 dark:text-gray-400';
 export const control = 'h-10 rounded-lg border-gray-300 bg-white text-sm text-gray-900 focus:border-[#B4283F] focus:ring-[#B4283F] dark:border-gray-600 dark:bg-gray-900 dark:text-white';
+export const textarea = 'w-full rounded-lg border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-[#B4283F] focus:ring-[#B4283F] dark:border-gray-600 dark:bg-gray-900 dark:text-white';
 export const label = 'block text-sm font-medium text-gray-700 dark:text-gray-200';
 
 const buttonBase = 'inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none';
@@ -80,10 +81,10 @@ export const EmptyState = ({ children }) => (
 );
 
 // Dialog content for the shared Modal: title, body, then the action row
-export function AdminDialog({ show, onClose, title, children, actions }) {
+export function AdminDialog({ show, onClose, title, children, actions, wide = false }) {
     return (
-        <Modal show={show} onClose={onClose} maxWidth="md">
-            <div className="w-full p-2 sm:w-[26rem]">
+        <Modal show={show} onClose={onClose} maxWidth={wide ? '2xl' : 'md'}>
+            <div className={`w-full p-2 ${wide ? 'sm:w-[38rem]' : 'sm:w-[26rem]'}`}>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h2>
                 <div className="mt-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300">{children}</div>
                 <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">{actions}</div>

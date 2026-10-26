@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { control } from '@/Components/AdminUi';
 
-export default function FilterableSelect({ label='', value, onChange, options }) {
+export default function FilterableSelect({ id, label='', value, onChange, options }) {
     const [filteredOptions, setFilteredOptions] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
     const containerRef = useRef(null);
@@ -44,32 +45,36 @@ export default function FilterableSelect({ label='', value, onChange, options })
     }, []);
 
     return (
-        <div className="relative w-full mb-4" ref={containerRef}>
-            <label className="text-lg font-bold mb-2">{label}</label>
+        <div className="relative w-full" ref={containerRef}>
+            {label && <label htmlFor={id} className="mb-2 text-lg font-bold">{label}</label>}
             <div className="relative">
                 <input
+                    id={id}
                     type="text"
-                    className="mt-1 block w-full rounded-md dark:bg-gray-700 dark:text-white"
+                    className={`${control} w-full pr-10`}
                     value={value}
                     onChange={handleInputChange}
                     onFocus={() => setShowDropdown(true)}
                     autoComplete="off"
                 />
-                <div
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+                <button
+                    type="button"
+                    tabIndex={-1}
+                    aria-label="Afficher les suggestions"
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                     onClick={toggleDropdown}
                 >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>
-                </div>
+                </button>
             </div>
             {showDropdown && filteredOptions.length > 0 && (
-                <ul className="absolute z-10 bg-white border border-gray-300 w-full mt-1 max-h-40 overflow-y-auto dark:bg-gray-700 dark:text-white rounded-md">
+                <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 text-sm shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:text-white">
                     {filteredOptions.map((option, index) => (
                         <li
                             key={index}
-                            className="cursor-pointer px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-600"
+                            className="cursor-pointer px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
                             onClick={() => handleOptionClick(option)}
                         >
                             {option}

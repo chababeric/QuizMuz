@@ -58,23 +58,19 @@ export default function Edit({ auth }) {
             <Head title="Pièce" />
 
             {isLoading ? (
-                <div className="py-12">
-                    <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
-                            <p className="text-center text-gray-500 dark:text-gray-400">Chargement des données...</p>
-                        </div>
-                    </div>
+                <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                    <p className="rounded-2xl border border-gray-200 bg-white p-6 text-center text-sm text-gray-500 dark:border-gray-700/70 dark:bg-gray-800 dark:text-gray-400">
+                        Chargement des données...
+                    </p>
                 </div>
             ) : (
-                <div className="py-12 dark:bg-gray-900">
-                    <SharedPieceEditor
-                        piecesList={piecesList}
-                        setPiecesList={setPiecesList}
-                        coursesList={coursesList}
-                        mode="litmus"
-                        user={user}
-                    />
-                </div>
+                <SharedPieceEditor
+                    piecesList={piecesList}
+                    setPiecesList={setPiecesList}
+                    coursesList={coursesList}
+                    mode="litmus"
+                    user={user}
+                />
             )}
         </AuthenticatedLayout>
     );

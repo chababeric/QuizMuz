@@ -67,27 +67,11 @@ export default function Edit({ auth, user }) {
                         />
                     </div>
 
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                        <AddModule
-                            className="max-w-xl dark:bg-gray-800"
-                            courseName="Formation Musicale et Auditive"
-                        />
-                    </div>
-
-                    {/* Update Module Section */}
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                        <UpdateModule
-                            className="max-w-xl dark:bg-gray-800"
-                            courseName="Formation Musicale et Auditive"
-                        />
-                    </div>
-
-                    {/* Module List Section */}
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                        <ModuleList
-                            className="max-w-4xl dark:bg-gray-800"
-                            courseName="Formation Musicale et Auditive"
-                        />
+                    {/* Module sections, same layout as the LitMus page */}
+                    <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
+                        <ModuleList courseName="Formation Musicale et Auditive"/>
+                        <AddModule courseName="Formation Musicale et Auditive"/>
+                        <UpdateModule courseName="Formation Musicale et Auditive"/>
                     </div>
                 </div>
             </div>
