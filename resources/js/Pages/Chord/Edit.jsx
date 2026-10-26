@@ -49,30 +49,23 @@ export default function Edit({ auth, user }) {
         >
             <Head title="Admin - FMA" />
 
-            <div className="py-12 dark:bg-gray-900">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                        <AddNewChord
-                            className="max-w-xl dark:bg-gray-800"
-                            levelsList={sortedLevels}
-                            getAllChords={getAllChords}
-                        />
-                    </div>
+            <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+                <AddNewChord
+                    levelsList={sortedLevels}
+                    getAllChords={getAllChords}
+                />
 
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg dark:bg-gray-800">
-                        <UpdateChord
-                            chordsList={chords}
-                            setChordsList={setChords}
-                            levelsList={sortedLevels}
-                        />
-                    </div>
+                <UpdateChord
+                    chordsList={chords}
+                    setChordsList={setChords}
+                    levelsList={sortedLevels}
+                />
 
-                    {/* Module sections, same layout as the LitMus page */}
-                    <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
-                        <ModuleList courseName="Formation Musicale et Auditive"/>
-                        <AddModule courseName="Formation Musicale et Auditive"/>
-                        <UpdateModule courseName="Formation Musicale et Auditive"/>
-                    </div>
+                {/* Module sections, same layout as the LitMus page */}
+                <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
+                    <ModuleList courseName="Formation Musicale et Auditive"/>
+                    <AddModule courseName="Formation Musicale et Auditive"/>
+                    <UpdateModule courseName="Formation Musicale et Auditive"/>
                 </div>
             </div>
         </AuthenticatedLayout>

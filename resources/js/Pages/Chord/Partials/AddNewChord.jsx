@@ -1,8 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { Transition } from '@headlessui/react';
-import InputError from '@/Components/InputError.jsx';
-import InputLabel from '@/Components/InputLabel.jsx';
-import PrimaryButton from '@/Components/PrimaryButton.jsx';
+import { AdminField, AdminInput, SavedNote, SectionCard, buttonPrimary, control, muted } from '@/Components/AdminUi';
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -64,95 +61,74 @@ export default function AddNewChord({ className = '', levelsList, getAllChords }
     }
 
     return (
-        <section className={className}>
-            <header>
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Ajouter une nouvelle formule hormonique</h2>
-            </header>
-
+        <SectionCard id="new-chord-title" title="Ajouter une nouvelle formule harmonique" description="Formation Musicale et Auditive" className={className}>
             {errors.error && (
-                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                <p role="alert" className="mx-5 mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-300">
                     {errors.error}
-                </div>
+                </p>
             )}
 
-            <form onSubmit={submitNewChord} className="mt-6 space-y-6">
-                <div>
-                    <InputLabel htmlFor="level" value="Niveau" className="dark:text-white"/>
-                    <select
-                        id="level"
-                        className="mt-1 block w-full rounded-md dark:bg-gray-700 dark:text-white"
-                        value={data.level}
-                        onChange={handleLevelChange}
-                        required
+            <form onSubmit={submitNewChord} className="flex flex-col gap-5 p-5">
+                <div className="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
+                    <AdminField id="new-chord-level" label="Niveau" error={errors.level}>
+                        <select
+                            id="new-chord-level"
+                            className={`${control} w-full`}
+                            value={data.level}
+                            onChange={handleLevelChange}
+                            required
+                        >
+                            <option value="">Choisir un niveau</option>
+                            {levelsList.map((level) => (
+                                <option key={level.id} value={level.id}>{level.name}</option>
+                            ))}
+                        </select>
+                    </AdminField>
+
+                    <AdminField
+                        id="new-chord-module"
+                        label="Module (optionnel)"
+                        hint={selectedLevel && modules.length === 0 ? 'Aucun module disponible pour ce niveau' : null}
+                        error={errors.module}
                     >
-                        <option value="">Choisir un niveau</option>
-                        {levelsList.map((level) => (
-                            <option key={level.id} value={level.id}>{level.name}</option>
-                        ))}
-                    </select>
-                    <InputError className="mt-2" message={errors.level}/>
-                </div>
+                        <select
+                            id="new-chord-module"
+                            className={`${control} w-full`}
+                            value={data.module}
+                            onChange={(e) => setData('module', e.target.value)}
+                            disabled={!selectedLevel || modules.length === 0}
+                        >
+                            <option value="">Aucun module</option>
+                            {modules.map((module) => (
+                                <option key={module.id} value={module.id}>{module.title}</option>
+                            ))}
+                        </select>
+                    </AdminField>
 
-                <div>
-                    <InputLabel htmlFor="module" value="Module (optionnel)" className="dark:text-white"/>
-                    <select
-                        id="module"
-                        className="mt-1 block w-full rounded-md dark:bg-gray-700 dark:text-white"
-                        value={data.module}
-                        onChange={(e) => setData('module', e.target.value)}
-                        disabled={!selectedLevel || modules.length === 0}
-                    >
-                        <option value="">Aucun module</option>
-                        {modules.map((module) => (
-                            <option key={module.id} value={module.id}>{module.title}</option>
-                        ))}
-                    </select>
-                    <InputError className="mt-2" message={errors.module}/>
-                    {selectedLevel && modules.length === 0 && (
-                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Aucun module disponible pour ce niveau
-                        </p>
-                    )}
-                </div>
+                    <AdminField id="new-chord-name" label="Accord / Formule" error={errors.chord_name}>
+                        <AdminInput
+                            id="new-chord-name"
+                            value={data.chord_name}
+                            onChange={(e) => setData('chord_name', e.target.value)}
+                            required
+                        />
+                    </AdminField>
 
-                <div>
-                    <InputLabel htmlFor="chord_name" value="Accord / Formule" className="dark:text-white"/>
-                    <input
-                        id="chord_name"
-                        type="text"
-                        className="mt-1 block w-full rounded-md dark:bg-gray-700 dark:text-white"
-                        value={data.chord_name}
-                        onChange={(e) => setData('chord_name', e.target.value)}
-                        required
-                    />
-                    <InputError className="mt-2" message={errors.chord_name}/>
-                </div>
-
-                <div className="flex flex-col mb-4 w-full">
-                    <InputLabel htmlFor="audioFile" value="Fichier audio" className="dark:text-white"/>
-                    <input
-                        id="audioFile"
-                        type="file"
-                        className="new-chord-input dark:bg-gray-700 dark:text-white"
-                        onChange={(e) => setData('audioFile', e.target.files.length ? e.target.files[0] : null)}
-                    />
-                    <InputError className="mt-2" message={errors.audioFile}/>
+                    <AdminField id="new-chord-audio" label="Fichier audio" error={errors.audioFile}>
+                        <input
+                            id="new-chord-audio"
+                            type="file"
+                            className={`block w-full text-sm ${muted} file:mr-3 file:h-10 file:cursor-pointer file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:text-sm file:font-semibold file:text-gray-700 hover:file:bg-gray-200 dark:file:bg-gray-700 dark:file:text-gray-200 dark:hover:file:bg-gray-600`}
+                            onChange={(e) => setData('audioFile', e.target.files.length ? e.target.files[0] : null)}
+                        />
+                    </AdminField>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton type="submit" disabled={processing} className="dark:bg-blue-500 dark:hover:bg-blue-700">Ajouter l'accord</PrimaryButton>
-
-                    <Transition
-                        show={recentlySuccessful}
-                        enter="transition ease-in-out"
-                        enterFrom="opacity-0"
-                        leave="transition ease-in-out"
-                        leaveTo="opacity-0"
-                    >
-                        <p className="text-green-500 text-sm">Accord ajouté!</p>
-                    </Transition>
+                    <button type="submit" disabled={processing} className={buttonPrimary}>Ajouter l'accord</button>
+                    <SavedNote show={recentlySuccessful}>Accord ajouté!</SavedNote>
                 </div>
             </form>
-        </section>
+        </SectionCard>
     );
 }
